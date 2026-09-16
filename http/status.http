@@ -1,0 +1,14 @@
+# Select an environment from http-client.env.json in Rider's "Run with" menu.
+# A value named apiToken in http-client.private.env.json overrides this OS variable.
+@apiToken = {{$env.OFFICEDAYS_API_TOKEN}}
+
+### Current user's current-month status
+GET {{baseUrl}}/api/status
+Authorization: Bearer {{apiToken}}
+Accept: application/json
+
+### Selected-month status
+GET {{baseUrl}}/api/status?year=2026&month=9
+Authorization: Bearer {{apiToken}}
+Accept: application/json
+

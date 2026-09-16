@@ -70,9 +70,21 @@ async function loadDashboard() {
   document.getElementById("eligibility-note").textContent = `${status.eligibleWorkingDays} eligible working days · maximum ${status.maximumWfhDays} WFH days`;
 
   const attendanceList = document.getElementById("attendance-list"); attendanceList.replaceChildren();
-  attendance.forEach(item => attendanceList.append(actionItem(`✓ ${displayDate(item.date)}`, "", "Remove", async () => {
-    await api(`/api/attendance/${item.date}`, { method: "DELETE" }); message("Office day removed."); await loadDashboard();
-  })));
+  attendance.forEach(item => {
+    const row = actionItem(displayDate(item.date), "", "Remove", async () => {
+      await api(`/api/attendance/${item.date}`, { method: "DELETE" }); message("Office day removed."); await loadDashboard();
+    });
+    const text = row.querySelector("strong");
+    const source = item.isManual ? "Manually added" : "Automatically added";
+    text.title = source;
+    text.setAttribute("aria-label", `${displayDate(item.date)} · ${source}`);
+    const check = document.createElement("span");
+    check.className = item.isManual ? "attendance-check manual" : "attendance-check automatic";
+    check.textContent = "✓ ";
+    check.setAttribute("aria-hidden", "true");
+    text.prepend(check);
+    attendanceList.append(row);
+  });
   if (!attendance.length) attendanceList.append(emptyItem("No office days recorded for this month."));
 
   const vacationList = document.getElementById("vacation-list"); vacationList.replaceChildren();

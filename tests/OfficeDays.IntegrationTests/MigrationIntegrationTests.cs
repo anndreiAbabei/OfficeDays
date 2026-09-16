@@ -9,7 +9,7 @@ namespace OfficeDays.IntegrationTests;
 public sealed class MigrationIntegrationTests
 {
     [Fact]
-    public async Task Jurisdiction_migration_preserves_existing_users_and_holidays_as_Romania()
+    public async Task Migrations_preserve_existing_data_and_backfill_only_historical_attendance_as_manual()
     {
         var databasePath = Path.Combine(Path.GetTempPath(), $"officedays-migration-{Guid.NewGuid():N}.db");
         var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -34,7 +34,29 @@ public sealed class MigrationIntegrationTests
                 VALUES ({0}, '2026-12-01', 'National Day');
                 """, holidayId);
 
+            var attendanceId = Guid.NewGuid();
+            await db.Database.ExecuteSqlRawAsync("""
+                INSERT INTO "Attendances" ("Id", "UserId", "Date", "CreatedAt")
+                VALUES ({0}, {1}, '2026-09-15', '2026-09-15 09:00:00+00:00');
+                """, attendanceId, userId);
+
             await migrator.MigrateAsync();
+            var existingAttendance = await db.Attendances.AsNoTracking().SingleAsync();
+            Assert.Equal(attendanceId, existingAttendance.Id);
+            Assert.Equal(userId, existingAttendance.UserId);
+            Assert.Equal(new DateOnly(2026, 9, 15), existingAttendance.Date);
+            Assert.True(existingAttendance.IsManual);
+
+            db.Attendances.Add(new OfficeDays.Domain.Attendance
+            {
+                Id = Guid.NewGuid(), UserId = userId, Date = new DateOnly(2026, 9, 16),
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+            await db.SaveChangesAsync();
+            Assert.False((await db.Attendances.AsNoTracking().SingleAsync(x => x.Date == new DateOnly(2026, 9, 16))).IsManual);
+            await migrator.MigrateAsync();
+            Assert.False((await db.Attendances.AsNoTracking().SingleAsync(x => x.Date == new DateOnly(2026, 9, 16))).IsManual);
+
 
             var jurisdiction = await db.HolidayJurisdictions.SingleAsync();
             Assert.Equal("RO", jurisdiction.Code);
