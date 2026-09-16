@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using OfficeDays.Data;
-using OfficeDays.Domain;
 using OfficeDays.Features.Common;
 using OfficeDays.Security;
 using OfficeDays.Services;

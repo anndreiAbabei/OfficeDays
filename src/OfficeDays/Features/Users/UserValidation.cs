@@ -1,5 +1,4 @@
 using OfficeDays.Services;
-using OfficeDays.Domain;
 
 namespace OfficeDays.Features.Users;
 
