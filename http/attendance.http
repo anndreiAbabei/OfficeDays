@@ -1,0 +1,39 @@
+# Select an environment from http-client.env.json in Rider's "Run with" menu.
+# A value named apiToken in http-client.private.env.json overrides this OS variable.
+@apiToken = {{$env.OFFICEDAYS_API_TOKEN}}
+
+### Record today as an office day (iOS Shortcut request)
+POST {{baseUrl}}/api/attendance
+Authorization: Bearer {{apiToken}}
+
+### Manually record a past office day
+PUT {{baseUrl}}/api/attendance/2026-09-15
+Authorization: Bearer {{apiToken}}
+
+### List attendance for a month
+GET {{baseUrl}}/api/attendance?year=2026&month=9
+Authorization: Bearer {{apiToken}}
+Accept: application/json
+
+### Remove an attendance day
+DELETE {{baseUrl}}/api/attendance/2026-09-15
+Authorization: Bearer {{apiToken}}
+
+### Explicitly record today as automatic (same default as no body)
+POST {{baseUrl}}/api/attendance
+Authorization: Bearer {{apiToken}}
+Content-Type: application/json
+
+{
+  "isManual": false
+}
+
+### Record today as manual
+# An existing date keeps its original source; remove it first to test creation again.
+POST {{baseUrl}}/api/attendance
+Authorization: Bearer {{apiToken}}
+Content-Type: application/json
+
+{
+  "isManual": true
+}

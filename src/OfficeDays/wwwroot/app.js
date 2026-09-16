@@ -29,11 +29,28 @@ function showLogin() {
 }
 
 function localYearMonth(timeZone) {
-  const parts = new Intl.DateTimeFormat("en", { timeZone, year: "numeric", month: "numeric" }).formatToParts();
+  const parts = new Intl.DateTimeFormat("en", { timeZone, year: "numeric", month: "numeric", day: "numeric" }).formatToParts();
   return {
     year: Number(parts.find(x => x.type === "year").value),
-    month: Number(parts.find(x => x.type === "month").value)
+    month: Number(parts.find(x => x.type === "month").value),
+    day: Number(parts.find(x => x.type === "day").value)
   };
+}
+
+function resetEntryDates() {
+  const { year, month } = selectedPeriod();
+  const today = localYearMonth(state.user.timeZoneId);
+  const first = `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-01`;
+  const officeDate = year === today.year && month === today.month
+    ? `${first.slice(0, 8)}${String(today.day).padStart(2, "0")}` : first;
+  document.getElementById("attendance-date").value = officeDate;
+  document.getElementById("vacation-from").value = first;
+  document.getElementById("vacation-to").value = first;
+}
+
+function changePeriod() {
+  resetEntryDates();
+  loadDashboard().catch(error => message(error.message, true));
 }
 
 function selectedPeriod() { return { year: Number(document.getElementById("year").value), month: Number(document.getElementById("month").value) }; }
@@ -67,12 +84,24 @@ async function loadDashboard() {
   document.getElementById("remaining-days").textContent = status.remainingOfficeDays;
   document.getElementById("progress-label").textContent = `${status.progressPercentage}%`;
   document.getElementById("progress-bar").style.width = `${status.progressPercentage}%`;
-  document.getElementById("eligibility-note").textContent = `${status.eligibleWorkingDays} eligible working days · maximum ${status.maximumWfhDays} WFH days`;
+  document.getElementById("eligibility-note").textContent = `${status.eligibleWorkingDays} eligible working days · ${status.requiredOfficeDays} work from office days`;
 
   const attendanceList = document.getElementById("attendance-list"); attendanceList.replaceChildren();
-  attendance.forEach(item => attendanceList.append(actionItem(`✓ ${displayDate(item.date)}`, "", "Remove", async () => {
-    await api(`/api/attendance/${item.date}`, { method: "DELETE" }); message("Office day removed."); await loadDashboard();
-  })));
+  attendance.forEach(item => {
+    const row = actionItem(displayDate(item.date), "", "Remove", async () => {
+      await api(`/api/attendance/${item.date}`, { method: "DELETE" }); message("Office day removed."); await loadDashboard();
+    });
+    const text = row.querySelector("strong");
+    const source = item.isManual ? "Manually added" : "Automatically added";
+    text.title = source;
+    text.setAttribute("aria-label", `${displayDate(item.date)} · ${source}`);
+    const check = document.createElement("span");
+    check.className = item.isManual ? "attendance-check manual" : "attendance-check automatic";
+    check.textContent = "✓ ";
+    check.setAttribute("aria-hidden", "true");
+    text.prepend(check);
+    attendanceList.append(row);
+  });
   if (!attendance.length) attendanceList.append(emptyItem("No office days recorded for this month."));
 
   const vacationList = document.getElementById("vacation-list"); vacationList.replaceChildren();
@@ -169,6 +198,7 @@ async function boot() {
     document.getElementById("login-view").hidden = true; document.getElementById("dashboard").hidden = false;
     document.getElementById("admin-jurisdictions").hidden = !state.user.isAdmin;
     document.getElementById("admin-holidays").hidden = !state.user.isAdmin;
+    resetEntryDates();
     if (state.user.isAdmin) await loadJurisdictions();
     await loadDashboard();
   } catch { showLogin(); }
@@ -183,12 +213,12 @@ document.getElementById("login-form").addEventListener("submit", async event => 
 });
 
 document.getElementById("logout").addEventListener("click", async () => { await api("/api/auth/logout", { method: "POST" }); location.reload(); });
-document.getElementById("month").addEventListener("change", () => loadDashboard().catch(error => message(error.message, true)));
-document.getElementById("year").addEventListener("change", () => loadDashboard().catch(error => message(error.message, true)));
+document.getElementById("month").addEventListener("change", changePeriod);
+document.getElementById("year").addEventListener("change", changePeriod);
 function shiftMonth(delta) {
   let { year, month } = selectedPeriod(); month += delta;
   if (month === 0) { month = 12; year--; } if (month === 13) { month = 1; year++; }
-  document.getElementById("year").value = year; document.getElementById("month").value = month; loadDashboard().catch(error => message(error.message, true));
+  document.getElementById("year").value = year; document.getElementById("month").value = month; changePeriod();
 }
 document.getElementById("previous-month").addEventListener("click", () => shiftMonth(-1));
 document.getElementById("next-month").addEventListener("click", () => shiftMonth(1));

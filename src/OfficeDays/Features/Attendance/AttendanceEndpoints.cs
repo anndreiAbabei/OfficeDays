@@ -20,7 +20,8 @@ public static class AttendanceEndpoints
         attendance.MapDelete("/{date}", RemoveAttendance).AddEndpointFilter<CookieAntiforgeryFilter>();
     }
 
-    private static async Task<IResult> RecordToday(ClaimsPrincipal principal,
+    private static async Task<IResult> RecordToday(RecordAttendanceRequest? request,
+                                                   ClaimsPrincipal principal,
                                                    AppDbContext db,
                                                    UserDateService dates,
                                                    TimeProvider clock,
@@ -30,7 +31,7 @@ public static class AttendanceEndpoints
         var user = await db.Users.FindAsync([principal.GetUserId()], cancellationToken);
         
         return user is not null
-            ? await Add(user.Id, dates.Today(user), db, clock,
+            ? await Add(user.Id, dates.Today(user), request?.IsManual ?? false, db, clock,
                 loggerFactory.CreateLogger(LogCategory), cancellationToken)
             : Results.NotFound();
     }
@@ -54,7 +55,7 @@ public static class AttendanceEndpoints
         if (attendanceDate > dates.Today(user))
             return ApiResults.Validation("Future attendance cannot be recorded.", "date");
         
-        return await Add(user.Id, attendanceDate, db, clock,
+        return await Add(user.Id, attendanceDate, true, db, clock,
             loggerFactory.CreateLogger(LogCategory), cancellationToken);
     }
 
@@ -108,6 +109,7 @@ public static class AttendanceEndpoints
 
     private static async Task<IResult> Add(Guid userId,
                                            DateOnly date,
+                                           bool isManual,
                                            AppDbContext db,
                                            TimeProvider clock,
                                            ILogger logger,
@@ -127,6 +129,7 @@ public static class AttendanceEndpoints
             Id = Guid.NewGuid(),
             UserId = userId,
             Date = date,
+            IsManual = isManual,
             CreatedAt = clock.GetUtcNow()
         };
         db.Attendances.Add(row);

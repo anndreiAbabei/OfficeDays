@@ -1,0 +1,27 @@
+# Select an environment from http-client.env.json in Rider's "Run with" menu.
+# A value named apiToken in http-client.private.env.json overrides this OS variable.
+@apiToken = {{$env.OFFICEDAYS_API_TOKEN}}
+
+### Add vacation and retain its ID
+POST {{baseUrl}}/api/vacations
+Authorization: Bearer {{apiToken}}
+Content-Type: application/json
+
+{
+  "from": "2026-09-21",
+  "to": "2026-09-25"
+}
+
+> {%
+    client.global.set("vacationId", response.body.id);
+%}
+
+### List vacations for a month
+GET {{baseUrl}}/api/vacations?year=2026&month=9
+Authorization: Bearer {{apiToken}}
+Accept: application/json
+
+### Remove the vacation created above
+DELETE {{baseUrl}}/api/vacations/{{vacationId}}
+Authorization: Bearer {{apiToken}}
+

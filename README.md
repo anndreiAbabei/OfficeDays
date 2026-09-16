@@ -215,7 +215,9 @@ After login, everything is on one dashboard:
 - admin-only holiday-jurisdiction management
 - an admin-only bank holiday editor
 
-Manual attendance uses idempotent `PUT /api/attendance/{yyyy-MM-dd}` and does not allow future dates. Shortcut attendance uses the payload-free `POST /api/attendance`.
+Manual attendance uses idempotent `PUT /api/attendance/{yyyy-MM-dd}` and does not allow future dates. Shortcut attendance uses `POST /api/attendance` with no body by default. It also accepts an optional JSON body `{ "isManual": false }`; omitted `isManual` defaults to false. Send `{ "isManual": true }` to record today manually. PUT always creates manual entries. Both endpoints preserve the original source when the date already exists.
+
+Attendance responses include `isManual`. In the Office days list, automatic entries have green checkmarks and manual entries have yellow checkmarks, with source tooltips and accessible labels. The UI uses PUT, so all entries it creates are manual. The `AddAttendanceIsManual` migration marks all existing attendance as manual without changing their dates or timestamps.
 
 ## API tokens
 
