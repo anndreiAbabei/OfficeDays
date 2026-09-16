@@ -80,7 +80,7 @@ h2 { margin-bottom: .15rem; font-size: 1.04rem; }
 .period-picker .icon { min-height: 2.55rem; }
 .message { min-height: 1.5rem; margin: 0 0 .5rem; color: var(--green-dark); font-size: .9rem; }
 .status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-.metric { display: grid; grid-template-columns: auto 1fr; align-items: baseline; }
+.metric { display: grid; grid-template-columns: auto 1fr; align-items: baseline; column-gap: .5rem; row-gap: .25rem; }
 .metric span { grid-column: 1 / -1; color: var(--muted); font-size: .8rem; font-weight: 650; }
 .metric strong { font-size: 2.5rem; letter-spacing: -.06em; }
 .metric small { color: var(--muted); }
@@ -127,3 +127,6 @@ h2 { margin-bottom: .15rem; font-size: 1.04rem; }
 
 .attendance-check.automatic { color: var(--green-dark); }
 .attendance-check.manual { color: #a87500; }
+
+#attendance-list { max-height: 20rem; overflow-y: auto; scrollbar-gutter: stable; }
+.item-main .attendance-check { display: inline; }
