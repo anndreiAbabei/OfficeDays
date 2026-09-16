@@ -137,15 +137,47 @@ OFFICEDAYS_GID=1000
 OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER=true
 ```
 
-7. Save the Stack and deploy it. Port `8080` on the Docker host will serve the application.
+7. Save the Stack and deploy it. Port `5802` on the Docker host will serve the application.
 
-The absolute data path is important in Komodo: it keeps the SQLite database and login-cookie keys outside Komodo's Git checkout. After the first successful startup creates `Admin`, the bootstrap password can be removed from the Stack environment. Put an HTTPS reverse proxy in front of port `8080` before using bearer tokens outside a trusted network.
+The absolute data path is important in Komodo: it keeps the SQLite database and login-cookie keys outside Komodo's Git checkout. After the first successful startup creates `Admin`, the bootstrap password can be removed from the Stack environment. Put an HTTPS reverse proxy in front of port `5802` before using bearer tokens outside a trusted network.
 
 ### HTTPS deployment
 
 Put the application behind an HTTPS reverse proxy before exposing it outside a trusted network. API bearer tokens are credentials and must never be transmitted over public plain HTTP.
 
-By default, the application rejects any bearer-authenticated request for which ASP.NET Core does not see HTTPS. A TLS-terminating proxy must forward the original scheme (`X-Forwarded-Proto: https`). A reverse proxy running on the same host and forwarding to `localhost:8080` is trusted by ASP.NET Core's default forwarded-header configuration. If the proxy runs in a separate container or on another machine, explicitly configure its address as a trusted proxy before relying on forwarded headers.
+By default, the application rejects any bearer-authenticated request for which ASP.NET Core does not see HTTPS. It is normal for TLS to terminate at the reverse proxy and for the proxy-to-application connection to use HTTP. The proxy must preserve the original public scheme so the application sees the request as secure:
+
+```text
+Client --HTTPS--> Nginx --HTTP + X-Forwarded-Proto: https--> Office Days
+```
+
+For Nginx or OpenResty, the proxy location should include:
+
+```nginx
+proxy_set_header Host $host;
+proxy_set_header X-Forwarded-Proto $scheme;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Real-IP $remote_addr;
+```
+
+ASP.NET Core trusts forwarded headers from loopback proxies by default. When Nginx and Office Days run in different containers, Nginx normally reaches the application from a Docker-network address rather than loopback. The Compose configuration therefore enables forwarded-header processing inside the container with:
+
+```yaml
+ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+```
+
+Komodo's Stack Environment is supplied to Docker Compose as an environment file. Values placed there are available for Compose interpolation but are not automatically passed into the application container unless `compose.yaml` includes them under the service's `environment` section. After changing container environment configuration, use **Redeploy** rather than only restarting the existing container.
+
+`ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` accepts forwarded headers from any connecting proxy. Use it only when direct access to the application's HTTP port is restricted to trusted systems. If Nginx runs directly on the Docker host, the published port can be restricted to loopback:
+
+```yaml
+ports:
+  - "127.0.0.1:5802:5802"
+```
+
+If Nginx runs in a container, prefer attaching Nginx and Office Days to a shared Docker network and avoiding a publicly reachable application port. A stricter alternative is to configure the exact proxy address or Docker subnet as a trusted ASP.NET Core proxy/network.
+
+If an HTTPS request with a bearer token returns `400 HTTPS required`, verify that Nginx sends `X-Forwarded-Proto` and that forwarded-header processing is enabled inside the Office Days container.
 
 For an explicitly trusted internal-only HTTP network, the check can be disabled in `.env` with:
 
@@ -324,3 +356,30 @@ dotnet ef migrations add NameOfChange \
 ```
 
 The `AddHolidayJurisdictions` migration assigns existing users and existing bank holidays to the seeded `RO` jurisdiction. This preserves the data from installations created before jurisdiction support was introduced.
+
+## Application version and health
+
+`GET /api/version` returns the running application's embedded version, for example
+`{"version":"1.0.0+build.20260916.143025"}`. The footer fetches this endpoint on page
+load, including before login. The response disables caching.
+
+The release version is maintained in `src/OfficeDays/OfficeDays.csproj` (`Version`).
+Docker publish automatically appends a UTC build timestamp. Komodo needs no extra
+configuration: pulling master and building via Compose embeds the stamp in the image.
+This identifies a build, not a push counter: a cached image retains its version,
+a fresh rebuild gets a new stamp, and a rollback shows the older image's version.
+Local .NET builds display `1.0.0+local`. Change `Version` manually only when choosing
+a new release number. Refresh the page after deployment to see the running version.
+
+Public monitoring endpoints:
+
+- `GET /health/live`: HTTP 200 when the HTTP application is running, without querying SQLite.
+- `GET /health/ready`: queries the application's Users table; HTTP 200 when healthy,
+  HTTP 503 on database failure. JSON includes overall status and database status,
+  without exception details. Responses are not cached.
+
+Startup database initialization must finish before the server accepts requests.
+Readiness verifies a read query, not write access or every table in the schema.
+SQLite `.db-wal`, `.db-shm`, and `.db-journal` files are runtime database sidecars;
+they are excluded from Git and Docker build contexts. Do not delete them while the
+application is running, since the WAL can contain uncheckpointed data.

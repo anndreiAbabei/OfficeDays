@@ -1,6 +1,5 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using OfficeDays.Domain;
 using OfficeDays.Services;
 
 namespace OfficeDays.Features.Common;

@@ -8,7 +8,8 @@ COPY tests/OfficeDays.IntegrationTests/OfficeDays.IntegrationTests.csproj tests/
 RUN dotnet restore src/OfficeDays/OfficeDays.csproj
 
 COPY src/OfficeDays/ src/OfficeDays/
-RUN dotnet publish src/OfficeDays/OfficeDays.csproj -c Release --no-restore -o /output
+RUN dotnet publish src/OfficeDays/OfficeDays.csproj -c Release --no-restore -o /output \
+    -p:InformationalVersion="$(dotnet msbuild src/OfficeDays/OfficeDays.csproj -getProperty:Version)+build.$(date -u +%Y%m%d.%H%M%S)"
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app

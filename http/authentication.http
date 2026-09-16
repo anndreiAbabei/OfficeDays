@@ -1,3 +1,4 @@
+# Set registrationPassword in the ignored http-client.private.env.json for the selected environment.
 # Select the `local` or `docker` environment in Rider's "Run with" menu.
 # Values in http-client.private.env.json override these operating-system variables.
 @username = {{OFFICEDAYS_USERNAME}}
@@ -12,8 +13,8 @@ POST {{baseUrl}}/api/users
 Content-Type: application/json
 
 {
-  "username": "http-test-user",
-  "password": "a-long-test-password!",
+  "username": "andrei",
+  "password": "{{registrationPassword}}",
   "timeZoneId": "Europe/Bucharest",
   "countryCode": "RO"
 }

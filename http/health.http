@@ -1,0 +1,11 @@
+### Running application version
+GET {{baseUrl}}/api/version
+Accept: application/json
+
+### API liveness
+GET {{baseUrl}}/health/live
+Accept: application/json
+
+### API and database readiness
+GET {{baseUrl}}/health/ready
+Accept: application/json

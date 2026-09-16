@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using OfficeDays.Domain;
 using OfficeDays.Features.Attendance;
 using OfficeDays.Features.Authentication;
 using OfficeDays.Features.BankHolidays;
