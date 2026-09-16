@@ -243,6 +243,8 @@ The unit suite covers odd/even rule behavior, weekdays and weekends, holidays, a
 
 The integration suite uses `WebApplicationFactory`, the real middleware/endpoints, and a fresh migrated SQLite file per test. It covers registration/login, admin jurisdiction management, country-scoped holiday replacement, token creation/use/revocation and ownership isolation, idempotent bearer attendance and removal, vacation ownership/lifecycle, and persisted status calculations.
 
+Rider-compatible manual API requests are available under `http/`. Select the `local` or `docker` HTTP Client environment and provide secrets through the ignored `http/http-client.private.env.json` file or the documented operating-system variables.
+
 ## Database migrations
 
 Migrations are committed under `src/OfficeDays/Data/Migrations` and applied at startup. To create a migration after changing the model:

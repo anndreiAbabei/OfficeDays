@@ -1,0 +1,44 @@
+# Select the `local` or `docker` environment in Rider's "Run with" menu.
+# Values in http-client.private.env.json override these operating-system variables.
+@username = {{$env.OFFICEDAYS_USERNAME}}
+@password = {{$env.OFFICEDAYS_PASSWORD}}
+
+### List valid holiday jurisdictions (anonymous)
+GET {{baseUrl}}/api/holiday-jurisdictions
+Accept: application/json
+
+### Create a normal user (anonymous; change the username before repeating)
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "username": "http-test-user",
+  "password": "a-long-test-password!",
+  "timeZoneId": "Europe/Bucharest",
+  "countryCode": "RO"
+}
+
+### Log in and store the persistent session cookie
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+### Get and retain an antiforgery token for cookie-authenticated mutations
+GET {{baseUrl}}/api/auth/csrf
+Accept: application/json
+
+> {%
+    client.global.set("csrfToken", response.body.token);
+%}
+
+### Show the signed-in user
+GET {{baseUrl}}/api/auth/me
+Accept: application/json
+
+### Log out
+POST {{baseUrl}}/api/auth/logout
+X-CSRF-TOKEN: {{csrfToken}}

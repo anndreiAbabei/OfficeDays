@@ -6,6 +6,9 @@
 # dotenv files
 .env
 
+# Rider HTTP Client secrets
+http-client.private.env.json
+
 # User-specific files
 *.rsuser
 *.suo

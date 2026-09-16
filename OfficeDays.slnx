@@ -1,0 +1,25 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/docs/">
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/docs/http/">
+    <File Path="http\api.http" />
+    <File Path="http\authentication.http" />
+    <File Path="http\http-client.env.json" />
+    <File Path="http\http-client.private.env.json.example" />
+    <File Path="http\README.md" />
+    <File Path="http\romania-2026.http" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/OfficeDays/OfficeDays.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OfficeDays.IntegrationTests/OfficeDays.IntegrationTests.csproj" />
+    <Project Path="tests/OfficeDays.UnitTests/OfficeDays.UnitTests.csproj" />
+  </Folder>
+</Solution>
