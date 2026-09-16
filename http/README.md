@@ -10,6 +10,6 @@ These files target JetBrains Rider's built-in HTTP Client.
 
 `authentication.http` demonstrates cookie authentication and antiforgery handling. `api.http` exercises the main user APIs with a bearer token. `romania-2026.http` configures Romania's complete 2026 holiday calendar.
 
-`health.http` checks API liveness and database readiness. `version.http` retrieves the deployed application version. These requests use the selected environment's `baseUrl` and do not require authentication.
+`health.http` checks API liveness and database readiness and retrieves the deployed application version. These requests use the selected environment's `baseUrl` and do not require authentication.
 
 The Romania dates follow Article 139 of the Romanian Labour Code and the 2026 Orthodox calendar. Because both Children's Day and Orthodox Whit Monday fall on 1 June 2026, that date has one combined entry to satisfy the API's unique-date constraint.

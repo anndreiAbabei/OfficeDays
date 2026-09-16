@@ -1,3 +1,7 @@
+### Running application version
+GET {{baseUrl}}/api/version
+Accept: application/json
+
 ### API liveness
 GET {{baseUrl}}/health/live
 Accept: application/json
