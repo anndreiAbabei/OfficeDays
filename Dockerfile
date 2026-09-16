@@ -15,8 +15,8 @@ WORKDIR /app
 RUN mkdir -p /app/data && chown -R app:app /app
 COPY --from=build --chown=app:app /output/ ./
 USER app
-ENV ASPNETCORE_HTTP_PORTS=8080 \
+ENV ASPNETCORE_HTTP_PORTS=5802 \
     ConnectionStrings__Default="Data Source=/app/data/officedays.db" \
     DataProtection__KeysPath=/app/data/keys
-EXPOSE 8080
+EXPOSE 5802
 ENTRYPOINT ["dotnet", "OfficeDays.dll"]

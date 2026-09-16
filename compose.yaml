@@ -4,7 +4,7 @@ services:
       context: .
     user: "${OFFICEDAYS_UID:-1000}:${OFFICEDAYS_GID:-1000}"
     ports:
-      - "8080:8080"
+      - "5802:5802"
     environment:
       ASPNETCORE_ENVIRONMENT: "Production"
       ConnectionStrings__Default: "Data Source=/app/data/officedays.db"
