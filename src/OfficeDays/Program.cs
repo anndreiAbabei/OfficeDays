@@ -38,7 +38,6 @@ if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"
     app.UseHsts();
 
 app.UseBearerTokenHttpsProtection();
-app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -49,7 +48,7 @@ app.MapApiEndpoints();
 
 OfficeDays.Features.Operations.OperationsEndpoints.Map(app);
 
-app.MapFallbackToFile("index.html");
+app.MapUiEndpoints();
 
 await app.RunAsync();
 return;
