@@ -385,3 +385,21 @@ Readiness verifies a read query, not write access or every table in the schema.
 SQLite `.db-wal`, `.db-shm`, and `.db-journal` files are runtime database sidecars;
 they are excluded from Git and Docker build contexts. Do not delete them while the
 application is running, since the WAL can contain uncheckpointed data.
+
+## UI asset caching
+
+The application serves JavaScript and CSS at content-addressed URLs such as
+`/assets/<sha256>/app.js`. Each file's URL changes automatically when its contents
+change, for both local runs and Docker deployments. Files are loaded at application
+startup; restart the app after editing UI assets during local development.
+
+The HTML response (including `/index.html` and client-side fallback routes) sends
+`Cache-Control: no-store` so it references the current asset URLs. Fingerprinted
+assets can be cached for a year because each URL identifies fixed content. Legacy
+`/app.js` and `/styles.css` routes also send `no-store`.
+
+Keep Komodo's **Build Images → Pre Build Images** enabled so deployments rebuild
+the application from the selected Git branch. Save and deploy after merging changes.
+Reverse proxies should respect the application's HTML cache headers; if a proxy
+already cached old HTML or overrides `no-store`, purge that HTML cache once and
+remove the override. Old cached unversioned CSS/JS are bypassed by the new HTML.
