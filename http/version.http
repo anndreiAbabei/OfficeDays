@@ -1,0 +1,3 @@
+### Running application version
+GET {{baseUrl}}/api/version
+Accept: application/json
