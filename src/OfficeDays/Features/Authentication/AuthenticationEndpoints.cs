@@ -41,7 +41,9 @@ public static class AuthenticationEndpoints
             return ApiResults.Validation("Username and password are required.");
 
         var normalized = ApiResults.NormalizeUsername(request.Username!);
-        var user = await db.Users.SingleOrDefaultAsync(x => x.NormalizedUsername == normalized);
+        var user = await db.Users
+                           .Include(x => x.HolidayJurisdiction)
+                           .SingleOrDefaultAsync(x => x.NormalizedUsername == normalized);
         
         if (user is null || hasher.VerifyHashedPassword(user, user.PasswordHash, request.Password!) == PasswordVerificationResult.Failed)
         {
@@ -80,7 +82,9 @@ public static class AuthenticationEndpoints
 
     private static async Task<IResult> GetCurrentUser(ClaimsPrincipal principal, AppDbContext db)
     {
-        var user = await db.Users.FindAsync(principal.GetUserId());
+        var user = await db.Users
+                           .Include(x => x.HolidayJurisdiction)
+                           .SingleOrDefaultAsync(x => x.Id == principal.GetUserId());
         
         return user is null 
                    ? Results.NotFound() 

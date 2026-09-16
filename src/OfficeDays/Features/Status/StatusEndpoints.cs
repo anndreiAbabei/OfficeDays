@@ -33,7 +33,8 @@ public static class StatusEndpoints
         }
 
         var holidayDates = await db.BankHolidays
-            .Where(x => x.Date >= period.Start && x.Date <= period.End)
+            .Where(x => x.HolidayJurisdictionId == user.HolidayJurisdictionId &&
+                        x.Date >= period.Start && x.Date <= period.End)
             .Select(x => x.Date)
             .ToListAsync();
         var vacationRows = await db.Vacations

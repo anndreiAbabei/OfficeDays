@@ -14,6 +14,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<Vacation> Vacations => Set<Vacation>();
     public DbSet<ApiToken> ApiTokens => Set<ApiToken>();
     public DbSet<BankHoliday> BankHolidays => Set<BankHoliday>();
+    public DbSet<HolidayJurisdiction> HolidayJurisdictions => Set<HolidayJurisdiction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,8 +25,11 @@ public sealed class AppDbContext : DbContext
             entity.Property(x => x.NormalizedUsername).HasMaxLength(100).IsRequired();
             entity.Property(x => x.PasswordHash).IsRequired();
             entity.Property(x => x.TimeZoneId).HasMaxLength(100).IsRequired();
-            
             entity.HasIndex(x => x.NormalizedUsername).IsUnique();
+            entity.HasOne(x => x.HolidayJurisdiction)
+                  .WithMany(x => x.Users)
+                  .HasForeignKey(x => x.HolidayJurisdictionId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Attendance>(entity =>
@@ -57,7 +61,19 @@ public sealed class AppDbContext : DbContext
         {
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Name).HasMaxLength(150).IsRequired();
-            entity.HasIndex(x => x.Date).IsUnique();
+            entity.HasIndex(x => new { x.HolidayJurisdictionId, x.Date }).IsUnique();
+            entity.HasOne(x => x.HolidayJurisdiction)
+                  .WithMany(x => x.BankHolidays)
+                  .HasForeignKey(x => x.HolidayJurisdictionId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<HolidayJurisdiction>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Code).HasMaxLength(6).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            entity.HasIndex(x => x.Code).IsUnique();
         });
     }
 }

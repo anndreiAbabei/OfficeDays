@@ -1,4 +1,4 @@
-const state = { user: null, csrf: null, holidays: [] };
+const state = { user: null, csrf: null, holidays: [], jurisdictions: [] };
 const months = Array.from({ length: 12 }, (_, index) =>
   new Intl.DateTimeFormat(undefined, { month: "long" }).format(new Date(2024, index, 1)));
 
@@ -103,8 +103,44 @@ function renderTokens(tokens) {
 }
 
 async function loadHolidays(year) {
-  state.holidays = await api(`/api/bank-holidays/${year}`);
+  const code = document.getElementById("holiday-jurisdiction").value;
+  if (!code) { state.holidays = []; renderHolidays(); return; }
+  state.holidays = await api(`/api/bank-holidays/${encodeURIComponent(code)}/${year}`);
   renderHolidays();
+}
+
+async function loadJurisdictions() {
+  state.jurisdictions = await api("/api/holiday-jurisdictions");
+  const select = document.getElementById("holiday-jurisdiction");
+  const selected = select.value || state.user.countryCode;
+  select.replaceChildren();
+  state.jurisdictions.forEach(item => select.add(new Option(`${item.name} (${item.code})`, item.code)));
+  if (state.jurisdictions.some(item => item.code === selected)) select.value = selected;
+  renderJurisdictions();
+}
+
+function renderJurisdictions() {
+  const list = document.getElementById("jurisdiction-list"); list.replaceChildren();
+  state.jurisdictions.forEach(jurisdiction => {
+    const item = actionItem(jurisdiction.name, jurisdiction.code, "Remove", async () => {
+      if (!confirm(`Remove ${jurisdiction.name}?`)) return;
+      try {
+        await api(`/api/holiday-jurisdictions/${encodeURIComponent(jurisdiction.code)}`, { method: "DELETE" });
+        message("Holiday jurisdiction removed."); await loadJurisdictions(); await loadHolidays(selectedPeriod().year);
+      } catch (error) { message(error.message, true); }
+    });
+    const edit = document.createElement("button"); edit.type = "button"; edit.className = "secondary small"; edit.textContent = "Rename";
+    edit.addEventListener("click", async () => {
+      const name = prompt("Jurisdiction name", jurisdiction.name);
+      if (!name || name.trim() === jurisdiction.name) return;
+      try {
+        await api(`/api/holiday-jurisdictions/${encodeURIComponent(jurisdiction.code)}`, { method: "PUT", body: JSON.stringify({ name }) });
+        message("Holiday jurisdiction updated."); await loadJurisdictions();
+      } catch (error) { message(error.message, true); }
+    });
+    item.insertBefore(edit, item.lastElementChild); list.append(item);
+  });
+  if (!state.jurisdictions.length) list.append(emptyItem("No holiday jurisdictions configured."));
 }
 
 function renderHolidays() {
@@ -129,9 +165,11 @@ async function boot() {
     state.user = await api("/api/auth/me");
     const now = localYearMonth(state.user.timeZoneId);
     document.getElementById("year").value = now.year; document.getElementById("month").value = now.month;
-    document.getElementById("account-name").textContent = `${state.user.username} · ${state.user.timeZoneId}`;
+    document.getElementById("account-name").textContent = `${state.user.username} · ${state.user.countryName} (${state.user.countryCode}) · ${state.user.timeZoneId}`;
     document.getElementById("login-view").hidden = true; document.getElementById("dashboard").hidden = false;
+    document.getElementById("admin-jurisdictions").hidden = !state.user.isAdmin;
     document.getElementById("admin-holidays").hidden = !state.user.isAdmin;
+    if (state.user.isAdmin) await loadJurisdictions();
     await loadDashboard();
   } catch { showLogin(); }
 }
@@ -154,6 +192,7 @@ function shiftMonth(delta) {
 }
 document.getElementById("previous-month").addEventListener("click", () => shiftMonth(-1));
 document.getElementById("next-month").addEventListener("click", () => shiftMonth(1));
+document.getElementById("holiday-jurisdiction").addEventListener("change", () => loadHolidays(selectedPeriod().year).catch(error => message(error.message, true)));
 
 document.getElementById("attendance-form").addEventListener("submit", async event => {
   event.preventDefault();
@@ -179,6 +218,18 @@ document.getElementById("token-form").addEventListener("submit", async event => 
 });
 document.getElementById("copy-token").addEventListener("click", async () => { await navigator.clipboard.writeText(document.getElementById("raw-token").textContent); document.getElementById("copy-token").textContent = "Copied"; });
 
+document.getElementById("jurisdiction-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  try {
+    await api("/api/holiday-jurisdictions", { method: "POST", body: JSON.stringify({
+      code: document.getElementById("jurisdiction-code").value,
+      name: document.getElementById("jurisdiction-name").value
+    }) });
+    document.getElementById("jurisdiction-code").value = ""; document.getElementById("jurisdiction-name").value = "";
+    message("Holiday jurisdiction added."); await loadJurisdictions();
+  } catch (error) { message(error.message, true); }
+});
+
 document.getElementById("holiday-form").addEventListener("submit", event => {
   event.preventDefault(); const date = document.getElementById("holiday-date").value; const name = document.getElementById("holiday-name").value.trim();
   if (Number(date.slice(0, 4)) !== Number(document.getElementById("year").value)) { message("Holiday must be in the selected year.", true); return; }
@@ -188,7 +239,8 @@ document.getElementById("holiday-form").addEventListener("submit", event => {
 });
 document.getElementById("save-holidays").addEventListener("click", async () => {
   try {
-    await api(`/api/bank-holidays/${document.getElementById("year").value}`, { method: "PUT", body: JSON.stringify(state.holidays) });
+    const code = document.getElementById("holiday-jurisdiction").value;
+    await api(`/api/bank-holidays/${encodeURIComponent(code)}/${document.getElementById("year").value}`, { method: "PUT", body: JSON.stringify(state.holidays) });
     message("Bank holidays saved."); await loadDashboard();
   } catch (error) { message(error.message, true); }
 });

@@ -7,6 +7,8 @@ services:
     environment:
       BootstrapAdmin__Password: "${OFFICEDAYS_ADMIN_PASSWORD:?Set OFFICEDAYS_ADMIN_PASSWORD}"
       BootstrapAdmin__TimeZoneId: "${OFFICEDAYS_ADMIN_TIMEZONE:-Europe/Bucharest}"
+      BootstrapAdmin__CountryCode: "${OFFICEDAYS_ADMIN_COUNTRY_CODE:-RO}"
+      BootstrapAdmin__CountryName: "${OFFICEDAYS_ADMIN_COUNTRY_NAME:-Romania}"
     volumes:
       - office-days-data:/app/data
     restart: unless-stopped

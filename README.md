@@ -32,6 +32,7 @@ Stored dates such as attendance, vacation, and holidays use `DateOnly`. Audit ti
 - .NET 10 SDK for local development
 - Docker with Compose for container deployment
 - An IANA timezone name for each user, such as `Europe/Bucharest`
+- A holiday jurisdiction for each user, such as `RO`, `GB-ENG`, or `GB-NIR`
 
 ## Run locally
 
@@ -40,13 +41,15 @@ The first start requires bootstrap administrator environment variables. They are
 ```bash
 BootstrapAdmin__Password='use-a-long-unique-password' \
 BootstrapAdmin__TimeZoneId='Europe/Bucharest' \
+BootstrapAdmin__CountryCode='RO' \
+BootstrapAdmin__CountryName='Romania' \
 Security__RequireHttpsForBearerTokens=false \
 dotnet run --project src/OfficeDays
 ```
 
 Open the URL printed by ASP.NET Core and sign in as `Admin`. The HTTPS bearer-token check is disabled above only for local development. EF Core migrations run automatically on startup and create `officedays.db` in the working directory.
 
-If the database already contains any user, bootstrap configuration is ignored. It never resets or modifies the existing `Admin` account. If the database is empty and either required setting is missing, startup fails with a clear error.
+If the database already contains any user, bootstrap configuration is ignored. It never resets or modifies the existing `Admin` account. On an empty database, the configured jurisdiction is created if necessary. If any required bootstrap setting is missing, startup fails with a clear error.
 
 Cookie session lifetime is configured in `src/OfficeDays/appsettings.json` using a standard .NET `TimeSpan` value:
 
@@ -95,11 +98,12 @@ curl -X POST https://office.example.com/api/users \
   -d '{
     "username": "andrew",
     "password": "a-long-unique-password",
-    "timeZoneId": "Europe/Bucharest"
+    "timeZoneId": "Europe/Bucharest",
+    "countryCode": "RO"
   }'
 ```
 
-Usernames are unique without regard to case. The per-user timezone determines the calendar date recorded by `POST /api/attendance`, regardless of the container's timezone.
+Usernames are unique without regard to case. The country code must identify an existing holiday jurisdiction. The per-user timezone determines the calendar date recorded by `POST /api/attendance`, regardless of the container's timezone. The user's holiday jurisdiction determines which bank holidays are excluded from status calculations.
 
 ## Web UI
 
@@ -109,6 +113,7 @@ After login, everything is on one dashboard:
 - attendance history with a minimal past-day add/remove fallback
 - vacation range add/remove
 - API token creation and revocation
+- admin-only holiday-jurisdiction management
 - an admin-only bank holiday editor
 
 Manual attendance uses idempotent `PUT /api/attendance/{yyyy-MM-dd}` and does not allow future dates. Shortcut attendance uses the payload-free `POST /api/attendance`.
@@ -129,21 +134,36 @@ DELETE /api/tokens/{id}         revokes; does not physically delete
 
 Browser mutations use ASP.NET Core antiforgery protection. Bearer clients do not need an antiforgery token.
 
+## Holiday jurisdictions
+
+Holiday jurisdictions represent either a country-wide calendar (`RO`, `US`) or a regional calendar (`GB-ENG`, `GB-NIR`). Codes are normalized to uppercase. The common `UK` prefix is accepted and normalized to the ISO `GB` prefix.
+
+Jurisdiction reads are public so registration clients can discover valid country codes. Creating, renaming, and deleting jurisdictions requires an administrator:
+
+```text
+GET    /api/holiday-jurisdictions
+POST   /api/holiday-jurisdictions          { "code": "GB-NIR", "name": "Northern Ireland" }
+PUT    /api/holiday-jurisdictions/{code}   { "name": "Northern Ireland" }
+DELETE /api/holiday-jurisdictions/{code}
+```
+
+Codes are immutable and unique. A jurisdiction referenced by a user or bank holiday returns `409 Conflict` when deletion is attempted.
+
 ## Bank holidays
 
-Sign in as `Admin`, choose a year, edit the bank holiday list, and save. Normal users may view holidays but cannot change them.
+Sign in as `Admin`, choose a jurisdiction and year, edit the bank holiday list, and save. Holiday reads are public; only administrators can replace them.
 
 The API has full replacement semantics:
 
 ```http
-GET /api/bank-holidays/2026
-PUT /api/bank-holidays/2026
+GET /api/bank-holidays/RO/2026
+PUT /api/bank-holidays/RO/2026
 ```
 
 Example request using an Admin-owned API token:
 
 ```bash
-curl -X PUT https://office.example.com/api/bank-holidays/2026 \
+curl -X PUT https://office.example.com/api/bank-holidays/RO/2026 \
   -H 'Authorization: Bearer ADMIN_API_TOKEN' \
   -H 'Content-Type: application/json' \
   -d '[
@@ -152,7 +172,7 @@ curl -X PUT https://office.example.com/api/bank-holidays/2026 \
   ]'
 ```
 
-After the request, those are exactly the holidays stored for 2026. Omitted dates are removed, dates must belong to the URL year, and duplicate dates are rejected.
+After the request, those are exactly the holidays stored for Romania in 2026. Omitted dates are removed, dates must belong to the URL year, and duplicate dates are rejected. Different jurisdictions may configure the same date independently.
 
 ## Vacation
 
@@ -206,6 +226,7 @@ Status includes eligible working days, maximum WFH days, required office days, c
 - Long-lived API tokens are random opaque secrets, not JWTs. Only their hashes are stored.
 - Revocation is checked on every bearer authentication and `LastUsedAt` is updated after successful use.
 - User-owned queries always scope records to the authenticated user ID.
+- Status calculations select bank holidays through the user's required holiday-jurisdiction foreign key.
 - Cookie-authenticated modifying operations require ASP.NET Core antiforgery tokens.
 - Production exception handling returns Problem Details without stack traces.
 - Application events use structured ASP.NET Core logging. Passwords and raw API tokens are never logged.
@@ -220,7 +241,7 @@ dotnet test OfficeDays.sln
 
 The unit suite covers odd/even rule behavior, weekdays and weekends, holidays, all vacation overlap cases, remaining-day clamping, ineligible attendance, leap years, and period boundaries.
 
-The integration suite uses `WebApplicationFactory`, the real middleware/endpoints, and a fresh migrated SQLite file per test. It covers registration/login, admin authorization and holiday replacement, token creation/use/revocation and ownership isolation, idempotent bearer attendance and removal, vacation ownership/lifecycle, and persisted status calculations.
+The integration suite uses `WebApplicationFactory`, the real middleware/endpoints, and a fresh migrated SQLite file per test. It covers registration/login, admin jurisdiction management, country-scoped holiday replacement, token creation/use/revocation and ownership isolation, idempotent bearer attendance and removal, vacation ownership/lifecycle, and persisted status calculations.
 
 ## Database migrations
 
@@ -232,3 +253,5 @@ dotnet ef migrations add NameOfChange \
   --startup-project src/OfficeDays \
   --output-dir Data/Migrations
 ```
+
+The `AddHolidayJurisdictions` migration assigns existing users and existing bank holidays to the seeded `RO` jurisdiction. This preserves the data from installations created before jurisdiction support was introduced.

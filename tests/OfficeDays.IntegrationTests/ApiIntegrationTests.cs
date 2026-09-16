@@ -54,7 +54,8 @@ public sealed class ApiIntegrationTests
         using var client = factory.CreateClient();
         var response = await client.PostAsJsonAsync("/api/users", new
         {
-            username = "andrew", password = "A-personal-password!", timeZoneId = "Europe/Bucharest", isAdmin = true
+            username = "andrew", password = "A-personal-password!", timeZoneId = "Europe/Bucharest",
+            countryCode = "RO", isAdmin = true
         });
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var created = await Read(response);
@@ -74,23 +75,31 @@ public sealed class ApiIntegrationTests
         await CreateUser(normal, "normal");
         await Login(normal, "normal", "Normal-user-password!");
         var normalCsrf = await Csrf(normal);
-        var denied = await PutJson(normal, "/api/bank-holidays/2026", new[] { new { date = "2026-01-01", name = "New Year" } }, normalCsrf);
+        var denied = await PutJson(normal, "/api/bank-holidays/RO/2026", new[] { new { date = "2026-01-01", name = "New Year" } }, normalCsrf);
         Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
 
         using var admin = factory.CreateClient();
         await Login(admin, "Admin", "VeryStrongAdminPassword!");
         var adminCsrf = await Csrf(admin);
-        var first = await PutJson(admin, "/api/bank-holidays/2026", new[]
+        var first = await PutJson(admin, "/api/bank-holidays/RO/2026", new[]
         {
             new { date = "2026-01-01", name = "New Year" }, new { date = "2026-12-25", name = "Christmas" }
         }, adminCsrf);
         Assert.Equal(HttpStatusCode.OK, first.StatusCode);
-        var second = await PutJson(admin, "/api/bank-holidays/2026", new[] { new { date = "2026-05-01", name = "Labour Day" } }, adminCsrf);
+        var second = await PutJson(admin, "/api/bank-holidays/RO/2026", new[] { new { date = "2026-05-01", name = "Labour Day" } }, adminCsrf);
         Assert.Equal(HttpStatusCode.OK, second.StatusCode);
 
-        var holidays = await admin.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/2026");
+        var holidays = await admin.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/RO/2026");
         Assert.Single(holidays!);
         Assert.Equal("2026-05-01", holidays![0].GetProperty("date").GetString());
+
+        await PostJson(admin, "/api/holiday-jurisdictions",
+            new { code = "GB-NIR", name = "Northern Ireland" }, adminCsrf);
+        Assert.Equal(HttpStatusCode.OK,
+            (await PutJson(admin, "/api/bank-holidays/GB-NIR/2026",
+                new[] { new { date = "2026-05-01", name = "Northern Ireland holiday" } }, adminCsrf)).StatusCode);
+        Assert.Single((await admin.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/GB-NIR/2026"))!);
+        Assert.Single((await admin.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/RO/2026"))!);
     }
 
     [Fact]
@@ -178,7 +187,11 @@ public sealed class ApiIntegrationTests
         using var admin = factory.CreateClient();
         await Login(admin, "Admin", "VeryStrongAdminPassword!");
         var adminCsrf = await Csrf(admin);
-        await PutJson(admin, "/api/bank-holidays/2026", new[] { new { date = "2026-09-14", name = "Holiday" } }, adminCsrf);
+        await PutJson(admin, "/api/bank-holidays/RO/2026", new[] { new { date = "2026-09-14", name = "Holiday" } }, adminCsrf);
+        await PostJson(admin, "/api/holiday-jurisdictions",
+            new { code = "GB-NIR", name = "Northern Ireland" }, adminCsrf);
+        await PutJson(admin, "/api/bank-holidays/GB-NIR/2026",
+            new[] { new { date = "2026-09-15", name = "Other jurisdiction holiday" } }, adminCsrf);
 
         using var user = factory.CreateClient();
         await CreateUser(user, "statususer"); await Login(user, "statususer", "Normal-user-password!");
@@ -256,8 +269,60 @@ public sealed class ApiIntegrationTests
 
         await CreateUser(client, "CaseSensitiveName");
         var duplicate = await client.PostAsJsonAsync("/api/users", new
-            { username = "casesensitivename", password = "Normal-user-password!", timeZoneId = "Europe/Bucharest" });
+            { username = "casesensitivename", password = "Normal-user-password!", timeZoneId = "Europe/Bucharest", countryCode = "RO" });
         Assert.Equal(HttpStatusCode.Conflict, duplicate.StatusCode);
+
+        var unknownJurisdiction = await client.PostAsJsonAsync("/api/users", new
+            { username = "unknowncountry", password = "Normal-user-password!", timeZoneId = "Europe/Bucharest", countryCode = "US" });
+        Assert.Equal(HttpStatusCode.BadRequest, unknownJurisdiction.StatusCode);
+    }
+
+    [Fact]
+    public async Task Holiday_jurisdictions_are_publicly_readable_and_admin_managed()
+    {
+        using var factory = new OfficeDaysFactory();
+        using var anonymous = factory.CreateClient();
+
+        var initial = await anonymous.GetFromJsonAsync<JsonElement[]>("/api/holiday-jurisdictions");
+        Assert.Contains(initial!, item => item.GetProperty("code").GetString() == "RO");
+        Assert.Equal(HttpStatusCode.OK,
+            (await anonymous.GetAsync("/api/bank-holidays/RO/2026")).StatusCode);
+
+        using var normal = factory.CreateClient();
+        await CreateUser(normal, "jurisdictionnormal");
+        await Login(normal, "jurisdictionnormal", "Normal-user-password!");
+        var normalCsrf = await Csrf(normal);
+        Assert.Equal(HttpStatusCode.Forbidden,
+            (await PostJson(normal, "/api/holiday-jurisdictions",
+                new { code = "GB-NIR", name = "Northern Ireland" }, normalCsrf)).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden,
+            (await PutJson(normal, "/api/holiday-jurisdictions/RO",
+                new { name = "Changed" }, normalCsrf)).StatusCode);
+
+        using var admin = factory.CreateClient();
+        await Login(admin, "Admin", "VeryStrongAdminPassword!");
+        var adminCsrf = await Csrf(admin);
+        var created = await PostJson(admin, "/api/holiday-jurisdictions",
+            new { code = "uk-nir", name = "Northern Ireland" }, adminCsrf);
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        Assert.Equal("GB-NIR", (await Read(created)).GetProperty("code").GetString());
+
+        var updated = await PutJson(admin, "/api/holiday-jurisdictions/GB-NIR",
+            new { name = "Northern Ireland calendar" }, adminCsrf);
+        Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
+
+        await CreateUser(anonymous, "northernirelanduser", "GB-NIR");
+        await Login(anonymous, "northernirelanduser", "Normal-user-password!");
+        var profile = await anonymous.GetFromJsonAsync<JsonElement>("/api/auth/me");
+        Assert.Equal("GB-NIR", profile.GetProperty("countryCode").GetString());
+        Assert.Equal(HttpStatusCode.Conflict,
+            (await Delete(admin, "/api/holiday-jurisdictions/GB-NIR", adminCsrf)).StatusCode);
+
+        Assert.Equal(HttpStatusCode.Created,
+            (await PostJson(admin, "/api/holiday-jurisdictions",
+                new { code = "US-CA", name = "California" }, adminCsrf)).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent,
+            (await Delete(admin, "/api/holiday-jurisdictions/US-CA", adminCsrf)).StatusCode);
     }
 
     [Fact]
@@ -298,21 +363,21 @@ public sealed class ApiIntegrationTests
         var csrf = await Csrf(client);
 
         Assert.Equal(HttpStatusCode.BadRequest,
-            (await client.GetAsync("/api/bank-holidays/0")).StatusCode);
+            (await client.GetAsync("/api/bank-holidays/RO/0")).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest,
-            (await PutJson(client, "/api/bank-holidays/2026",
+            (await PutJson(client, "/api/bank-holidays/RO/2026",
                 new[] { new { date = "2025-12-31", name = "Wrong year" } }, csrf)).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest,
-            (await PutJson(client, "/api/bank-holidays/2026",
+            (await PutJson(client, "/api/bank-holidays/RO/2026",
                 new[] { new { date = "2026-01-01", name = "" } }, csrf)).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest,
-            (await PutJson(client, "/api/bank-holidays/2026", new[]
+            (await PutJson(client, "/api/bank-holidays/RO/2026", new[]
             {
                 new { date = "2026-01-01", name = "First" },
                 new { date = "2026-01-01", name = "Duplicate" }
             }, csrf)).StatusCode);
 
-        var nullPayload = new HttpRequestMessage(HttpMethod.Put, "/api/bank-holidays/2026");
+        var nullPayload = new HttpRequestMessage(HttpMethod.Put, "/api/bank-holidays/RO/2026");
         nullPayload.Headers.Add("X-CSRF-TOKEN", csrf);
         nullPayload.Content = JsonContent.Create<List<object>?>(null);
         Assert.Equal(HttpStatusCode.BadRequest, (await client.SendAsync(nullPayload)).StatusCode);
@@ -335,10 +400,10 @@ public sealed class ApiIntegrationTests
             (await Delete(client, $"/api/vacations/{Guid.NewGuid()}", csrf)).StatusCode);
     }
 
-    private static async Task CreateUser(HttpClient client, string username)
+    private static async Task CreateUser(HttpClient client, string username, string countryCode = "RO")
     {
         var response = await client.PostAsJsonAsync("/api/users", new
-            { username, password = "Normal-user-password!", timeZoneId = "Europe/Bucharest" });
+            { username, password = "Normal-user-password!", timeZoneId = "Europe/Bucharest", countryCode });
         response.EnsureSuccessStatusCode();
     }
 

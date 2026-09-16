@@ -26,6 +26,11 @@ public static class UserEndpoints
 
         var username = request.Username!.Trim();
         var normalized = ApiResults.NormalizeUsername(username);
+        HolidayJurisdictionCodes.TryNormalize(request.CountryCode, out var countryCode);
+        var jurisdiction = await db.HolidayJurisdictions.SingleOrDefaultAsync(x => x.Code == countryCode);
+        if (jurisdiction is null)
+            return ApiResults.Validation("The selected holiday jurisdiction does not exist.", "countryCode");
+
         if (await db.Users.AnyAsync(x => x.NormalizedUsername == normalized))
             return Results.Conflict(new ProblemDetails { Status = StatusCodes.Status409Conflict, Title = "Username already exists" });
 
@@ -36,6 +41,8 @@ public static class UserEndpoints
             NormalizedUsername = normalized,
             PasswordHash = string.Empty,
             TimeZoneId = request.TimeZoneId!,
+            HolidayJurisdictionId = jurisdiction.Id,
+            HolidayJurisdiction = jurisdiction,
             IsAdmin = false,
             CreatedAt = timeProvider.GetUtcNow()
         };

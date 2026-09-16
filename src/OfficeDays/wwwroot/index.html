@@ -86,10 +86,25 @@
         <ul id="token-list" class="item-list"></ul>
       </section>
 
+      <section id="admin-jurisdictions" class="card" hidden>
+        <div class="section-heading">
+          <div><h2>Holiday jurisdictions</h2><p class="muted">Admin only · countries or regional holiday calendars.</p></div>
+        </div>
+        <form id="jurisdiction-form" class="inline-form">
+          <input id="jurisdiction-code" maxlength="6" placeholder="e.g. RO or GB-NIR" required aria-label="Jurisdiction code">
+          <input id="jurisdiction-name" maxlength="100" placeholder="Jurisdiction name" required aria-label="Jurisdiction name">
+          <button type="submit">Add</button>
+        </form>
+        <ul id="jurisdiction-list" class="item-list"></ul>
+      </section>
+
       <section id="admin-holidays" class="card" hidden>
         <div class="section-heading">
           <div><h2>Bank holidays</h2><p class="muted">Admin only · saving replaces the complete selected year.</p></div>
-          <button id="save-holidays">Save year</button>
+          <div class="inline-form">
+            <label>Jurisdiction<select id="holiday-jurisdiction"></select></label>
+            <button id="save-holidays">Save year</button>
+          </div>
         </div>
         <form id="holiday-form" class="inline-form">
           <input id="holiday-date" type="date" required aria-label="Holiday date">

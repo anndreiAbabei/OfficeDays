@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using OfficeDays.Domain;
 using OfficeDays.Features.Attendance;
 using OfficeDays.Features.Authentication;
 using OfficeDays.Features.BankHolidays;
 using OfficeDays.Features.Common;
+using OfficeDays.Features.HolidayJurisdictions;
 using OfficeDays.Features.Tokens;
 using OfficeDays.Features.Users;
 using OfficeDays.Features.Vacations;
@@ -88,16 +90,46 @@ public sealed class ValidationTests
 
     [Fact]
     public void User_validation_accepts_valid_request() =>
-        Assert.Null(UserValidation.Validate(new CreateUserRequest("andrew", "long-password!", "Europe/Bucharest")));
+        Assert.Null(UserValidation.Validate(new CreateUserRequest("andrew", "long-password!", "Europe/Bucharest", "RO")));
 
     public static TheoryData<CreateUserRequest, string> InvalidUsers => new()
     {
-        { new CreateUserRequest(null, "long-password!", "Europe/Bucharest"), "username" },
-        { new CreateUserRequest("ab", "long-password!", "Europe/Bucharest"), "username" },
-        { new CreateUserRequest(new string('u', 101), "long-password!", "Europe/Bucharest"), "username" },
-        { new CreateUserRequest("andrew", "short", "Europe/Bucharest"), "password" },
-        { new CreateUserRequest("andrew", "long-password!", "Invalid/Zone"), "timeZoneId" }
+        { new CreateUserRequest(null, "long-password!", "Europe/Bucharest", "RO"), "username" },
+        { new CreateUserRequest("ab", "long-password!", "Europe/Bucharest", "RO"), "username" },
+        { new CreateUserRequest(new string('u', 101), "long-password!", "Europe/Bucharest", "RO"), "username" },
+        { new CreateUserRequest("andrew", "short", "Europe/Bucharest", "RO"), "password" },
+        { new CreateUserRequest("andrew", "long-password!", "Invalid/Zone", "RO"), "timeZoneId" },
+        { new CreateUserRequest("andrew", "long-password!", "Europe/Bucharest", "invalid"), "countryCode" }
     };
+
+    [Theory]
+    [InlineData("ro", "RO")]
+    [InlineData("UK", "GB")]
+    [InlineData("uk-nir", "GB-NIR")]
+    [InlineData("GB-SCT", "GB-SCT")]
+    public void Holiday_jurisdiction_codes_are_normalized(string input, string expected)
+    {
+        Assert.True(HolidayJurisdictionCodes.TryNormalize(input, out var actual));
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("ZZ")]
+    [InlineData("GB-TOOLONG")]
+    [InlineData("GB_ENG")]
+    public void Invalid_holiday_jurisdiction_codes_are_rejected(string? input) =>
+        Assert.False(HolidayJurisdictionCodes.TryNormalize(input, out _));
+
+    [Fact]
+    public void Holiday_jurisdiction_validation_checks_code_and_name()
+    {
+        Assert.Equal("code", HolidayJurisdictionValidation.Validate("invalid", "Name")?.Key);
+        Assert.Equal("name", HolidayJurisdictionValidation.Validate("RO", " ")?.Key);
+        Assert.Equal("name", HolidayJurisdictionValidation.ValidateName(new string('x', 101))?.Key);
+        Assert.Null(HolidayJurisdictionValidation.Validate("RO", "Romania"));
+    }
 
     [Fact]
     public void Authentication_validation_requires_both_values()

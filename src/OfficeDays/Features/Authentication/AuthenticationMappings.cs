@@ -10,6 +10,7 @@ public static class AuthenticationMappings
         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
         new Claim(ClaimTypes.Name, user.Username),
         new Claim("timezone", user.TimeZoneId),
+        new Claim("country", user.HolidayJurisdiction.Code),
         new Claim("is_admin", user.IsAdmin ? "true" : "false")
     ];
 }

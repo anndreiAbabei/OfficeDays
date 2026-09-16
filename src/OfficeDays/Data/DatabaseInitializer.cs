@@ -39,20 +39,34 @@ public sealed class DatabaseInitializer
 
         var password = _configuration["BootstrapAdmin:Password"];
         var timeZoneId = _configuration["BootstrapAdmin:TimeZoneId"];
-        if (string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(timeZoneId))
+        var configuredCountryCode = _configuration["BootstrapAdmin:CountryCode"];
+        var configuredCountryName = _configuration["BootstrapAdmin:CountryName"];
+        if (string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(timeZoneId) ||
+            string.IsNullOrWhiteSpace(configuredCountryCode) || string.IsNullOrWhiteSpace(configuredCountryName))
         {
             _logger.LogCritical("Bootstrap administrator environment variables are missing for an empty database");
-            throw new InvalidOperationException("The database has no users. Set the BootstrapAdmin__Password and BootstrapAdmin__TimeZoneId environment variables to create the initial Admin account.");
+            throw new InvalidOperationException("The database has no users. Set the BootstrapAdmin__Password, BootstrapAdmin__TimeZoneId, BootstrapAdmin__CountryCode, and BootstrapAdmin__CountryName environment variables to create the initial Admin account.");
         }
         if (password.Length < 12)
             throw new InvalidOperationException("The BootstrapAdmin__Password environment variable must contain at least 12 characters.");
         if (!UserDateService.IsValidTimeZone(timeZoneId))
             throw new InvalidOperationException($"BootstrapAdmin__TimeZoneId '{timeZoneId}' is not a valid IANA timezone.");
+        if (!HolidayJurisdictionCodes.TryNormalize(configuredCountryCode, out var countryCode))
+            throw new InvalidOperationException($"BootstrapAdmin__CountryCode '{configuredCountryCode}' is not a valid country or subdivision code.");
+        if (configuredCountryName.Trim().Length > 100)
+            throw new InvalidOperationException("The BootstrapAdmin__CountryName environment variable must contain at most 100 characters.");
+
+        var jurisdiction = await db.HolidayJurisdictions.SingleOrDefaultAsync(x => x.Code == countryCode);
+        if (jurisdiction is null)
+        {
+            jurisdiction = new HolidayJurisdiction { Code = countryCode, Name = configuredCountryName.Trim() };
+            db.HolidayJurisdictions.Add(jurisdiction);
+        }
 
         var user = new User
         {
             Id = Guid.NewGuid(), Username = "Admin", NormalizedUsername = "ADMIN", PasswordHash = string.Empty,
-            TimeZoneId = timeZoneId, IsAdmin = true,
+            TimeZoneId = timeZoneId, HolidayJurisdiction = jurisdiction, IsAdmin = true,
             CreatedAt = _timeProvider.GetUtcNow()
         };
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();

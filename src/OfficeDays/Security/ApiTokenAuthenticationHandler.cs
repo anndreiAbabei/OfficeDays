@@ -42,7 +42,7 @@ public sealed class ApiTokenAuthenticationHandler : AuthenticationHandler<Authen
         }
 
         var hash = ApiTokenService.Hash(rawToken);
-        var token = await _db.ApiTokens.Include(x => x.User)
+        var token = await _db.ApiTokens.Include(x => x.User).ThenInclude(x => x.HolidayJurisdiction)
             .SingleOrDefaultAsync(x => x.TokenHash == hash && x.RevokedAt == null);
         if (token is null)
         {
@@ -60,6 +60,7 @@ public sealed class ApiTokenAuthenticationHandler : AuthenticationHandler<Authen
             new Claim(ClaimTypes.NameIdentifier, token.UserId.ToString()),
             new Claim(ClaimTypes.Name, token.User.Username),
             new Claim("timezone", token.User.TimeZoneId),
+            new Claim("country", token.User.HolidayJurisdiction.Code),
             new Claim("is_admin", token.User.IsAdmin ? "true" : "false")
         };
         var identity = new ClaimsIdentity(claims, SchemeName);
