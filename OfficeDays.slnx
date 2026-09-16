@@ -10,6 +10,7 @@
   <Folder Name="/docs/http/">
     <File Path="http\api.http" />
     <File Path="http\authentication.http" />
+    <File Path="http\health.http" />
     <File Path="http\http-client.env.json" />
     <File Path="http\http-client.private.env.json.example" />
     <File Path="http\README.md" />
