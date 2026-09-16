@@ -84,7 +84,7 @@ async function loadDashboard() {
   document.getElementById("remaining-days").textContent = status.remainingOfficeDays;
   document.getElementById("progress-label").textContent = `${status.progressPercentage}%`;
   document.getElementById("progress-bar").style.width = `${status.progressPercentage}%`;
-  document.getElementById("eligibility-note").textContent = `${status.eligibleWorkingDays} eligible working days · ${status.requiredOfficeDays} work from office days`;
+  document.getElementById("eligibility-note").textContent = `${status.eligibleWorkingDays} eligible working days · ${status.requiredOfficeDays} work from office days · ${status.maximumWfhDays} max WFH days`;
 
   const attendanceList = document.getElementById("attendance-list"); attendanceList.replaceChildren();
   attendance.forEach(item => {
