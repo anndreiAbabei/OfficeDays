@@ -15,6 +15,6 @@ services:
       BootstrapAdmin__CountryCode: "${OFFICEDAYS_ADMIN_COUNTRY_CODE:-RO}"
       BootstrapAdmin__CountryName: "${OFFICEDAYS_ADMIN_COUNTRY_NAME:-Romania}"
     volumes:
-      - ./data:/app/data
-      - ./config/appsettings.Production.json:/app/appsettings.Production.json:ro
+      - ${OFFICEDAYS_DATA_PATH:-./data}:/app/data
+      - ./src/OfficeDays/appsettings.Production.json:/app/appsettings.Production.json:ro
     restart: unless-stopped

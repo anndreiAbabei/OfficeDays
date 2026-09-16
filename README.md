@@ -68,8 +68,8 @@ This setting must be a positive duration. The authentication cookie is persisten
 Docker Compose uses two host bind mounts:
 
 ```text
-./data                                  SQLite database and data-protection keys
-./config/appsettings.Production.json   non-secret production settings (read-only)
+./data                                      SQLite database and data-protection keys
+./src/OfficeDays/appsettings.Production.json non-secret production settings (read-only)
 ```
 
 Create the writable data directory and copy the environment template:
@@ -82,6 +82,7 @@ cp .env.example .env
 Edit `.env` before the first start:
 
 - Replace `OFFICEDAYS_ADMIN_PASSWORD` with a strong password of at least 12 characters.
+- Leave `OFFICEDAYS_DATA_PATH=./data` for a local checkout, or set it to a stable absolute host path when a deployment manager such as Komodo controls the checkout.
 - On Linux, set `OFFICEDAYS_UID` and `OFFICEDAYS_GID` to the output of `id -u` and `id -g`. This lets the non-root container process write to `./data`.
 - Keep `OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER=true` when using an HTTPS reverse proxy.
 
@@ -112,7 +113,33 @@ git pull
 docker compose up --build -d
 ```
 
-`config/appsettings.Production.json` is mounted read-only. It is suitable for cookie lifetime, logging, and security switches, but passwords and other secrets should remain in `.env`. Environment variables override values from the JSON file.
+`src/OfficeDays/appsettings.Production.json` sits beside the other ASP.NET Core settings files and is mounted read-only. It is suitable for cookie lifetime, logging, and security switches, but passwords and other secrets should remain in `.env`. Environment variables override values from the JSON file.
+
+### Deploy with Komodo
+
+Create Office Days as a **Stack** rather than a standalone Deployment so Komodo can use the repository's `compose.yaml` and build the Dockerfile:
+
+1. Push this repository to a Git server that the Komodo host can access.
+2. On the Docker host, create a persistent directory such as `/opt/appdata/office-days`, owned by the UID/GID that the container will use.
+3. In Komodo, open **Stacks**, select **New Stack**, give it a name such as `office-days`, and select the target server.
+4. Choose the Git repository source, select the repository and branch, and set the Compose file path to `compose.yaml`.
+5. In Komodo's **Settings → Variables**, create a variable named `OFFICE_DAYS_BOOTSTRAP_PASSWORD`, enable its **Secret** option, and give it the initial Admin password.
+6. Add the following values to the Stack's **Environment** field. The double-bracket expression asks Komodo to substitute the secret without committing it to Git:
+
+```dotenv
+OFFICEDAYS_ADMIN_PASSWORD=[[OFFICE_DAYS_BOOTSTRAP_PASSWORD]]
+OFFICEDAYS_ADMIN_TIMEZONE=Europe/Bucharest
+OFFICEDAYS_ADMIN_COUNTRY_CODE=RO
+OFFICEDAYS_ADMIN_COUNTRY_NAME=Romania
+OFFICEDAYS_DATA_PATH=/opt/appdata/office-days
+OFFICEDAYS_UID=1000
+OFFICEDAYS_GID=1000
+OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER=true
+```
+
+7. Save the Stack and deploy it. Port `8080` on the Docker host will serve the application.
+
+The absolute data path is important in Komodo: it keeps the SQLite database and login-cookie keys outside Komodo's Git checkout. After the first successful startup creates `Admin`, the bootstrap password can be removed from the Stack environment. Put an HTTPS reverse proxy in front of port `8080` before using bearer tokens outside a trusted network.
 
 ### HTTPS deployment
 
