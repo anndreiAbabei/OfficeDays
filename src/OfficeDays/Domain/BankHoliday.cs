@@ -6,5 +6,6 @@ public sealed class BankHoliday
     public DateOnly Date { get; init; }
     public required string Name { get; init; }
     public int HolidayJurisdictionId { get; init; }
+    
     public HolidayJurisdiction HolidayJurisdiction { get; init; } = null!;
 }

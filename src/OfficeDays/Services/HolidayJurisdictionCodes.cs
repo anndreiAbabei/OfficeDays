@@ -1,22 +1,26 @@
 using System.Globalization;
 
-namespace OfficeDays.Domain;
+namespace OfficeDays.Services;
 
 public static class HolidayJurisdictionCodes
 {
     public static bool TryNormalize(string? value, out string code)
     {
         code = value?.Trim().ToUpperInvariant() ?? string.Empty;
-        if (code == "UK") code = "GB";
+        if (code == "UK") 
+            code = "GB";
+        
         if (code.StartsWith("UK-", StringComparison.Ordinal)) code = $"GB-{code[3..]}";
 
-        var parts = code.Split('-', StringSplitOptions.None);
+        var parts = code.Split('-');
+        
         if (parts.Length is < 1 or > 2 || parts[0].Length != 2 ||
             parts[0].Any(character => character is < 'A' or > 'Z'))
+        {
             return false;
+        }
 
-        if (parts.Length == 2 &&
-            (parts[1].Length is < 1 or > 3 || parts[1].Any(character => !char.IsAsciiLetterOrDigit(character))))
+        if (parts.Length == 2 && (parts[1].Length is < 1 or > 3 || parts[1].Any(character => !char.IsAsciiLetterOrDigit(character))))
             return false;
 
         try

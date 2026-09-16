@@ -22,7 +22,8 @@ public static class VacationEndpoints
     private static async Task<IResult> GetVacations(int? year,
                                                     int? month,
                                                     ClaimsPrincipal principal,
-                                                    AppDbContext db)
+                                                    AppDbContext db,
+                                                    CancellationToken cancellationToken)
     {
         var query = db.Vacations
                       .AsNoTracking()
@@ -35,7 +36,7 @@ public static class VacationEndpoints
             query = query.Where(x => x.From <= period.End && x.To >= period.Start);
         }
 
-        var rows = await query.OrderByDescending(x => x.From).ToListAsync();
+        var rows = await query.OrderByDescending(x => x.From).ToListAsync(cancellationToken);
         
         return Results.Ok(rows.Select(x => x.ToViewModel()));
     }
@@ -44,7 +45,8 @@ public static class VacationEndpoints
                                                       ClaimsPrincipal principal,
                                                       AppDbContext db,
                                                       TimeProvider clock,
-                                                      ILoggerFactory loggerFactory)
+                                                      ILoggerFactory loggerFactory,
+                                                      CancellationToken cancellationToken)
     {
         var logger = loggerFactory.CreateLogger(LogCategory);
         var error = VacationValidation.Validate(request);
@@ -60,7 +62,7 @@ public static class VacationEndpoints
             CreatedAt = clock.GetUtcNow()
         };
         db.Vacations.Add(row);
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
         logger.LogInformation("User {UserId} added vacation {VacationId} from {FromDate} to {ToDate}", row.UserId, row.Id, row.From, row.To);
         return Results.Created($"/api/vacations/{row.Id}", row.ToViewModel());
     }
@@ -68,15 +70,17 @@ public static class VacationEndpoints
     private static async Task<IResult> RemoveVacation(Guid id,
                                                       ClaimsPrincipal principal,
                                                       AppDbContext db,
-                                                      ILoggerFactory loggerFactory)
+                                                      ILoggerFactory loggerFactory,
+                                                      CancellationToken cancellationToken)
     {
         var logger = loggerFactory.CreateLogger(LogCategory);
         var userId = principal.GetUserId();
-        var row = await db.Vacations.SingleOrDefaultAsync(x => x.Id == id && x.UserId == userId);
+        var row = await db.Vacations.SingleOrDefaultAsync(
+            x => x.Id == id && x.UserId == userId, cancellationToken);
         if (row is null) 
             return Results.NotFound();
         db.Vacations.Remove(row);
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
         logger.LogInformation("User {UserId} removed vacation {VacationId}", userId, row.Id);
         return Results.NoContent();
     }

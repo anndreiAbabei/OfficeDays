@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using OfficeDays.Data;
 using OfficeDays.Domain;
 using OfficeDays.Features.Common;
+using OfficeDays.Services;
 
 namespace OfficeDays.Features.Users;
 
@@ -17,7 +18,8 @@ public static class UserEndpoints
                                                   AppDbContext db,
                                                   IPasswordHasher<User> hasher,
                                                   TimeProvider timeProvider,
-                                                  ILoggerFactory loggerFactory)
+                                                  ILoggerFactory loggerFactory,
+                                                  CancellationToken cancellationToken)
     {
         var logger = loggerFactory.CreateLogger(LogCategory);
         var validation = UserValidation.Validate(request);
@@ -27,11 +29,12 @@ public static class UserEndpoints
         var username = request.Username!.Trim();
         var normalized = ApiResults.NormalizeUsername(username);
         HolidayJurisdictionCodes.TryNormalize(request.CountryCode, out var countryCode);
-        var jurisdiction = await db.HolidayJurisdictions.SingleOrDefaultAsync(x => x.Code == countryCode);
+        var jurisdiction = await db.HolidayJurisdictions.SingleOrDefaultAsync(
+            x => x.Code == countryCode, cancellationToken);
         if (jurisdiction is null)
             return ApiResults.Validation("The selected holiday jurisdiction does not exist.", "countryCode");
 
-        if (await db.Users.AnyAsync(x => x.NormalizedUsername == normalized))
+        if (await db.Users.AnyAsync(x => x.NormalizedUsername == normalized, cancellationToken))
             return Results.Conflict(new ProblemDetails { Status = StatusCodes.Status409Conflict, Title = "Username already exists" });
 
         var user = new User
@@ -50,7 +53,7 @@ public static class UserEndpoints
         db.Users.Add(user);
         try
         {
-            await db.SaveChangesAsync();
+            await db.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateException exception) when (ApiResults.IsUniqueViolation(exception))
         {

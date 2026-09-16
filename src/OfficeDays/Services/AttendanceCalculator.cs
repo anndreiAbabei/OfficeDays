@@ -1,4 +1,4 @@
-namespace OfficeDays.Domain;
+namespace OfficeDays.Services;
 
 public readonly record struct CalculationPeriod(DateOnly Start, DateOnly End, string Label)
 {
@@ -10,22 +10,20 @@ public readonly record struct CalculationPeriod(DateOnly Start, DateOnly End, st
     }
 }
 
-public sealed record AttendanceStatus(
-    string Period,
-    int EligibleWorkingDays,
-    int MaximumWfhDays,
-    int RequiredOfficeDays,
-    int OfficeDays,
-    int RemainingOfficeDays,
-    decimal ProgressPercentage);
+public sealed record AttendanceStatus(string Period,
+                                      int EligibleWorkingDays,
+                                      int MaximumWfhDays,
+                                      int RequiredOfficeDays,
+                                      int OfficeDays,
+                                      int RemainingOfficeDays,
+                                      decimal ProgressPercentage);
 
 public static class AttendanceCalculator
 {
-    public static AttendanceStatus Calculate(
-        CalculationPeriod period,
-        IEnumerable<DateOnly> bankHolidays,
-        IEnumerable<(DateOnly From, DateOnly To)> vacations,
-        IEnumerable<DateOnly> officeDates)
+    public static AttendanceStatus Calculate(CalculationPeriod period,
+                                             IEnumerable<DateOnly> bankHolidays,
+                                             IEnumerable<(DateOnly From, DateOnly To)> vacations,
+                                             IEnumerable<DateOnly> officeDates)
     {
         if (period.End < period.Start)
         {
@@ -34,15 +32,15 @@ public static class AttendanceCalculator
 
         var holidays = bankHolidays.ToHashSet();
         var vacationDates = ExpandVacations(vacations, period);
-        var eligibleDates = EnumerateDates(period.Start, period.End)
-            .Where(IsWeekday)
-            .Where(date => !holidays.Contains(date) && !vacationDates.Contains(date))
-            .ToHashSet();
+        var eligibleDates = EnumerateDates(period.Start, period.End).Where(IsWeekday)
+                                                                    .Where(date => !holidays.Contains(date) && 
+                                                                                   !vacationDates.Contains(date))
+                                                                    .ToHashSet();
 
         var eligibleWorkingDays = eligibleDates.Count;
         var maximumWfhDays = (int)Math.Floor(eligibleWorkingDays * 0.5m);
         var requiredOfficeDays = eligibleWorkingDays - maximumWfhDays;
-        var officeDays = officeDates.Distinct().Count(date => eligibleDates.Contains(date));
+        var officeDays = officeDates.Distinct().Count(eligibleDates.Contains);
         var remainingOfficeDays = Math.Max(0, requiredOfficeDays - officeDays);
         var progress = requiredOfficeDays == 0
             ? 100m
@@ -52,9 +50,8 @@ public static class AttendanceCalculator
                                     officeDays, remainingOfficeDays, progress);
     }
 
-    private static HashSet<DateOnly> ExpandVacations(
-        IEnumerable<(DateOnly From, DateOnly To)> vacations,
-        CalculationPeriod period)
+    private static HashSet<DateOnly> ExpandVacations(IEnumerable<(DateOnly From, DateOnly To)> vacations,
+                                                     CalculationPeriod period)
     {
         var dates = new HashSet<DateOnly>();
         foreach (var (from, to) in vacations)
@@ -66,13 +63,12 @@ public static class AttendanceCalculator
 
             var start = from < period.Start ? period.Start : from;
             var end = to > period.End ? period.End : to;
-            if (start <= end)
-            {
-                foreach (var date in EnumerateDates(start, end))
-                {
-                    dates.Add(date);
-                }
-            }
+            
+            if (start > end)
+                continue;
+            
+            foreach (var date in EnumerateDates(start, end))
+                dates.Add(date);
         }
 
         return dates;
@@ -81,11 +77,8 @@ public static class AttendanceCalculator
     private static IEnumerable<DateOnly> EnumerateDates(DateOnly start, DateOnly end)
     {
         for (var date = start; date <= end; date = date.AddDays(1))
-        {
             yield return date;
-        }
     }
 
-    private static bool IsWeekday(DateOnly date) =>
-        date.DayOfWeek is not DayOfWeek.Saturday and not DayOfWeek.Sunday;
+    private static bool IsWeekday(DateOnly date) => date.DayOfWeek is not DayOfWeek.Saturday and not DayOfWeek.Sunday;
 }

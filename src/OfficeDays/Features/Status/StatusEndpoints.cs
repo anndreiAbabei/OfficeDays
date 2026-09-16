@@ -16,9 +16,10 @@ public static class StatusEndpoints
                                                  int? month,
                                                  ClaimsPrincipal principal,
                                                  AppDbContext db,
-                                                 UserDateService dates)
+                                                 UserDateService dates,
+                                                 CancellationToken cancellationToken)
     {
-        var user = await db.Users.FindAsync(principal.GetUserId());
+        var user = await db.Users.FindAsync([principal.GetUserId()], cancellationToken);
         if (user is null) return Results.NotFound();
 
         CalculationPeriod period;
@@ -36,15 +37,15 @@ public static class StatusEndpoints
             .Where(x => x.HolidayJurisdictionId == user.HolidayJurisdictionId &&
                         x.Date >= period.Start && x.Date <= period.End)
             .Select(x => x.Date)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
         var vacationRows = await db.Vacations
             .Where(x => x.UserId == user.Id && x.From <= period.End && x.To >= period.Start)
             .Select(x => new { x.From, x.To })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
         var officeDates = await db.Attendances
             .Where(x => x.UserId == user.Id && x.Date >= period.Start && x.Date <= period.End)
             .Select(x => x.Date)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
         var result = AttendanceCalculator.Calculate(period, holidayDates,
             vacationRows.Select(x => (x.From, x.To)), officeDates);
         return Results.Ok(result.ToViewModel());

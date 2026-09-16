@@ -5,6 +5,7 @@
 
 # dotenv files
 .env
+/data/
 
 # Rider HTTP Client secrets
 http-client.private.env.json

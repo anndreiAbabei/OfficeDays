@@ -65,25 +65,65 @@ This setting must be a positive duration. The authentication cookie is persisten
 
 ## Run with Docker Compose
 
-Copy the example environment file and replace the password:
+Docker Compose uses two host bind mounts:
+
+```text
+./data                                  SQLite database and data-protection keys
+./config/appsettings.Production.json   non-secret production settings (read-only)
+```
+
+Create the writable data directory and copy the environment template:
 
 ```bash
+mkdir -p data
 cp .env.example .env
+```
+
+Edit `.env` before the first start:
+
+- Replace `OFFICEDAYS_ADMIN_PASSWORD` with a strong password of at least 12 characters.
+- On Linux, set `OFFICEDAYS_UID` and `OFFICEDAYS_GID` to the output of `id -u` and `id -g`. This lets the non-root container process write to `./data`.
+- Keep `OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER=true` when using an HTTPS reverse proxy.
+
+Build and start the application:
+
+```bash
+docker compose up --build -d
+docker compose logs -f office-days
+```
+
+The service listens on port `8080`. Database migrations and initial Admin creation happen automatically. The bind-mounted directory will contain:
+
+```text
+data/officedays.db   SQLite database
+data/keys/           ASP.NET Core data-protection keys used by login cookies
+```
+
+Rebuilding or replacing the container does not delete these files. Back up the entire `data` directory; retaining both the database and key ring prevents existing browser sessions from becoming invalid after restoration.
+
+After the Admin account has been created successfully, `OFFICEDAYS_ADMIN_PASSWORD` may be removed from `.env`. Bootstrap values are ignored whenever the database already contains a user.
+
+To stop or update the application:
+
+```bash
+docker compose down
+
+git pull
 docker compose up --build -d
 ```
 
-The service listens on `http://localhost:8080`. SQLite data and ASP.NET Core data-protection keys are persisted in the `office-days-data` named volume at `/app/data`. Rebuilding or replacing the container does not delete them.
-
-The container runs as the image's non-root `app` user. Database migrations and initial Admin creation happen automatically.
+`config/appsettings.Production.json` is mounted read-only. It is suitable for cookie lifetime, logging, and security switches, but passwords and other secrets should remain in `.env`. Environment variables override values from the JSON file.
 
 ### HTTPS deployment
 
 Put the application behind an HTTPS reverse proxy before exposing it outside a trusted network. API bearer tokens are credentials and must never be transmitted over public plain HTTP.
 
-By default, the application rejects any bearer-authenticated request for which ASP.NET Core does not see HTTPS. A TLS-terminating proxy must forward the original scheme (normally `X-Forwarded-Proto: https`) from a trusted proxy. For an explicitly trusted internal-only HTTP network, the check can be disabled with:
+By default, the application rejects any bearer-authenticated request for which ASP.NET Core does not see HTTPS. A TLS-terminating proxy must forward the original scheme (`X-Forwarded-Proto: https`). A reverse proxy running on the same host and forwarding to `localhost:8080` is trusted by ASP.NET Core's default forwarded-header configuration. If the proxy runs in a separate container or on another machine, explicitly configure its address as a trusted proxy before relying on forwarded headers.
+
+For an explicitly trusted internal-only HTTP network, the check can be disabled in `.env` with:
 
 ```text
-Security__RequireHttpsForBearerTokens=false
+OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER=false
 ```
 
 Do not disable this for an internet-facing deployment. The browser session and antiforgery cookies are `HttpOnly`/`SameSite=Strict`; they automatically receive the `Secure` flag when the request is HTTPS.

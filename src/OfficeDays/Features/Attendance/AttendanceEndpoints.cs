@@ -24,13 +24,15 @@ public static class AttendanceEndpoints
                                                    AppDbContext db,
                                                    UserDateService dates,
                                                    TimeProvider clock,
-                                                   ILoggerFactory loggerFactory)
+                                                   ILoggerFactory loggerFactory,
+                                                   CancellationToken cancellationToken)
     {
-        var user = await db.Users.FindAsync(principal.GetUserId());
+        var user = await db.Users.FindAsync([principal.GetUserId()], cancellationToken);
         
-        return user is null
-            ? Results.NotFound()
-            : await Add(user.Id, dates.Today(user), db, clock, loggerFactory.CreateLogger(LogCategory));
+        return user is not null
+            ? await Add(user.Id, dates.Today(user), db, clock,
+                loggerFactory.CreateLogger(LogCategory), cancellationToken)
+            : Results.NotFound();
     }
 
     private static async Task<IResult> RecordDate(string date,
@@ -38,12 +40,13 @@ public static class AttendanceEndpoints
                                                   AppDbContext db,
                                                   UserDateService dates,
                                                   TimeProvider clock,
-                                                  ILoggerFactory loggerFactory)
+                                                  ILoggerFactory loggerFactory,
+                                                  CancellationToken cancellationToken)
     {
         if (!AttendanceValidation.TryParseDate(date, out var attendanceDate))
             return ApiResults.Validation("Date must use the yyyy-MM-dd format.", "date");
         
-        var user = await db.Users.FindAsync(principal.GetUserId());
+        var user = await db.Users.FindAsync([principal.GetUserId()], cancellationToken);
         
         if (user is null) 
             return Results.NotFound();
@@ -51,13 +54,15 @@ public static class AttendanceEndpoints
         if (attendanceDate > dates.Today(user))
             return ApiResults.Validation("Future attendance cannot be recorded.", "date");
         
-        return await Add(user.Id, attendanceDate, db, clock, loggerFactory.CreateLogger(LogCategory));
+        return await Add(user.Id, attendanceDate, db, clock,
+            loggerFactory.CreateLogger(LogCategory), cancellationToken);
     }
 
     private static async Task<IResult> GetAttendance(int? year,
                                                      int? month,
                                                      ClaimsPrincipal principal,
-                                                     AppDbContext db)
+                                                     AppDbContext db,
+                                                     CancellationToken cancellationToken)
     {
         var query = db.Attendances.AsNoTracking()
                       .Where(x => x.UserId == principal.GetUserId());
@@ -70,7 +75,7 @@ public static class AttendanceEndpoints
             query = query.Where(x => x.Date >= period.Start && x.Date <= period.End);
         }
 
-        var rows = await query.OrderByDescending(x => x.Date).ToListAsync();
+        var rows = await query.OrderByDescending(x => x.Date).ToListAsync(cancellationToken);
         
         return Results.Ok(rows.Select(x => x.ToViewModel()));
     }
@@ -78,7 +83,8 @@ public static class AttendanceEndpoints
     private static async Task<IResult> RemoveAttendance(string date,
                                                         ClaimsPrincipal principal,
                                                         AppDbContext db,
-                                                        ILoggerFactory loggerFactory)
+                                                        ILoggerFactory loggerFactory,
+                                                        CancellationToken cancellationToken)
     {
         var logger = loggerFactory.CreateLogger(LogCategory);
         
@@ -86,13 +92,14 @@ public static class AttendanceEndpoints
             return ApiResults.Validation("Date must use the yyyy-MM-dd format.", "date");
         
         var userId = principal.GetUserId();
-        var row = await db.Attendances.SingleOrDefaultAsync(x => x.UserId == userId && x.Date == attendanceDate);
+        var row = await db.Attendances.SingleOrDefaultAsync(
+            x => x.UserId == userId && x.Date == attendanceDate, cancellationToken);
         
         if (row is null) 
             return Results.NotFound();
         
         db.Attendances.Remove(row);
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
         
         logger.LogInformation("User {UserId} removed office attendance for {AttendanceDate}", userId, attendanceDate);
         
@@ -103,9 +110,11 @@ public static class AttendanceEndpoints
                                            DateOnly date,
                                            AppDbContext db,
                                            TimeProvider clock,
-                                           ILogger logger)
+                                           ILogger logger,
+                                           CancellationToken cancellationToken)
     {
-        var existing = await db.Attendances.SingleOrDefaultAsync(x => x.UserId == userId && x.Date == date);
+        var existing = await db.Attendances.SingleOrDefaultAsync(
+            x => x.UserId == userId && x.Date == date, cancellationToken);
 
         if (existing is not null)
         {
@@ -124,7 +133,7 @@ public static class AttendanceEndpoints
 
         try
         {
-            await db.SaveChangesAsync();
+            await db.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation("Recorded office attendance for user {UserId} on {AttendanceDate}", userId, date);
             return Results.Created($"/api/attendance/{date:yyyy-MM-dd}", row.ToViewModel());
@@ -133,9 +142,11 @@ public static class AttendanceEndpoints
             when (ApiResults.IsUniqueViolation(exception))
         {
             db.Entry(row).State = EntityState.Detached;
-            existing = await db.Attendances.SingleAsync(x => x.UserId == userId && x.Date == date);
+            existing = await db.Attendances.SingleAsync(
+                x => x.UserId == userId && x.Date == date, cancellationToken);
 
             logger.LogDebug("Resolved concurrent duplicate attendance for user {UserId} on {AttendanceDate}", userId, date);
+            
             return Results.Ok(existing.ToViewModel());
         }
     }

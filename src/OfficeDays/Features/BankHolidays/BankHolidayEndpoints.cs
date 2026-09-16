@@ -5,6 +5,7 @@ using OfficeDays.Data;
 using OfficeDays.Domain;
 using OfficeDays.Features.Common;
 using OfficeDays.Security;
+using OfficeDays.Services;
 
 namespace OfficeDays.Features.BankHolidays;
 
@@ -21,7 +22,10 @@ public static class BankHolidayEndpoints
             .AddEndpointFilter<CookieAntiforgeryFilter>();
     }
 
-    private static async Task<IResult> GetBankHolidays(string countryCode, int year, AppDbContext db)
+    private static async Task<IResult> GetBankHolidays(string countryCode,
+                                                       int year,
+                                                       AppDbContext db,
+                                                       CancellationToken cancellationToken)
     {
         if (!HolidayJurisdictionCodes.TryNormalize(countryCode, out var normalizedCode))
             return ApiResults.Validation("A valid country or subdivision code is required.", "countryCode");
@@ -29,7 +33,7 @@ public static class BankHolidayEndpoints
             return ApiResults.Validation("Year must be between 1 and 9999.", "year");
 
         var jurisdiction = await db.HolidayJurisdictions.AsNoTracking()
-                                   .SingleOrDefaultAsync(x => x.Code == normalizedCode);
+                                   .SingleOrDefaultAsync(x => x.Code == normalizedCode, cancellationToken);
         if (jurisdiction is null) return Results.NotFound();
 
         var start = new DateOnly(year, 1, 1);
@@ -40,7 +44,7 @@ public static class BankHolidayEndpoints
                            .Where(x => x.HolidayJurisdictionId == jurisdiction.Id &&
                                        x.Date >= start && x.Date <= end)
                            .OrderBy(x => x.Date)
-                           .ToListAsync();
+                           .ToListAsync(cancellationToken);
         return Results.Ok(rows.Select(x => x.ToViewModel()));
     }
 
@@ -49,7 +53,8 @@ public static class BankHolidayEndpoints
                                                            [FromBody] List<BankHolidayRequest>? request,
                                                            ClaimsPrincipal principal,
                                                            AppDbContext db,
-                                                           ILoggerFactory loggerFactory)
+                                                           ILoggerFactory loggerFactory,
+                                                           CancellationToken cancellationToken)
     {
         var logger = loggerFactory.CreateLogger(LogCategory);
         if (!HolidayJurisdictionCodes.TryNormalize(countryCode, out var normalizedCode))
@@ -59,20 +64,21 @@ public static class BankHolidayEndpoints
             return ApiResults.Validation(validation.Value.Message, validation.Value.Key);
         var replacement = request!;
 
-        var jurisdiction = await db.HolidayJurisdictions.SingleOrDefaultAsync(x => x.Code == normalizedCode);
+        var jurisdiction = await db.HolidayJurisdictions.SingleOrDefaultAsync(
+            x => x.Code == normalizedCode, cancellationToken);
         if (jurisdiction is null) return Results.NotFound();
 
         var start = new DateOnly(year, 1, 1);
         var end = new DateOnly(year, 12, 31);
-        await using var transaction = await db.Database.BeginTransactionAsync();
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await db.BankHolidays
                 .Where(x => x.HolidayJurisdictionId == jurisdiction.Id &&
                             x.Date >= start && x.Date <= end)
-                .ExecuteDeleteAsync();
+                .ExecuteDeleteAsync(cancellationToken);
         var rows = replacement.Select(x => x.ToEntity(jurisdiction)).ToList();
         db.BankHolidays.AddRange(rows);
-        await db.SaveChangesAsync();
-        await transaction.CommitAsync();
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         logger.LogInformation("Admin user {UserId} replaced bank holidays for {JurisdictionCode} in {Year} with {HolidayCount} entries",
             principal.GetUserId(), jurisdiction.Code, year, rows.Count);
         return Results.Ok(rows.OrderBy(x => x.Date).Select(x => x.ToViewModel()));

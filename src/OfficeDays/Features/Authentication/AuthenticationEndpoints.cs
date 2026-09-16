@@ -27,13 +27,20 @@ public static class AuthenticationEndpoints
         api.MapGet("/auth/me", GetCurrentUser).RequireAuthorization();
     }
 
-    private static IResult GetCsrfToken(IAntiforgery antiforgery, HttpContext context) => Results.Ok(new { token = antiforgery.GetAndStoreTokens(context).RequestToken });
+    private static IResult GetCsrfToken(IAntiforgery antiforgery,
+                                        HttpContext context,
+                                        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Results.Ok(new { token = antiforgery.GetAndStoreTokens(context).RequestToken });
+    }
 
     private static async Task<IResult> Login([FromBody] LoginRequest request,
                                              AppDbContext db,
                                              IPasswordHasher<User> hasher,
                                              HttpContext context,
-                                             ILoggerFactory loggerFactory)
+                                             ILoggerFactory loggerFactory,
+                                             CancellationToken cancellationToken)
     {
         var logger = loggerFactory.CreateLogger(LogCategory);
         
@@ -43,7 +50,7 @@ public static class AuthenticationEndpoints
         var normalized = ApiResults.NormalizeUsername(request.Username!);
         var user = await db.Users
                            .Include(x => x.HolidayJurisdiction)
-                           .SingleOrDefaultAsync(x => x.NormalizedUsername == normalized);
+                           .SingleOrDefaultAsync(x => x.NormalizedUsername == normalized, cancellationToken);
         
         if (user is null || hasher.VerifyHashedPassword(user, user.PasswordHash, request.Password!) == PasswordVerificationResult.Failed)
         {
@@ -56,7 +63,8 @@ public static class AuthenticationEndpoints
         }
 
         var identity = new ClaimsIdentity(user.ToClaims(), CookieAuthenticationDefaults.AuthenticationScheme);
-        
+
+        cancellationToken.ThrowIfCancellationRequested();
         await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, 
                                   new ClaimsPrincipal(identity), 
                                   new AuthenticationProperties { IsPersistent = true });
@@ -68,11 +76,13 @@ public static class AuthenticationEndpoints
 
     private static async Task<IResult> Logout(ClaimsPrincipal principal,
                                               HttpContext context,
-                                              ILoggerFactory loggerFactory)
+                                              ILoggerFactory loggerFactory,
+                                              CancellationToken cancellationToken)
     {
         var logger = loggerFactory.CreateLogger(LogCategory);
         var userId = principal.GetUserId();
         
+        cancellationToken.ThrowIfCancellationRequested();
         await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         
         logger.LogInformation("User {UserId} signed out", userId);
@@ -80,11 +90,13 @@ public static class AuthenticationEndpoints
         return Results.NoContent();
     }
 
-    private static async Task<IResult> GetCurrentUser(ClaimsPrincipal principal, AppDbContext db)
+    private static async Task<IResult> GetCurrentUser(ClaimsPrincipal principal,
+                                                      AppDbContext db,
+                                                      CancellationToken cancellationToken)
     {
         var user = await db.Users
                            .Include(x => x.HolidayJurisdiction)
-                           .SingleOrDefaultAsync(x => x.Id == principal.GetUserId());
+                           .SingleOrDefaultAsync(x => x.Id == principal.GetUserId(), cancellationToken);
         
         return user is null 
                    ? Results.NotFound() 

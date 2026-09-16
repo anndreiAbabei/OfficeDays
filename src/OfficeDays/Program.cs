@@ -90,7 +90,8 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
-await app.Services.GetRequiredService<DatabaseInitializer>().InitializeAsync();
+await app.Services.GetRequiredService<DatabaseInitializer>()
+                  .InitializeAsync(app.Lifetime.ApplicationStopping);
 
 app.MapApiEndpoints();
 app.MapFallbackToFile("index.html");

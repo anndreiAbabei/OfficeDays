@@ -5,16 +5,17 @@ namespace OfficeDays.Data;
 
 public sealed class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-    {
-    }
-
     public DbSet<User> Users => Set<User>();
     public DbSet<Attendance> Attendances => Set<Attendance>();
     public DbSet<Vacation> Vacations => Set<Vacation>();
     public DbSet<ApiToken> ApiTokens => Set<ApiToken>();
     public DbSet<BankHoliday> BankHolidays => Set<BankHoliday>();
     public DbSet<HolidayJurisdiction> HolidayJurisdictions => Set<HolidayJurisdiction>();
+    
+    public AppDbContext(DbContextOptions<AppDbContext> options) 
+        : base(options)
+    {
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

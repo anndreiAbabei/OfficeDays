@@ -2,16 +2,19 @@ services:
   office-days:
     build:
       context: .
+    user: "${OFFICEDAYS_UID:-1000}:${OFFICEDAYS_GID:-1000}"
     ports:
       - "8080:8080"
     environment:
-      BootstrapAdmin__Password: "${OFFICEDAYS_ADMIN_PASSWORD:?Set OFFICEDAYS_ADMIN_PASSWORD}"
+      ASPNETCORE_ENVIRONMENT: "Production"
+      ConnectionStrings__Default: "Data Source=/app/data/officedays.db"
+      DataProtection__KeysPath: "/app/data/keys"
+      Security__RequireHttpsForBearerTokens: "${OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER:-true}"
+      BootstrapAdmin__Password: "${OFFICEDAYS_ADMIN_PASSWORD:-}"
       BootstrapAdmin__TimeZoneId: "${OFFICEDAYS_ADMIN_TIMEZONE:-Europe/Bucharest}"
       BootstrapAdmin__CountryCode: "${OFFICEDAYS_ADMIN_COUNTRY_CODE:-RO}"
       BootstrapAdmin__CountryName: "${OFFICEDAYS_ADMIN_COUNTRY_NAME:-Romania}"
     volumes:
-      - office-days-data:/app/data
+      - ./data:/app/data
+      - ./config/appsettings.Production.json:/app/appsettings.Production.json:ro
     restart: unless-stopped
-
-volumes:
-  office-days-data:

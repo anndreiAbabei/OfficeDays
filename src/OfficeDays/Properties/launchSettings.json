@@ -16,7 +16,11 @@
       "launchBrowser": true,
       "applicationUrl": "https://localhost:5400;http://localhost:5200",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "BootstrapAdmin__Password":"123456789012",
+        "BootstrapAdmin__TimeZoneId":"Europe/Bucharest",
+        "BootstrapAdmin__CountryCode":"RO",
+        "BootstrapAdmin__CountryName":"Romania"
       }
     }
   }

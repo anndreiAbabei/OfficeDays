@@ -19,21 +19,23 @@ public static class TokenEndpoints
         tokens.MapDelete("/{id:guid}", RevokeToken).AddEndpointFilter<CookieAntiforgeryFilter>();
     }
 
-    private static async Task<IResult> GetTokens(ClaimsPrincipal principal, AppDbContext db)
+    private static async Task<IResult> GetTokens(ClaimsPrincipal principal,
+                                                 AppDbContext db,
+                                                 CancellationToken cancellationToken)
     {
         var rows = await db.ApiTokens
             .AsNoTracking()
             .Where(x => x.UserId == principal.GetUserId())
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
         return Results.Ok(rows.OrderByDescending(x => x.CreatedAt).Select(x => x.ToViewModel()));
     }
 
-    private static async Task<IResult> CreateToken(
-        CreateTokenRequest request,
-        ClaimsPrincipal principal,
+    private static async Task<IResult> CreateToken(CreateTokenRequest request,
+                                                   ClaimsPrincipal principal,
         AppDbContext db,
         TimeProvider timeProvider,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        CancellationToken cancellationToken)
     {
         var logger = loggerFactory.CreateLogger(LogCategory);
         var error = TokenValidation.ValidateName(request.Name);
@@ -49,27 +51,28 @@ public static class TokenEndpoints
             CreatedAt = timeProvider.GetUtcNow()
         };
         db.ApiTokens.Add(token);
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
         logger.LogInformation("User {UserId} created API token {TokenId} named {TokenName}",
             token.UserId, token.Id, token.Name);
         return Results.Created($"/api/tokens/{token.Id}", token.ToCreatedViewModel(rawToken));
     }
 
-    private static async Task<IResult> RevokeToken(
-        Guid id,
-        ClaimsPrincipal principal,
+    private static async Task<IResult> RevokeToken(Guid id,
+                                                   ClaimsPrincipal principal,
         AppDbContext db,
         TimeProvider timeProvider,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        CancellationToken cancellationToken)
     {
         var logger = loggerFactory.CreateLogger(LogCategory);
         var userId = principal.GetUserId();
-        var token = await db.ApiTokens.SingleOrDefaultAsync(x => x.Id == id && x.UserId == userId);
+        var token = await db.ApiTokens.SingleOrDefaultAsync(
+            x => x.Id == id && x.UserId == userId, cancellationToken);
         if (token is null) return Results.NotFound();
         if (token.RevokedAt is null)
         {
             token.RevokedAt = timeProvider.GetUtcNow();
-            await db.SaveChangesAsync();
+            await db.SaveChangesAsync(cancellationToken);
             logger.LogInformation("User {UserId} revoked API token {TokenId}", userId, token.Id);
         }
         return Results.NoContent();

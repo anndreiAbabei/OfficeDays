@@ -43,7 +43,7 @@ public sealed class ApiTokenAuthenticationHandler : AuthenticationHandler<Authen
 
         var hash = ApiTokenService.Hash(rawToken);
         var token = await _db.ApiTokens.Include(x => x.User).ThenInclude(x => x.HolidayJurisdiction)
-            .SingleOrDefaultAsync(x => x.TokenHash == hash && x.RevokedAt == null);
+            .SingleOrDefaultAsync(x => x.TokenHash == hash && x.RevokedAt == null, Context.RequestAborted);
         if (token is null)
         {
             _logger.LogWarning("Rejected an invalid or revoked API token from {RemoteIpAddress}",
@@ -52,7 +52,7 @@ public sealed class ApiTokenAuthenticationHandler : AuthenticationHandler<Authen
         }
 
         token.LastUsedAt = _timeProvider.GetUtcNow();
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(Context.RequestAborted);
         _logger.LogDebug("API token {TokenId} authenticated user {UserId}", token.Id, token.UserId);
 
         var claims = new List<Claim>

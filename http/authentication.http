@@ -1,7 +1,7 @@
 # Select the `local` or `docker` environment in Rider's "Run with" menu.
 # Values in http-client.private.env.json override these operating-system variables.
-@username = {{$env.OFFICEDAYS_USERNAME}}
-@password = {{$env.OFFICEDAYS_PASSWORD}}
+@username = {{OFFICEDAYS_USERNAME}}
+@password = {{OFFICEDAYS_PASSWORD}}
 
 ### List valid holiday jurisdictions (anonymous)
 GET {{baseUrl}}/api/holiday-jurisdictions

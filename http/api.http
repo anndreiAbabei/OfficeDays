@@ -1,6 +1,6 @@
 # Select the `local` or `docker` environment in Rider's "Run with" menu.
 # A value named apiToken in http-client.private.env.json overrides this OS variable.
-@apiToken = {{$env.OFFICEDAYS_API_TOKEN}}
+@apiToken = {{OFFICEDAYS_TOKEN}}
 
 ### Current user's current-month status
 GET {{baseUrl}}/api/status
@@ -63,7 +63,7 @@ Authorization: Bearer {{apiToken}}
 Content-Type: application/json
 
 {
-  "name": "HTTP Client test token"
+  "name": "Test admin token"
 }
 
 > {%

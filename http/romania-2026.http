@@ -1,6 +1,6 @@
 # Select the `local` or `docker` environment in Rider's "Run with" menu.
 # The token must belong to an administrator.
-@apiToken = {{$env.OFFICEDAYS_API_TOKEN}}
+@apiToken = {{OFFICEDAYS_TOKEN}}
 
 ### Create Romania as a holiday jurisdiction
 # The AddHolidayJurisdictions migration already seeds RO for upgraded and fresh databases,
