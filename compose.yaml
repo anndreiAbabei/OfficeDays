@@ -7,6 +7,7 @@ services:
       - "5802:5802"
     environment:
       ASPNETCORE_ENVIRONMENT: "Production"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
       ConnectionStrings__Default: "Data Source=/app/data/officedays.db"
       DataProtection__KeysPath: "/app/data/keys"
       Security__RequireHttpsForBearerTokens: "${OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER:-true}"
