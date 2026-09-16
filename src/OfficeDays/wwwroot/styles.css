@@ -122,3 +122,5 @@ h2 { margin-bottom: .15rem; font-size: 1.04rem; }
   .range-form { grid-template-columns: 1fr 1fr; }
   .range-form button { grid-column: 1 / -1; }
 }
+
+.app-footer { text-align: center; padding: 1rem 1rem 2rem; font-size: .8rem; }

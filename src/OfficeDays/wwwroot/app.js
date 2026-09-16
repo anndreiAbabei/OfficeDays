@@ -246,3 +246,16 @@ document.getElementById("save-holidays").addEventListener("click", async () => {
 });
 
 boot();
+
+async function loadVersion() {
+  const label = document.getElementById("app-version");
+  try {
+    const response = await fetch("/api/version", { cache: "no-store" });
+    if (!response.ok) throw new Error("Version unavailable");
+    const { version } = await response.json();
+    label.textContent = `v${version}`;
+  } catch {
+    label.textContent = "Version unavailable";
+  }
+}
+loadVersion();

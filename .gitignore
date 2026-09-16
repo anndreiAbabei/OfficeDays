@@ -489,3 +489,8 @@ $RECYCLE.BIN/
 
 # Data
 officedays.db
+
+# SQLite runtime files
+*.db-shm
+*.db-wal
+*.db-journal

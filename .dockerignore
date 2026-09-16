@@ -4,3 +4,8 @@
 .env
 data
 *.db
+
+# SQLite runtime files
+*.db-shm
+*.db-wal
+*.db-journal

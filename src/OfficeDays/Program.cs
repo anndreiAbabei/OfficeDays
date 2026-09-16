@@ -17,6 +17,8 @@ if (cookieExpireTimeSpan <= TimeSpan.Zero)
     throw new InvalidOperationException("Authentication:CookieExpireTimeSpan must be a positive TimeSpan.");
 
 builder.Services.AddProblemDetails();
+builder.Services.AddHealthChecks()
+    .AddCheck<OfficeDays.Features.Operations.DatabaseHealthCheck>("database", timeout: TimeSpan.FromSeconds(5));
 var keysPath = builder.Configuration["DataProtection:KeysPath"];
 if (string.IsNullOrWhiteSpace(keysPath))
     builder.Services.AddDataProtection();
@@ -94,6 +96,7 @@ await app.Services.GetRequiredService<DatabaseInitializer>()
                   .InitializeAsync(app.Lifetime.ApplicationStopping);
 
 app.MapApiEndpoints();
+OfficeDays.Features.Operations.OperationsEndpoints.Map(app);
 app.MapFallbackToFile("index.html");
 
 app.Run();
