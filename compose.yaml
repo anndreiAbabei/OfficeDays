@@ -1,0 +1,15 @@
+services:
+  office-days:
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    environment:
+      BootstrapAdmin__Password: "${OFFICEDAYS_ADMIN_PASSWORD:?Set OFFICEDAYS_ADMIN_PASSWORD}"
+      BootstrapAdmin__TimeZoneId: "${OFFICEDAYS_ADMIN_TIMEZONE:-Europe/Bucharest}"
+    volumes:
+      - office-days-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  office-days-data:
