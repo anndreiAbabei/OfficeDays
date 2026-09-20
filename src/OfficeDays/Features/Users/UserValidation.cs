@@ -18,14 +18,20 @@ internal static class UserValidation
             return ("countryCode", "A valid country or subdivision code is required, for example RO, GB-NIR, or US.");
         return ValidateEmail(request.Email);
     }
+    
     public static string? NormalizeEmail(string? email) =>
         string.IsNullOrWhiteSpace(email) ? null : email.Trim();
 
     public static (string Key, string Message)? ValidateEmail(string? email)
     {
         var normalized = NormalizeEmail(email);
-        if (normalized is not null && (normalized.Length > 254 || !new EmailAddressAttribute().IsValid(normalized)))
-            return ("email", "Enter a valid email address of at most 254 characters.");
+        
+        const int maxEmailLen = 250;
+
+        var emailValidator = new EmailAddressAttribute();
+        if (normalized is null || normalized.Length > maxEmailLen || !emailValidator.IsValid(normalized))
+            return ("email", $"Enter a valid email address of at most {maxEmailLen} characters.");
+        
         return null;
     }
 }
