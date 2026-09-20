@@ -8,7 +8,7 @@ These files target JetBrains Rider's built-in HTTP Client.
    - Start Rider with `OFFICEDAYS_API_TOKEN`, `OFFICEDAYS_USERNAME`, and `OFFICEDAYS_PASSWORD` available in its process environment. The request files read them with `{{$env.NAME}}`.
 3. Run individual requests using the gutter icons.
 
-`authentication.http` demonstrates cookie authentication and antiforgery handling. `attendance.http`, `vacations.http`, `status.http`, and `tokens.http` exercise their respective APIs with a bearer token. Attendance requests demonstrate both the optional `isManual` POST body and manual date-based PUT; duplicate dates retain their original source. `romania-2026.http` configures Romania's complete 2026 holiday calendar.
+`authentication.http` demonstrates registration with an optional email, cookie authentication, antiforgery handling, and updating or clearing the signed-in user’s email with response assertions. `attendance.http`, `vacations.http`, `status.http`, and `tokens.http` exercise their respective APIs with a bearer token. Attendance requests demonstrate both the optional `isManual` POST body and manual date-based PUT; duplicate dates retain their original source. `romania-2026.http` configures Romania's complete 2026 holiday calendar.
 
 `health.http` checks API liveness and database readiness and retrieves the deployed application version. These requests use the selected environment's `baseUrl` and do not require authentication.
 

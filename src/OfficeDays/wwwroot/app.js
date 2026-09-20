@@ -24,6 +24,7 @@ async function refreshCsrf() {
 }
 
 function showLogin() {
+  document.getElementById("register-view").hidden = true;
   document.getElementById("dashboard").hidden = true;
   document.getElementById("login-view").hidden = false;
 }
@@ -202,8 +203,93 @@ async function boot() {
     resetEntryDates();
     if (state.user.isAdmin) await loadJurisdictions();
     await loadDashboard();
-  } catch { showLogin(); }
+  } catch {
+    if (location.hash === "#register") await showRegister();
+    else showLogin();
+  }
 }
+
+async function showRegister() {
+  document.getElementById("login-view").hidden = true;
+  document.getElementById("dashboard").hidden = true;
+  document.getElementById("register-view").hidden = false;
+  const error = document.getElementById("register-error");
+  const submit = document.getElementById("register-submit");
+  const retry = document.getElementById("retry-register-calendars");
+  error.textContent = "";
+  submit.disabled = true;
+  retry.hidden = true;
+  const timezone = document.getElementById("register-timezone");
+  if (!timezone.value) timezone.value = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  const options = document.getElementById("timezone-options");
+  if (!options.children.length && typeof Intl.supportedValuesOf === "function") {
+    Intl.supportedValuesOf("timeZone").forEach(zone => options.append(new Option(zone, zone)));
+  }
+  try {
+    const calendars = await api("/api/holiday-jurisdictions");
+    const select = document.getElementById("register-country");
+    const selected = select.value;
+    select.replaceChildren(new Option("Select a holiday calendar", ""));
+    calendars.forEach(item => select.add(new Option(`${item.name} (${item.code})`, item.code)));
+    if (calendars.some(item => item.code === selected)) select.value = selected;
+    else if (calendars.length === 1) select.value = calendars[0].code;
+    if (!calendars.length) throw new Error("No holiday calendars are available. Please contact the administrator.");
+    submit.disabled = false;
+  } catch (failure) {
+    error.textContent = failure.message;
+    retry.hidden = false;
+  }
+}
+
+document.getElementById("show-register").addEventListener("click", event => {
+  event.preventDefault();
+  history.replaceState(null, "", "#register");
+  showRegister();
+});
+document.getElementById("show-login").addEventListener("click", event => {
+  event.preventDefault();
+  history.replaceState(null, "", "#login");
+  showLogin();
+});
+document.getElementById("retry-register-calendars").addEventListener("click", showRegister);
+window.addEventListener("hashchange", () => {
+  if (!state.user) {
+    if (location.hash === "#register") showRegister();
+    else showLogin();
+  }
+});
+
+document.getElementById("register-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const error = document.getElementById("register-error");
+  const button = document.getElementById("register-submit");
+  const password = document.getElementById("register-password").value;
+  error.textContent = "";
+  if (password !== document.getElementById("register-confirm-password").value) {
+    error.textContent = "Passwords do not match.";
+    document.getElementById("register-confirm-password").focus();
+    return;
+  }
+  button.disabled = true;
+  try {
+    const created = await api("/api/users", { method: "POST", body: JSON.stringify({
+      username: document.getElementById("register-username").value.trim(),
+      password,
+      email: document.getElementById("register-email").value.trim() || null,
+      timeZoneId: document.getElementById("register-timezone").value.trim(),
+      countryCode: document.getElementById("register-country").value
+    }) });
+    document.getElementById("register-form").reset();
+    document.getElementById("login-username").value = created.username;
+    document.getElementById("login-password").value = "";
+    document.getElementById("login-error").textContent = "";
+    document.getElementById("login-message").textContent = "Account created. Sign in to continue.";
+    location.hash = "login";
+    showLogin();
+    document.getElementById("login-password").focus();
+  } catch (failure) { error.textContent = failure.message; }
+  finally { button.disabled = false; }
+});
 
 document.getElementById("login-form").addEventListener("submit", async event => {
   event.preventDefault(); document.getElementById("login-error").textContent = "";

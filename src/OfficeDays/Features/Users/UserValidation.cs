@@ -29,7 +29,7 @@ internal static class UserValidation
         const int maxEmailLen = 250;
 
         var emailValidator = new EmailAddressAttribute();
-        if (normalized is null || normalized.Length > maxEmailLen || !emailValidator.IsValid(normalized))
+        if (normalized is not null && (normalized.Length > maxEmailLen || !emailValidator.IsValid(normalized)))
             return ("email", $"Enter a valid email address of at most {maxEmailLen} characters.");
         
         return null;

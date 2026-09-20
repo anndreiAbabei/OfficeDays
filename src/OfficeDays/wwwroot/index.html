@@ -19,7 +19,29 @@
         <label>Password<input id="login-password" type="password" autocomplete="current-password" required></label>
         <button type="submit">Sign in</button>
       </form>
+      <p id="login-message" class="message" role="status"></p>
+      <p>New here? <a href="#register" id="show-register">Create an account</a></p>
       <p id="login-error" class="error" role="alert"></p>
+    </section>
+
+    <section id="register-view" class="login-card" hidden>
+      <div class="brand-mark">OD</div>
+      <h1>Create an account</h1>
+      <p class="muted">Start tracking your office days.</p>
+      <form id="register-form" class="stack">
+        <label>Username<input id="register-username" autocomplete="username" minlength="3" maxlength="100" required></label>
+        <label>Email address (optional)<input id="register-email" type="email" autocomplete="email" maxlength="250"></label>
+        <label>Password<input id="register-password" type="password" autocomplete="new-password" minlength="12" aria-describedby="register-password-help" required></label>
+        <p id="register-password-help" class="muted">Use at least 12 characters.</p>
+        <label>Confirm password<input id="register-confirm-password" type="password" autocomplete="new-password" minlength="12" required></label>
+        <label>Timezone<input id="register-timezone" list="timezone-options" placeholder="Europe/Bucharest" required></label>
+        <datalist id="timezone-options"></datalist>
+        <label>Holiday calendar<select id="register-country" required><option value="">Select a holiday calendar</option></select></label>
+        <button id="register-submit" type="submit" disabled>Create account</button>
+      </form>
+      <p id="register-error" class="error" role="alert"></p>
+      <button id="retry-register-calendars" type="button" class="secondary" hidden>Retry loading calendars</button>
+      <p>Already have an account? <a href="#login" id="show-login">Sign in</a></p>
     </section>
 
     <div id="dashboard" hidden>
