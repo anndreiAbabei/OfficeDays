@@ -15,7 +15,16 @@ public sealed class CookieAntiforgeryFilter : IEndpointFilter
     {
         if (!context.HttpContext.Request.Headers.Authorization.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
-            await _antiforgery.ValidateRequestAsync(context.HttpContext);
+            try
+            {
+                await _antiforgery.ValidateRequestAsync(context.HttpContext);
+            }
+            catch (AntiforgeryValidationException)
+            {
+                return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
+                    title: "Invalid antiforgery token",
+                    detail: "Refresh the page and try again.");
+            }
         }
 
         return await next(context);

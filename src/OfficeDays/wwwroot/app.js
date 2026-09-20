@@ -192,6 +192,7 @@ async function boot() {
   await refreshCsrf();
   try {
     state.user = await api("/api/auth/me");
+    document.getElementById("profile-email").value = state.user.email || "";
     const now = localYearMonth(state.user.timeZoneId);
     document.getElementById("year").value = now.year; document.getElementById("month").value = now.month;
     document.getElementById("account-name").textContent = `${state.user.username} · ${state.user.countryName} (${state.user.countryCode}) · ${state.user.timeZoneId}`;
@@ -236,6 +237,23 @@ document.getElementById("vacation-form").addEventListener("submit", async event 
     await api("/api/vacations", { method: "POST", body: JSON.stringify({ from: document.getElementById("vacation-from").value, to: document.getElementById("vacation-to").value }) });
     message("Vacation added."); await loadDashboard();
   } catch (error) { message(error.message, true); }
+});
+
+document.getElementById("profile-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const button = event.currentTarget.querySelector("button");
+  const feedback = document.getElementById("profile-message");
+  button.disabled = true;
+  feedback.textContent = "";
+  try {
+    state.user = await api("/api/users/me", { method: "PUT", body: JSON.stringify({ email: document.getElementById("profile-email").value.trim() || null }) });
+    document.getElementById("profile-email").value = state.user.email || "";
+    feedback.style.color = "var(--green-dark)";
+    feedback.textContent = "Profile saved.";
+  } catch (error) {
+    feedback.style.color = "var(--danger)";
+    feedback.textContent = error.message;
+  } finally { button.disabled = false; }
 });
 
 document.getElementById("token-form").addEventListener("submit", async event => {

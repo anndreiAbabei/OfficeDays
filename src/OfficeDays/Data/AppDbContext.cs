@@ -24,6 +24,7 @@ public sealed class AppDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Username).HasMaxLength(100).IsRequired();
             entity.Property(x => x.NormalizedUsername).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Email).HasMaxLength(254);
             entity.Property(x => x.PasswordHash).IsRequired();
             entity.Property(x => x.TimeZoneId).HasMaxLength(100).IsRequired();
             entity.HasIndex(x => x.NormalizedUsername).IsUnique();

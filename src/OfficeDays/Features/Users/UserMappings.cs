@@ -6,5 +6,5 @@ public static class UserMappings
 {
     public static UserResponse ToViewModel(this User user) =>
         new UserResponse(user.Id, user.Username, user.TimeZoneId,
-            user.HolidayJurisdiction.Code, user.HolidayJurisdiction.Name, user.IsAdmin);
+            user.HolidayJurisdiction.Code, user.HolidayJurisdiction.Name, user.IsAdmin, user.Email);
 }
