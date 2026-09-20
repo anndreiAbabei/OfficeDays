@@ -130,3 +130,6 @@ h2 { margin-bottom: .15rem; font-size: 1.04rem; }
 
 #attendance-list { max-height: 20rem; overflow-y: auto; scrollbar-gutter: stable; }
 .item-main .attendance-check { display: inline; }
+
+.login-card a { color: var(--green-dark); }
+#register-view { margin-top: 4vh; margin-bottom: 4vh; }

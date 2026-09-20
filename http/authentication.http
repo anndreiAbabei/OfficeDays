@@ -16,7 +16,8 @@ Content-Type: application/json
   "username": "andrei",
   "password": "{{registrationPassword}}",
   "timeZoneId": "Europe/Bucharest",
-  "countryCode": "RO"
+  "countryCode": "RO",
+  "email": null
 }
 
 ### Log in and store the persistent session cookie
@@ -39,6 +40,38 @@ Accept: application/json
 ### Show the signed-in user
 GET {{baseUrl}}/api/auth/me
 Accept: application/json
+
+### Update the signed-in user's email (run login and CSRF requests first)
+PUT {{baseUrl}}/api/users/me
+Content-Type: application/json
+X-CSRF-TOKEN: {{csrfToken}}
+
+{
+  "email": "andrei@example.com"
+}
+
+> {%
+    client.test("Email is updated", function () {
+        client.assert(response.status === 200, "Expected HTTP 200");
+        client.assert(response.body.email === "andrei@example.com", "Expected updated email");
+    });
+%}
+
+### Clear the signed-in user's optional email
+PUT {{baseUrl}}/api/users/me
+Content-Type: application/json
+X-CSRF-TOKEN: {{csrfToken}}
+
+{
+  "email": null
+}
+
+> {%
+    client.test("Email is cleared", function () {
+        client.assert(response.status === 200, "Expected HTTP 200");
+        client.assert(response.body.email === null, "Expected null email");
+    });
+%}
 
 ### Log out
 POST {{baseUrl}}/api/auth/logout
