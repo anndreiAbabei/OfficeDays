@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using OfficeDays.Security;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +14,31 @@ public static class UserEndpoints
 {
     private const string LogCategory = "OfficeDays.Features.Users";
 
-    public static void Map(RouteGroupBuilder api) => api.MapPost("/users", CreateUser).AllowAnonymous();
+    public static void Map(RouteGroupBuilder api)
+    {
+        api.MapPost("/users", CreateUser).AllowAnonymous();
+        api.MapPut("/users/me", UpdateUser)
+           .RequireAuthorization()
+           .AddEndpointFilter<CookieAntiforgeryFilter>();
+    }
+
+    private static async Task<IResult> UpdateUser([FromBody] UpdateUserRequest request,
+                                                  ClaimsPrincipal principal,
+                                                  AppDbContext db,
+                                                  CancellationToken cancellationToken)
+    {
+        var validation = UserValidation.ValidateEmail(request.Email);
+        if (validation.HasValue)
+            return ApiResults.Validation(validation.Value.Message, validation.Value.Key);
+
+        var user = await db.Users.Include(x => x.HolidayJurisdiction)
+            .SingleOrDefaultAsync(x => x.Id == principal.GetUserId(), cancellationToken);
+        if (user is null) return Results.NotFound();
+
+        user.Email = UserValidation.NormalizeEmail(request.Email);
+        await db.SaveChangesAsync(cancellationToken);
+        return Results.Ok(user.ToViewModel());
+    }
 
     private static async Task<IResult> CreateUser([FromBody] CreateUserRequest request,
                                                   AppDbContext db,
@@ -41,6 +67,7 @@ public static class UserEndpoints
         {
             Id = Guid.NewGuid(),
             Username = username,
+            Email = UserValidation.NormalizeEmail(request.Email),
             NormalizedUsername = normalized,
             PasswordHash = string.Empty,
             TimeZoneId = request.TimeZoneId!,

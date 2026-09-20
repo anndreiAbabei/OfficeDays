@@ -189,6 +189,10 @@ Do not disable this for an internet-facing deployment. The browser session and a
 
 ## Create a normal user
 
+Email is optional at registration: omit `email` or pass `null`. User responses (registration, login, and `/api/auth/me`) include the nullable `email` field. The Profile section lets signed-in users save or clear their email.
+
+`PUT /api/users/me` updates the authenticated user's email and returns the updated user. Send `{"email":"person@example.com"}` to set it, or `{"email":null}` to clear it. Empty/whitespace values also clear it; surrounding whitespace is trimmed. Supplied addresses must be valid and at most 254 characters. Cookie requests require the usual `X-CSRF-TOKEN`; bearer authentication is also supported. Email verification and password recovery are not implemented yet.
+
 `POST /api/users` is the self-registration endpoint. It is intentionally anonymous and always creates a normal user. Its DTO has no `isAdmin` field; extra JSON such as `"isAdmin": true` cannot grant administration.
 
 ```bash

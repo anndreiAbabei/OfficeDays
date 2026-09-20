@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using OfficeDays.Services;
 
 namespace OfficeDays.Features.Users;
@@ -15,6 +16,16 @@ internal static class UserValidation
             return ("timeZoneId", "A valid IANA timezone is required, for example Europe/Bucharest.");
         if (!HolidayJurisdictionCodes.TryNormalize(request.CountryCode, out _))
             return ("countryCode", "A valid country or subdivision code is required, for example RO, GB-NIR, or US.");
+        return ValidateEmail(request.Email);
+    }
+    public static string? NormalizeEmail(string? email) =>
+        string.IsNullOrWhiteSpace(email) ? null : email.Trim();
+
+    public static (string Key, string Message)? ValidateEmail(string? email)
+    {
+        var normalized = NormalizeEmail(email);
+        if (normalized is not null && (normalized.Length > 254 || !new EmailAddressAttribute().IsValid(normalized)))
+            return ("email", "Enter a valid email address of at most 254 characters.");
         return null;
     }
 }

@@ -467,6 +467,65 @@ public sealed class ApiIntegrationTests
             (await Delete(client, $"/api/vacations/{Guid.NewGuid()}", csrf)).StatusCode);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData(" person@example.com ")]
+    public async Task Email_can_be_created_updated_and_cleared(string? email)
+    {
+        using var factory = new OfficeDaysFactory();
+        using var client = factory.CreateClient();
+        var created = await client.PostAsJsonAsync("/api/users", new
+        {
+            username = "emailuser", password = "Normal-user-password!",
+            timeZoneId = "Europe/Bucharest", countryCode = "RO", email
+        });
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        Assert.Equal(email?.Trim(), (await Read(created)).GetProperty("email").GetString());
+        await CreateUser(client, "otheruser");
+        await Login(client, "emailuser", "Normal-user-password!");
+        var csrf = await Csrf(client);
+        var updated = await PutJson(client, "/api/users/me", new { email = " updated@example.com " }, csrf);
+        Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
+        Assert.Equal("updated@example.com", (await Read(updated)).GetProperty("email").GetString());
+        Assert.Equal("updated@example.com", (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("email").GetString());
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            Assert.Null((await db.Users.SingleAsync(x => x.Username == "otheruser")).Email);
+        }
+        foreach (var empty in new string?[] { null, "", "   " })
+        {
+            var cleared = await PutJson(client, "/api/users/me", new { email = empty }, csrf);
+            Assert.Equal(HttpStatusCode.OK, cleared.StatusCode);
+            Assert.Null((await Read(cleared)).GetProperty("email").GetString());
+        }
+    }
+
+    [Fact]
+    public async Task Email_update_requires_authentication_csrf_and_valid_email()
+    {
+        using var factory = new OfficeDaysFactory();
+        using var client = factory.CreateClient();
+        Assert.Equal(HttpStatusCode.Unauthorized,
+            (await client.PutAsJsonAsync("/api/users/me", new { email = "user@example.com" })).StatusCode);
+        await CreateUser(client, "emailvalidation");
+        await Login(client, "emailvalidation", "Normal-user-password!");
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await client.PutAsJsonAsync("/api/users/me", new { email = "user@example.com" })).StatusCode);
+        var csrf = await Csrf(client);
+        foreach (var invalid in new[] { "invalid", "a@b@example.com", new string('a', 243) + "@example.com" })
+        {
+            Assert.Equal(HttpStatusCode.BadRequest,
+                (await PutJson(client, "/api/users/me", new { email = invalid }, csrf)).StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/users", new
+            {
+                username = "invalidemail", password = "Normal-user-password!",
+                timeZoneId = "Europe/Bucharest", countryCode = "RO", email = invalid
+            })).StatusCode);
+        }
+        Assert.Null((await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("email").GetString());
+    }
+
     private static async Task CreateUser(HttpClient client, string username, string countryCode = "RO")
     {
         var response = await client.PostAsJsonAsync("/api/users", new

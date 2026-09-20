@@ -86,6 +86,15 @@
         <ul id="token-list" class="item-list"></ul>
       </section>
 
+      <section class="card" aria-labelledby="profile-heading">
+        <div class="section-heading"><div><h2 id="profile-heading">Profile</h2><p class="muted">Your email address is optional.</p></div></div>
+        <form id="profile-form" class="inline-form">
+          <label>Email address<input id="profile-email" type="email" autocomplete="email" maxlength="254"></label>
+          <button type="submit">Save profile</button>
+        </form>
+        <p id="profile-message" class="message" role="status"></p>
+      </section>
+
       <section id="admin-jurisdictions" class="card" hidden>
         <div class="section-heading">
           <div><h2>Holiday jurisdictions</h2><p class="muted">Admin only · countries or regional holiday calendars.</p></div>
