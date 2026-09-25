@@ -352,6 +352,12 @@ The unit suite covers odd/even rule behavior, weekdays and weekends, holidays, a
 
 The integration suite uses `WebApplicationFactory`, the real middleware/endpoints, and a fresh migrated SQLite file per test. It covers registration/login, admin jurisdiction management, country-scoped holiday replacement, token creation/use/revocation and ownership isolation, idempotent bearer attendance and removal, vacation ownership/lifecycle, and persisted status calculations.
 
+Migration tests explicitly verify that startup applies every migration to a fresh database, that the migrated schema supports the current model, and that running initialization again preserves bootstrap data. They also upgrade an older database and verify that existing data and migration defaults are preserved. Run just these tests with:
+
+```bash
+dotnet test tests/OfficeDays.IntegrationTests --filter FullyQualifiedName~MigrationIntegrationTests
+```
+
 Rider-compatible manual API requests are available under `http/`. Select the `local` or `docker` HTTP Client environment and provide secrets through the ignored `http/http-client.private.env.json` file or the documented operating-system variables.
 
 ## Database migrations

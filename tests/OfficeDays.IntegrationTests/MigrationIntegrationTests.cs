@@ -2,12 +2,48 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.DependencyInjection;
 using OfficeDays.Data;
 
 namespace OfficeDays.IntegrationTests;
 
 public sealed class MigrationIntegrationTests
 {
+    [Fact]
+    public async Task Startup_applies_all_migrations_and_reinitialization_preserves_bootstrap_data()
+    {
+        using var factory = new OfficeDaysFactory();
+        using var client = factory.CreateClient();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var migrations = db.Database.GetMigrations().ToArray();
+
+        Assert.NotEmpty(migrations);
+        Assert.Equal(migrations, (await db.Database.GetAppliedMigrationsAsync()).ToArray());
+        Assert.Empty(await db.Database.GetPendingMigrationsAsync());
+        Assert.False(db.Database.HasPendingModelChanges());
+
+        // Materialize every mapped table to check that the migrated schema supports the current model.
+        var admin = Assert.Single(await db.Users.AsNoTracking().ToListAsync());
+        Assert.Equal("Admin", admin.Username);
+        Assert.True(admin.IsAdmin);
+        var jurisdiction = Assert.Single(await db.HolidayJurisdictions.AsNoTracking().ToListAsync());
+        Assert.Equal(jurisdiction.Id, admin.HolidayJurisdictionId);
+        Assert.Empty(await db.Attendances.AsNoTracking().ToListAsync());
+        Assert.Empty(await db.Vacations.AsNoTracking().ToListAsync());
+        Assert.Empty(await db.ApiTokens.AsNoTracking().ToListAsync());
+        Assert.Empty(await db.BankHolidays.AsNoTracking().ToListAsync());
+
+        await scope.ServiceProvider.GetRequiredService<DatabaseInitializer>().InitializeAsync(CancellationToken.None);
+
+        Assert.Equal(migrations, (await db.Database.GetAppliedMigrationsAsync()).ToArray());
+        var existingAdmin = Assert.Single(await db.Users.AsNoTracking().ToListAsync());
+        Assert.Equal(admin.Id, existingAdmin.Id);
+        Assert.Equal(admin.PasswordHash, existingAdmin.PasswordHash);
+        Assert.Equal(jurisdiction.Id,
+            Assert.Single(await db.HolidayJurisdictions.AsNoTracking().ToListAsync()).Id);
+    }
+
     [Fact]
     public async Task Migrations_preserve_existing_data_and_backfill_only_historical_attendance_as_manual()
     {
