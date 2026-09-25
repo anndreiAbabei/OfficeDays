@@ -4,6 +4,31 @@ namespace OfficeDays.UnitTests;
 
 public sealed class AttendanceCalculatorTests
 {
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(25, 6)]
+    [InlineData(50, 11)]
+    [InlineData(75, 16)]
+    [InlineData(100, 21)]
+    public void Custom_percentage_rounds_up_required_days(int percentage, int expected)
+    {
+        var period = new CalculationPeriod(new DateOnly(2026, 9, 1), new DateOnly(2026, 9, 29), "test");
+        var result = AttendanceCalculator.Calculate(period, [], [], [], percentage);
+        Assert.Equal(expected, result.RequiredOfficeDays);
+        Assert.Equal(21 - expected, result.MaximumWfhDays);
+        Assert.Equal(expected, result.RemainingOfficeDays);
+        Assert.Equal(expected == 0 ? 100m : 0m, result.ProgressPercentage);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(101)]
+    public void Invalid_percentage_is_rejected(int percentage)
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            AttendanceCalculator.Calculate(CalculationPeriod.ForMonth(2026, 9), [], [], [], percentage));
+    }
+
     [Fact]
     public void Odd_eligible_days_enforces_maximum_half_wfh_rule()
     {

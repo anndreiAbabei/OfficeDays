@@ -194,6 +194,7 @@ async function boot() {
   try {
     state.user = await api("/api/auth/me");
     document.getElementById("profile-email").value = state.user.email || "";
+    document.getElementById("profile-office-percentage").value = state.user.requiredOfficePercentage;
     const now = localYearMonth(state.user.timeZoneId);
     document.getElementById("year").value = now.year; document.getElementById("month").value = now.month;
     document.getElementById("account-name").textContent = `${state.user.username} · ${state.user.countryName} (${state.user.countryCode}) · ${state.user.timeZoneId}`;
@@ -277,7 +278,8 @@ document.getElementById("register-form").addEventListener("submit", async event 
       password,
       email: document.getElementById("register-email").value.trim() || null,
       timeZoneId: document.getElementById("register-timezone").value.trim(),
-      countryCode: document.getElementById("register-country").value
+      countryCode: document.getElementById("register-country").value,
+      requiredOfficePercentage: Number(document.getElementById("register-office-percentage").value)
     }) });
     document.getElementById("register-form").reset();
     document.getElementById("login-username").value = created.username;
@@ -332,10 +334,12 @@ document.getElementById("profile-form").addEventListener("submit", async event =
   button.disabled = true;
   feedback.textContent = "";
   try {
-    state.user = await api("/api/users/me", { method: "PUT", body: JSON.stringify({ email: document.getElementById("profile-email").value.trim() || null }) });
+    state.user = await api("/api/users/me", { method: "PUT", body: JSON.stringify({ email: document.getElementById("profile-email").value.trim() || null, requiredOfficePercentage: Number(document.getElementById("profile-office-percentage").value) }) });
     document.getElementById("profile-email").value = state.user.email || "";
+    document.getElementById("profile-office-percentage").value = state.user.requiredOfficePercentage;
     feedback.style.color = "var(--green-dark)";
     feedback.textContent = "Profile saved.";
+    await loadDashboard();
   } catch (error) {
     feedback.style.color = "var(--danger)";
     feedback.textContent = error.message;

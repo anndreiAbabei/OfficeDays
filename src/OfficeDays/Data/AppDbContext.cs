@@ -25,6 +25,9 @@ public sealed class AppDbContext : DbContext
             entity.Property(x => x.Username).HasMaxLength(100).IsRequired();
             entity.Property(x => x.NormalizedUsername).HasMaxLength(100).IsRequired();
             entity.Property(x => x.Email).HasMaxLength(254);
+            entity.Property(x => x.RequiredOfficePercentage).HasDefaultValue(50).HasSentinel(50);
+            entity.ToTable(table => table.HasCheckConstraint("CK_Users_RequiredOfficePercentage",
+                "\"RequiredOfficePercentage\" BETWEEN 0 AND 100"));
             entity.Property(x => x.PasswordHash).IsRequired();
             entity.Property(x => x.TimeZoneId).HasMaxLength(100).IsRequired();
             entity.HasIndex(x => x.NormalizedUsername).IsUnique();

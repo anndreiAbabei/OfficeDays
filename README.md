@@ -1,16 +1,18 @@
 # Office Days Tracker
 
-Office Days Tracker is a small, self-hosted application for recording office attendance and checking compliance with a hybrid-working rule: **no more than 50% of eligible working days may be worked from home**.
+Office Days Tracker is a small, self-hosted application for recording office attendance and checking progress against a personal office attendance requirement, **50% of eligible working days by default**.
 
 For each calendar month, the application subtracts weekends, centrally configured bank holidays, and the user's vacation dates. It then calculates:
 
 ```text
-maximum WFH days       = floor(eligible working days × 0.5)
-required office days   = eligible working days - maximum WFH days
+required office days   = ceil(eligible working days × required office percentage / 100)
+maximum WFH days       = eligible working days - required office days
 remaining office days  = max(0, required office days - eligible office attendance)
 ```
 
-With 21 eligible days, this means at most 10 WFH days and therefore at least 11 office days.
+Users can set a whole percentage from 0–100 during registration or in Profile. Existing accounts default to 50%. Changing the percentage recalculates all viewed months using the current setting. The API accepts `requiredOfficePercentage` on registration and profile updates, and returns it with user details. Omitting it during registration defaults to 50; omitting it during a profile update preserves the saved value.
+
+With 21 eligible days at 50%, this means at most 10 WFH days and therefore at least 11 office days.
 
 ## Architecture
 

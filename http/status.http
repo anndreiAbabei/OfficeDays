@@ -2,6 +2,8 @@
 # A value named apiToken in http-client.private.env.json overrides this OS variable.
 @apiToken = {{$env.OFFICEDAYS_API_TOKEN}}
 
+# Status uses the user's saved requiredOfficePercentage for every selected month.
+# Required office days round up: ceil(eligible working days * percentage / 100).
 ### Current user's current-month status
 GET {{baseUrl}}/api/status
 Authorization: Bearer {{apiToken}}

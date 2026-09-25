@@ -23,12 +23,16 @@ public static class AttendanceCalculator
     public static AttendanceStatus Calculate(CalculationPeriod period,
                                              IEnumerable<DateOnly> bankHolidays,
                                              IEnumerable<(DateOnly From, DateOnly To)> vacations,
-                                             IEnumerable<DateOnly> officeDates)
+                                             IEnumerable<DateOnly> officeDates,
+                                             int requiredOfficePercentage = 50)
     {
         if (period.End < period.Start)
         {
             throw new ArgumentException("The calculation period end cannot precede its start.", nameof(period));
         }
+
+        ArgumentOutOfRangeException.ThrowIfLessThan(requiredOfficePercentage, 0);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(requiredOfficePercentage, 100);
 
         var holidays = bankHolidays.ToHashSet();
         var vacationDates = ExpandVacations(vacations, period);
@@ -38,8 +42,8 @@ public static class AttendanceCalculator
                                                                     .ToHashSet();
 
         var eligibleWorkingDays = eligibleDates.Count;
-        var maximumWfhDays = (int)Math.Floor(eligibleWorkingDays * 0.5m);
-        var requiredOfficeDays = eligibleWorkingDays - maximumWfhDays;
+        var requiredOfficeDays = (int)Math.Ceiling(eligibleWorkingDays * requiredOfficePercentage / 100m);
+        var maximumWfhDays = eligibleWorkingDays - requiredOfficeDays;
         var officeDays = officeDates.Distinct().Count(eligibleDates.Contains);
         var remainingOfficeDays = Math.Max(0, requiredOfficeDays - officeDays);
         var progress = requiredOfficeDays == 0
