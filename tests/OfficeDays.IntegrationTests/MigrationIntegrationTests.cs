@@ -58,6 +58,7 @@ public sealed class MigrationIntegrationTests
             Assert.False((await db.Attendances.AsNoTracking().SingleAsync(x => x.Date == new DateOnly(2026, 9, 16))).IsManual);
 
 
+            Assert.Equal(50, (await db.Users.SingleAsync()).RequiredOfficePercentage);
             Assert.Null((await db.Users.SingleAsync()).Email);
             var jurisdiction = await db.HolidayJurisdictions.SingleAsync();
             Assert.Equal("RO", jurisdiction.Code);

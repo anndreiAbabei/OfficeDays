@@ -27,7 +27,8 @@ public static class UserEndpoints
                                                   AppDbContext db,
                                                   CancellationToken cancellationToken)
     {
-        var validation = UserValidation.ValidateEmail(request.Email);
+        var validation = UserValidation.ValidateEmail(request.Email)
+                         ?? UserValidation.ValidateOfficePercentage(request.RequiredOfficePercentage);
         if (validation.HasValue)
             return ApiResults.Validation(validation.Value.Message, validation.Value.Key);
 
@@ -38,6 +39,8 @@ public static class UserEndpoints
             return Results.NotFound();
 
         user.Email = UserValidation.NormalizeEmail(request.Email);
+        if (request.RequiredOfficePercentage.HasValue)
+            user.RequiredOfficePercentage = request.RequiredOfficePercentage.Value;
         await db.SaveChangesAsync(cancellationToken);
         
         return Results.Ok(user.ToViewModel());
@@ -71,6 +74,7 @@ public static class UserEndpoints
             Id = Guid.NewGuid(),
             Username = username,
             Email = UserValidation.NormalizeEmail(request.Email),
+            RequiredOfficePercentage = request.RequiredOfficePercentage,
             NormalizedUsername = normalized,
             PasswordHash = string.Empty,
             TimeZoneId = request.TimeZoneId!,

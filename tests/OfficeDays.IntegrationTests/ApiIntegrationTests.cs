@@ -526,6 +526,64 @@ public sealed class ApiIntegrationTests
         Assert.Null((await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("email").GetString());
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(75)]
+    [InlineData(100)]
+    public async Task Office_percentage_is_persisted_and_updates_status(int percentage)
+    {
+        using var factory = new OfficeDaysFactory();
+        using var client = factory.CreateClient();
+        var created = await client.PostAsJsonAsync("/api/users", new
+        {
+            username = "percentageuser", password = "Normal-user-password!",
+            timeZoneId = "Europe/Bucharest", countryCode = "RO", requiredOfficePercentage = percentage
+        });
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        Assert.Equal(percentage, (await Read(created)).GetProperty("requiredOfficePercentage").GetInt32());
+        await CreateUser(client, "otherpercentage");
+        await Login(client, "percentageuser", "Normal-user-password!");
+        var csrf = await Csrf(client);
+        var profile = await client.GetFromJsonAsync<JsonElement>("/api/auth/me");
+        Assert.Equal(percentage, profile.GetProperty("requiredOfficePercentage").GetInt32());
+        var status = await client.GetFromJsonAsync<JsonElement>("/api/status?year=2026&month=9");
+        Assert.Equal((int)Math.Ceiling(status.GetProperty("eligibleWorkingDays").GetInt32() * percentage / 100m),
+            status.GetProperty("requiredOfficeDays").GetInt32());
+
+        var updated = await PutJson(client, "/api/users/me", new { requiredOfficePercentage = 25 }, csrf);
+        Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
+        Assert.Equal(25, (await Read(updated)).GetProperty("requiredOfficePercentage").GetInt32());
+        // Older clients that only update email must preserve the percentage.
+        (await PutJson(client, "/api/users/me", new { email = "user@example.com" }, csrf)).EnsureSuccessStatusCode();
+        Assert.Equal(25, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("requiredOfficePercentage").GetInt32());
+        status = await client.GetFromJsonAsync<JsonElement>("/api/status?year=2026&month=9");
+        Assert.Equal((int)Math.Ceiling(status.GetProperty("eligibleWorkingDays").GetInt32() * .25m),
+            status.GetProperty("requiredOfficeDays").GetInt32());
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.Equal(50, (await db.Users.SingleAsync(x => x.Username == "otherpercentage")).RequiredOfficePercentage);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(101)]
+    [InlineData(50.5)]
+    public async Task Invalid_office_percentages_are_rejected(decimal percentage)
+    {
+        using var factory = new OfficeDaysFactory();
+        using var client = factory.CreateClient();
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/users", new
+        {
+            username = "invalidpercentage", password = "Normal-user-password!",
+            timeZoneId = "Europe/Bucharest", countryCode = "RO", requiredOfficePercentage = percentage
+        })).StatusCode);
+        await CreateUser(client, "percentagevalidation");
+        await Login(client, "percentagevalidation", "Normal-user-password!");
+        Assert.Equal(HttpStatusCode.BadRequest, (await PutJson(client, "/api/users/me",
+            new { requiredOfficePercentage = percentage }, await Csrf(client))).StatusCode);
+        Assert.Equal(50, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("requiredOfficePercentage").GetInt32());
+    }
+
     private static async Task CreateUser(HttpClient client, string username, string countryCode = "RO")
     {
         var response = await client.PostAsJsonAsync("/api/users", new

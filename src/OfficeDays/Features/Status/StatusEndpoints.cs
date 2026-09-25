@@ -46,7 +46,7 @@ public static class StatusEndpoints
             .Select(x => x.Date)
             .ToListAsync(cancellationToken);
         var result = AttendanceCalculator.Calculate(period, holidayDates,
-            vacationRows.Select(x => (x.From, x.To)), officeDates);
+            vacationRows.Select(x => (x.From, x.To)), officeDates, user.RequiredOfficePercentage);
         return Results.Ok(result.ToViewModel());
     }
 }

@@ -16,9 +16,14 @@ internal static class UserValidation
             return ("timeZoneId", "A valid IANA timezone is required, for example Europe/Bucharest.");
         if (!HolidayJurisdictionCodes.TryNormalize(request.CountryCode, out _))
             return ("countryCode", "A valid country or subdivision code is required, for example RO, GB-NIR, or US.");
-        return ValidateEmail(request.Email);
+        return ValidateEmail(request.Email) ?? ValidateOfficePercentage(request.RequiredOfficePercentage);
     }
     
+    public static (string Key, string Message)? ValidateOfficePercentage(int? percentage) =>
+        percentage is < 0 or > 100
+            ? ("requiredOfficePercentage", "Required office percentage must be a whole number between 0 and 100.")
+            : null;
+
     public static string? NormalizeEmail(string? email) =>
         string.IsNullOrWhiteSpace(email) ? null : email.Trim();
 

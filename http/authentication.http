@@ -9,6 +9,7 @@ GET {{baseUrl}}/api/holiday-jurisdictions
 Accept: application/json
 
 ### Create a normal user (anonymous; change the username before repeating)
+# requiredOfficePercentage accepts whole numbers from 0 to 100; omitted values default to 50.
 POST {{baseUrl}}/api/users
 Content-Type: application/json
 
@@ -17,7 +18,8 @@ Content-Type: application/json
   "password": "{{registrationPassword}}",
   "timeZoneId": "Europe/Bucharest",
   "countryCode": "RO",
-  "email": null
+  "email": null,
+  "requiredOfficePercentage": 50
 }
 
 ### Log in and store the persistent session cookie
@@ -41,23 +43,27 @@ Accept: application/json
 GET {{baseUrl}}/api/auth/me
 Accept: application/json
 
-### Update the signed-in user's email (run login and CSRF requests first)
+### Update the signed-in user's email and office requirement (run login and CSRF requests first)
 PUT {{baseUrl}}/api/users/me
 Content-Type: application/json
 X-CSRF-TOKEN: {{csrfToken}}
 
 {
-  "email": "andrei@example.com"
+  "email": "andrei@example.com",
+  "requiredOfficePercentage": 75
 }
 
 > {%
-    client.test("Email is updated", function () {
+    client.test("Email and office requirement are updated", function () {
         client.assert(response.status === 200, "Expected HTTP 200");
         client.assert(response.body.email === "andrei@example.com", "Expected updated email");
+        client.assert(response.body.requiredOfficePercentage === 75, "Expected 75% office requirement");
+        client.global.set("savedOfficePercentage", response.body.requiredOfficePercentage);
     });
 %}
 
 ### Clear the signed-in user's optional email
+# Run the profile update above first. Omitting requiredOfficePercentage preserves its saved value.
 PUT {{baseUrl}}/api/users/me
 Content-Type: application/json
 X-CSRF-TOKEN: {{csrfToken}}
@@ -70,6 +76,7 @@ X-CSRF-TOKEN: {{csrfToken}}
     client.test("Email is cleared", function () {
         client.assert(response.status === 200, "Expected HTTP 200");
         client.assert(response.body.email === null, "Expected null email");
+        client.assert(response.body.requiredOfficePercentage === client.global.get("savedOfficePercentage"), "Expected office requirement to be preserved");
     });
 %}
 
