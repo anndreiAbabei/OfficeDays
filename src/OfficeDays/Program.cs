@@ -14,6 +14,7 @@ using OfficeDays.Middleware;
 using OfficeDays.Security;
 using OfficeDays.Services;
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.AddJsonConsole(options => options.IncludeScopes = true);
 var cookieExpireTimeSpan = builder.Configuration.GetValue<TimeSpan>("Authentication:CookieExpireTimeSpan");
 if (cookieExpireTimeSpan <= TimeSpan.Zero)
     throw new InvalidOperationException("Authentication:CookieExpireTimeSpan must be a positive TimeSpan.");
@@ -34,6 +35,7 @@ AddAuthorization(builder, cookieExpireTimeSpan);
 
 var app = builder.Build();
 
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto

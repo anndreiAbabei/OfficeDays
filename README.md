@@ -344,6 +344,16 @@ Status includes eligible working days, maximum WFH days, required office days, c
 - Production exception handling returns Problem Details without stack traces.
 - Application events use structured ASP.NET Core logging. Passwords and raw API tokens are never logged.
 
+## Request correlation
+
+Every response from the application includes `X-Correlation-ID`, including API errors, health checks, and UI assets. Send a single nonblank `X-Correlation-ID` request header to reuse your own ID; otherwise the application generates a new GUID. Blank or multiple header values generate a fresh ID rather than an ambiguous correlation value. Header names are case-insensitive.
+
+Request processing runs inside an `ILogger` scope with the structured property `CorrelationId`. JSON console logging includes scopes, so handler, database, and exception logs emitted inside that scope carry the same ID. A completion log records the HTTP method, path, status, and elapsed time without logging request bodies or query strings. Startup logs and hosting logs outside the request middleware scope do not have a request correlation ID. Distributed tracing IDs remain independent.
+
+```sh
+curl -i -H 'X-Correlation-ID: support-case-123' http://localhost:8080/api/version
+```
+
 ## Tests
 
 Run everything with:
