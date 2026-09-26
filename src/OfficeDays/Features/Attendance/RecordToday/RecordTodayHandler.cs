@@ -12,7 +12,7 @@ public sealed class RecordTodayHandler : IRequestHandler<RecordTodayRequest>
 {
     private readonly AppDbContext _dbContext;
     private readonly IHttpContextAccessor _contextAccessor;
-    private readonly UserDateService _dates;
+    private readonly IUserDateService _dates;
     private readonly TimeProvider _clock;
     private readonly ILogger<RecordTodayHandler> _logger;
     
@@ -22,7 +22,7 @@ public sealed class RecordTodayHandler : IRequestHandler<RecordTodayRequest>
 
     public RecordTodayHandler(AppDbContext dbContext, 
                               IHttpContextAccessor contextAccessor,
-                              UserDateService dates,
+                              IUserDateService dates,
                               TimeProvider clock,
                               ILogger<RecordTodayHandler> logger)
     {
@@ -55,7 +55,7 @@ public sealed class RecordTodayHandler : IRequestHandler<RecordTodayRequest>
             Id = Guid.NewGuid(),
             UserId = userId,
             Date = date,
-            IsManual = request.IsManual,
+            IsManual = request.Body?.IsManual ?? false,
             CreatedAt = _clock.GetUtcNow()
         };
         await _dbContext.Attendances.AddAsync(row, cancellationToken);

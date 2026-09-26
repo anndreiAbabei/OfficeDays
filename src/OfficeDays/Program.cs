@@ -101,8 +101,8 @@ void AddServices(WebApplicationBuilder svcBuilder)
 {
     svcBuilder.Services.AddSingleton(TimeProvider.System);
     svcBuilder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
-    svcBuilder.Services.AddScoped<UserDateService>();
     svcBuilder.Services.AddScoped<CookieAntiforgeryFilter>();
+    svcBuilder.Services.AddSingleton<IUserDateService, UserDateService>();
     svcBuilder.Services.AddSingleton<IHandlerCreator, HandlerCreator>();
     svcBuilder.Services.AddHttpContextAccessor();
 }

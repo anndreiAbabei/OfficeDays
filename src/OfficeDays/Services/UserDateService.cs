@@ -2,7 +2,13 @@ using OfficeDays.Domain;
 
 namespace OfficeDays.Services;
 
-public sealed class UserDateService
+public interface IUserDateService
+{
+    DateOnly Today(User user);
+    bool IsValidTimeZone(string id);
+}
+
+public sealed class UserDateService : IUserDateService
 {
     private readonly TimeProvider _timeProvider;
 
@@ -15,13 +21,14 @@ public sealed class UserDateService
     {
         var timeZone = TimeZoneInfo.FindSystemTimeZoneById(user.TimeZoneId);
         var local = TimeZoneInfo.ConvertTime(_timeProvider.GetUtcNow(), timeZone);
+        
         return DateOnly.FromDateTime(local.DateTime);
     }
 
-    public static bool IsValidTimeZone(string id) =>
+    public bool IsValidTimeZone(string id) =>
         IsValidTimeZone(id, TimeZoneInfo.FindSystemTimeZoneById);
 
-    internal static bool IsValidTimeZone(string id, Func<string, TimeZoneInfo> findTimeZone)
+    private static bool IsValidTimeZone(string id, Func<string, TimeZoneInfo> findTimeZone)
     {
         try
         {

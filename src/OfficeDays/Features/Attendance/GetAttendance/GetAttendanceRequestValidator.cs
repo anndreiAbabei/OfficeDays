@@ -19,7 +19,7 @@ public sealed class GetAttendanceRequestValidator : AbstractValidator<GetAttenda
         When(s => s.Month.HasValue, () =>
         {
             RuleFor(s => s.Month)
-                .GreaterThan(1)
+                .GreaterThanOrEqualTo(1)
                 .LessThanOrEqualTo(12);
             RuleFor(s => s.Year)
                 .NotNull();

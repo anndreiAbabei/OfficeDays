@@ -10,16 +10,19 @@ public sealed class DatabaseInitializer
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IConfiguration _configuration;
     private readonly TimeProvider _timeProvider;
+    private readonly IUserDateService _userDateService;
     private readonly ILogger<DatabaseInitializer> _logger;
 
     public DatabaseInitializer(IServiceScopeFactory scopeFactory,
                                IConfiguration configuration,
                                TimeProvider timeProvider,
+                               IUserDateService userDateService,
                                ILogger<DatabaseInitializer> logger)
     {
         _scopeFactory = scopeFactory;
         _configuration = configuration;
         _timeProvider = timeProvider;
+        _userDateService = userDateService;
         _logger = logger;
     }
 
@@ -51,7 +54,7 @@ public sealed class DatabaseInitializer
         
         if (password.Length < 12)
             throw new InvalidOperationException("The BootstrapAdmin__Password environment variable must contain at least 12 characters.");
-        if (!UserDateService.IsValidTimeZone(timeZoneId))
+        if (!_userDateService.IsValidTimeZone(timeZoneId))
             throw new InvalidOperationException($"BootstrapAdmin__TimeZoneId '{timeZoneId}' is not a valid IANA timezone.");
         if (!HolidayJurisdictionCodes.TryNormalize(configuredCountryCode, out var countryCode))
             throw new InvalidOperationException($"BootstrapAdmin__CountryCode '{configuredCountryCode}' is not a valid country or subdivision code.");

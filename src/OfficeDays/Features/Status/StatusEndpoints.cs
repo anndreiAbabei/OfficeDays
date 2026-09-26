@@ -15,7 +15,7 @@ public static class StatusEndpoints
                                                  int? month,
                                                  ClaimsPrincipal principal,
                                                  AppDbContext db,
-                                                 UserDateService dates,
+                                                 IUserDateService dates,
                                                  CancellationToken cancellationToken)
     {
         var user = await db.Users.FindAsync([principal.GetUserId()], cancellationToken);
