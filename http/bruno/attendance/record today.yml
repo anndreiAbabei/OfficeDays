@@ -1,0 +1,16 @@
+info:
+  name: record today
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: https://{{ApiHost}}/api/attendance
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
