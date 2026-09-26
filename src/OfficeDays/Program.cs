@@ -40,7 +40,7 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 app.UseExceptionHandler();
 
-if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing")) 
+if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
     app.UseHsts();
 
 app.UseBearerTokenHttpsProtection();
@@ -51,10 +51,6 @@ await app.Services.GetRequiredService<DatabaseInitializer>()
                   .InitializeAsync(app.Lifetime.ApplicationStopping);
 
 app.MapApiEndpoints();
-
-OfficeDays.Features.Operations.OperationsEndpoints.Map(app);
-
-app.MapUiEndpoints();
 
 await app.RunAsync();
 return;
@@ -92,7 +88,7 @@ void AddAntiforgery(WebApplicationBuilder antiForgeBuilder)
 
 void AddDatabase(WebApplicationBuilder dbBuilder)
 {
-    dbBuilder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(dbBuilder.Configuration.GetConnectionString("Default") ?? 
+    dbBuilder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(dbBuilder.Configuration.GetConnectionString("Default") ??
                                                                               "Data Source=officedays.db"));
     dbBuilder.Services.AddSingleton<DatabaseInitializer>();
 }
@@ -103,8 +99,10 @@ void AddServices(WebApplicationBuilder svcBuilder)
     svcBuilder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
     svcBuilder.Services.AddScoped<CookieAntiforgeryFilter>();
     svcBuilder.Services.AddSingleton<IUserDateService, UserDateService>();
-    svcBuilder.Services.AddSingleton<IHandlerCreator, HandlerCreator>();
+    svcBuilder.Services.AddSingleton<IRequestExecutor, RequestExecutor>();
     svcBuilder.Services.AddHttpContextAccessor();
+    svcBuilder.Services.AddSingleton<OfficeDays.Features.Ui.UiContent>();
+    svcBuilder.Services.AddScoped<ICurrentUser, CurrentUser>();
 }
 
 void AddEndpoints(WebApplicationBuilder endpointsBuilder)
@@ -112,17 +110,17 @@ void AddEndpoints(WebApplicationBuilder endpointsBuilder)
     var assembly = typeof(OfficeDays.Program).Assembly;
     var groupInterface = typeof(IEndpointGroup);
     var groupTypes = assembly.GetTypesImplementing<IEndpointGroup>();
-    
-    foreach (var type in groupTypes) 
+
+    foreach (var type in groupTypes)
         endpointsBuilder.Services.AddSingleton(groupInterface, type);
-    
+
     var endpointInterfaceTypes = assembly.GetTypesImplementing<IEndpoint>(false)
                                          .Where(t => t.IsInterface);
 
     foreach (var endpointInterfaceType in endpointInterfaceTypes)
     {
         var endpointTypes = assembly.GetTypesImplementing(endpointInterfaceType);
-        
+
         foreach (var type in endpointTypes)
             endpointsBuilder.Services.AddSingleton(endpointInterfaceType, type);
     }
@@ -132,7 +130,7 @@ void AddHandlers(WebApplicationBuilder handlersBuilder)
 {
     var handlerInterface = typeof(IRequestHandler<>);
     var types = typeof(OfficeDays.Program).Assembly.GetTypesImplementing(handlerInterface);
-    
+
     foreach (var type in types)
     {
         var requestType = type.GetInterfaces()

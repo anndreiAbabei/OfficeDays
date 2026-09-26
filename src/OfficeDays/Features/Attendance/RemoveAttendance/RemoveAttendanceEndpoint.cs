@@ -4,13 +4,13 @@ using OfficeDays.Security;
 
 namespace OfficeDays.Features.Attendance.RemoveAttendance;
 
-public sealed class RemoveAttendanceEndpoint(IHandlerCreator creator) : IAttendanceEndpoint
+public sealed class RemoveAttendanceEndpoint(IRequestExecutor creator) : IAttendanceEndpoint
 {
-    private readonly IHandlerCreator _creator = creator;
-    
+    private readonly IRequestExecutor _creator = creator;
+
     public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapDelete("{date}", _creator.Create<RemoveAttendanceRequest>)
+        endpoints.MapDelete("{date}", _creator.Execute<RemoveAttendanceRequest>)
                  .AddEndpointFilter<CookieAntiforgeryFilter>();
     }
 }

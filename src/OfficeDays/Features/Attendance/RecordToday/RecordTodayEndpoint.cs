@@ -4,13 +4,13 @@ using OfficeDays.Security;
 
 namespace OfficeDays.Features.Attendance.RecordToday;
 
-public sealed class RecordTodayEndpoint(IHandlerCreator creator) : IAttendanceEndpoint
+public sealed class RecordTodayEndpoint(IRequestExecutor creator) : IAttendanceEndpoint
 {
-    private readonly IHandlerCreator _creator = creator;
-    
+    private readonly IRequestExecutor _creator = creator;
+
     public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapPost("/", _creator.Create<RecordTodayRequest>)
+        endpoints.MapPost("/", _creator.Execute<RecordTodayRequest>)
                  .AddEndpointFilter<CookieAntiforgeryFilter>();
     }
 }

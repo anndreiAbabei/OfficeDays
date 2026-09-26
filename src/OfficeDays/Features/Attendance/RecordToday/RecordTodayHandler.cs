@@ -11,36 +11,36 @@ namespace OfficeDays.Features.Attendance.RecordToday;
 public sealed class RecordTodayHandler : IRequestHandler<RecordTodayRequest>
 {
     private readonly AppDbContext _dbContext;
-    private readonly IHttpContextAccessor _contextAccessor;
+    private readonly ICurrentUser _currentUser;
     private readonly IUserDateService _dates;
     private readonly TimeProvider _clock;
     private readonly ILogger<RecordTodayHandler> _logger;
-    
-    private static readonly Func<AppDbContext, Guid, DateOnly, CancellationToken, Task<Domain.Attendance?>> GetAttendanceQuery = 
+
+    private static readonly Func<AppDbContext, Guid, DateOnly, CancellationToken, Task<Domain.Attendance?>> GetAttendanceQuery =
         EF.CompileAsyncQuery((AppDbContext ctx, Guid userId, DateOnly date, CancellationToken ct) => ctx.Attendances.SingleOrDefault(x => x.UserId == userId && x.Date == date));
 
 
-    public RecordTodayHandler(AppDbContext dbContext, 
-                              IHttpContextAccessor contextAccessor,
+    public RecordTodayHandler(AppDbContext dbContext,
+                              ICurrentUser currentUser,
                               IUserDateService dates,
                               TimeProvider clock,
                               ILogger<RecordTodayHandler> logger)
     {
         _dbContext = dbContext;
-        _contextAccessor = contextAccessor;
+        _currentUser = currentUser;
         _dates = dates;
         _clock = clock;
         _logger = logger;
     }
-    
+
     public async ValueTask<IResult> Handle(RecordTodayRequest request, CancellationToken cancellationToken)
     {
-        var userId = _contextAccessor.HttpContext?.User.GetUserId() ?? Guid.Empty;
+        var userId = _currentUser.Id;
         var user = await _dbContext.Users.FindAsync([userId], cancellationToken);
 
         if (user == null)
             return Results.NotFound();
-        
+
         var date = _dates.Today(user);
         var existing = await GetAttendanceQuery(_dbContext, userId, date, cancellationToken);
 
@@ -74,7 +74,7 @@ public sealed class RecordTodayHandler : IRequestHandler<RecordTodayRequest>
             existing = await GetAttendanceQuery(_dbContext, userId, date, cancellationToken);
 
             _logger.LogResolvedConcurrentUpdate(userId, date);
-            
+
             return Results.Ok(existing!.ToViewModel());
         }
     }

@@ -11,9 +11,11 @@ public interface IEndpointGroup
     void MapGroup(IEndpointGroupBuilder endpoints);
 }
 
+public interface IRootEndpointGroup : IEndpointGroup;
+
 public interface IEndpointGroupBuilder
 {
-    RouteGroupBuilder MapEndpoints<T>([StringSyntax("Route")] string prefix) 
+    RouteGroupBuilder MapEndpoints<T>([StringSyntax("Route")] string prefix)
         where T : IEndpoint;
 }
 
@@ -28,15 +30,15 @@ public sealed class EndpointGroupBuilder : IEndpointGroupBuilder
         _routeGroupBuilder = routeGroupBuilder;
     }
 
-    public RouteGroupBuilder MapEndpoints<T>([StringSyntax("Route")] string prefix) 
+    public RouteGroupBuilder MapEndpoints<T>([StringSyntax("Route")] string prefix)
         where T : IEndpoint
     {
         var group = _routeGroupBuilder.MapGroup(prefix);
         var endpoints = _serviceProvider.GetServices<T>();
-        
+
         foreach (var endpoint in endpoints)
             endpoint.MapEndpoint(group);
-        
+
         return group;
     }
 }

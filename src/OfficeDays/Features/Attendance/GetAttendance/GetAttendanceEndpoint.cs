@@ -3,12 +3,12 @@ using OfficeDays.Infrastructure;
 
 namespace OfficeDays.Features.Attendance.GetAttendance;
 
-public sealed class GetAttendanceEndpoint(IHandlerCreator creator) : IAttendanceEndpoint
+public sealed class GetAttendanceEndpoint(IRequestExecutor creator) : IAttendanceEndpoint
 {
-    private readonly IHandlerCreator _creator = creator;
+    private readonly IRequestExecutor _creator = creator;
 
     public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/", _creator.Create<GetAttendanceRequest>);
+        endpoints.MapGet("/", _creator.Execute<GetAttendanceRequest>);
     }
 }

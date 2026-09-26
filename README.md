@@ -27,6 +27,10 @@ tests/OfficeDays.IntegrationTests real HTTP pipeline tests with an isolated SQLi
 
 The application uses .NET 10, ASP.NET Core minimal APIs, EF Core, and SQLite. The UI is one server-hosted page built with plain JavaScript and CSS. `AttendanceCalculator` is independent of HTTP and persistence, and accepts a general date range so future period types do not require rewriting the rule.
 
+Each API operation lives in `Features/<Area>/<Operation>` with its endpoint, request/response contracts, handler, FluentValidation validator, mapping, and source-generated logging methods as needed. Request wrappers bind route/query properties and an explicit `[FromBody]` payload. `RequestExecutor` validates and invokes the scoped handler; handlers return `IResult` and access EF Core directly. It logs request names and invalid field names, never request payloads.
+
+Endpoint groups own route prefixes and authorization. `ICurrentUser` provides the authenticated user ID. Root groups keep health and UI routes outside `/api`; health endpoints use ASP.NET Core health checks, and UI endpoints serve a shared startup snapshot of assets. `RecordToday` and `RecordDate` deliberately keep their recording logic independent.
+
 Stored dates such as attendance, vacation, and holidays use `DateOnly`. Audit timestamps use UTC. Calculated values are never persisted.
 
 ## Requirements
