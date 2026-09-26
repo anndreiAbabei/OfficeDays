@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using OfficeDays.Data;
 using OfficeDays.Extensions;
 using OfficeDays.Features.Attendance.RecordDate.Contracts;
-using OfficeDays.Features.Common;
 using OfficeDays.Infrastructure;
 using OfficeDays.Security;
 

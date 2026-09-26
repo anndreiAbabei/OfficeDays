@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using OfficeDays.Data;
 using OfficeDays.Domain;
 using OfficeDays.Features.Authentication.Login.Contracts;
-using OfficeDays.Features.Common;
 using OfficeDays.Infrastructure;
 using System.Security.Claims;
 using OfficeDays.Services;
