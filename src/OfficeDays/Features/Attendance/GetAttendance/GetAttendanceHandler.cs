@@ -13,10 +13,12 @@ public sealed class GetAttendanceHandler : IRequestHandler<GetAttendanceRequest>
     private readonly IHttpContextAccessor _contextAccessor;
     private readonly ILogger<GetAttendanceHandler> _logger;
 
-    private static readonly Func<AppDbContext, Guid, IAsyncEnumerable<Domain.Attendance>> GetAttendanceQuery = 
-        EF.CompileAsyncQuery((AppDbContext ctx, Guid userId) => ctx.Attendances
+    private static readonly Func<AppDbContext, Guid, DateOnly, DateOnly, IAsyncEnumerable<Domain.Attendance>> GetAttendanceQuery =
+        EF.CompileAsyncQuery<AppDbContext, Guid, DateOnly, DateOnly, Domain.Attendance>(
+            (ctx, userId, start, end) => ctx.Attendances
                                                                    .AsNoTracking()
-                                                                   .Where(x => x.UserId == userId));
+                                                                   .Where(x => x.UserId == userId && x.Date >= start && x.Date <= end)
+                                                                   .OrderByDescending(x => x.Date));
 
     public GetAttendanceHandler(AppDbContext dbContext, 
                                 IHttpContextAccessor contextAccessor,
@@ -30,7 +32,6 @@ public sealed class GetAttendanceHandler : IRequestHandler<GetAttendanceRequest>
     public async ValueTask<IResult> Handle(GetAttendanceRequest request, CancellationToken cancellationToken)
     {
         var userId = _contextAccessor.HttpContext?.User.GetUserId() ?? Guid.Empty;
-        var query = GetAttendanceQuery(_dbContext, userId);
         
         var year = request.Year;
         var month = request.Month;
@@ -39,11 +40,11 @@ public sealed class GetAttendanceHandler : IRequestHandler<GetAttendanceRequest>
         if (year.HasValue && month.HasValue)
         {
             period = CalculationPeriod.ForMonth(year.Value, month.Value);
-
-            query = query.Where(x => x.Date >= period.Value.Start && x.Date <= period.Value.End);
         }
         
-        var rows = await query.OrderByDescending(x => x.Date).ToListAsync(cancellationToken);
+        var query = GetAttendanceQuery(_dbContext, userId,
+            period?.Start ?? DateOnly.MinValue, period?.End ?? DateOnly.MaxValue);
+        var rows = await query.ToListAsync(cancellationToken);
         
         _logger.LogGetEntries(userId, period);
         

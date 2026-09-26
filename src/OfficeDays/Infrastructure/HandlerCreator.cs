@@ -24,7 +24,7 @@ public sealed partial class HandlerCreator : IHandlerCreator
                                                      CancellationToken cancellationToken = default)
         where TRequest : IRequest
     {
-        LogStartRequest(logger, request);
+        LogStartRequest(logger, typeof(TRequest).Name);
         var sw = Stopwatch.StartNew();
         
         if(validator != null)
@@ -54,8 +54,8 @@ public sealed partial class HandlerCreator : IHandlerCreator
 
     private const int EventIdStart = 0100;
     
-    [LoggerMessage(EventIdStart + 1, LogLevel.Debug, "Start request {Request}")]
-    private static partial void LogStartRequest(ILogger logger, object request);
+    [LoggerMessage(EventIdStart + 1, LogLevel.Debug, "Start request {RequestName}")]
+    private static partial void LogStartRequest(ILogger logger, string requestName);
     
     [LoggerMessage(EventIdStart + 2, LogLevel.Debug, "Start validating request")]
     private static partial void LogStartValidatingRequest(ILogger logger);
