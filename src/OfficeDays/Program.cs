@@ -1,16 +1,18 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using OfficeDays.Data;
 using OfficeDays.Domain;
 using OfficeDays.Endpoints;
+using OfficeDays.Extensions;
+using OfficeDays.Infrastructure;
 using OfficeDays.Middleware;
 using OfficeDays.Security;
 using OfficeDays.Services;
-
 var builder = WebApplication.CreateBuilder(args);
 var cookieExpireTimeSpan = builder.Configuration.GetValue<TimeSpan>("Authentication:CookieExpireTimeSpan");
 if (cookieExpireTimeSpan <= TimeSpan.Zero)
@@ -23,6 +25,10 @@ AddAntiforgery(builder);
 
 AddDatabase(builder);
 AddServices(builder);
+
+AddEndpoints(builder);
+AddHandlers(builder);
+AddValidation(builder);
 
 AddAuthorization(builder, cookieExpireTimeSpan);
 
@@ -97,6 +103,49 @@ void AddServices(WebApplicationBuilder svcBuilder)
     svcBuilder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
     svcBuilder.Services.AddScoped<UserDateService>();
     svcBuilder.Services.AddScoped<CookieAntiforgeryFilter>();
+    svcBuilder.Services.AddSingleton<IHandlerCreator, HandlerCreator>();
+    svcBuilder.Services.AddHttpContextAccessor();
+}
+
+void AddEndpoints(WebApplicationBuilder endpointsBuilder)
+{
+    var assembly = typeof(OfficeDays.Program).Assembly;
+    var groupInterface = typeof(IEndpointGroup);
+    var groupTypes = assembly.GetTypesImplementing<IEndpointGroup>();
+    
+    foreach (var type in groupTypes) 
+        endpointsBuilder.Services.AddSingleton(groupInterface, type);
+    
+    var endpointInterfaceTypes = assembly.GetTypesImplementing<IEndpoint>(false)
+                                         .Where(t => t.IsInterface);
+
+    foreach (var endpointInterfaceType in endpointInterfaceTypes)
+    {
+        var endpointTypes = assembly.GetTypesImplementing(endpointInterfaceType);
+        
+        foreach (var type in endpointTypes)
+            endpointsBuilder.Services.AddSingleton(endpointInterfaceType, type);
+    }
+}
+
+void AddHandlers(WebApplicationBuilder handlersBuilder)
+{
+    var handlerInterface = typeof(IRequestHandler<>);
+    var types = typeof(OfficeDays.Program).Assembly.GetTypesImplementing(handlerInterface);
+    
+    foreach (var type in types)
+    {
+        var requestType = type.GetInterfaces()
+                              .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == handlerInterface)
+                              .Select(i => i.GetGenericArguments()[0])
+                              .First();
+        handlersBuilder.Services.AddScoped(handlerInterface.MakeGenericType(requestType), type);
+    }
+}
+
+void AddValidation(WebApplicationBuilder validationBuilder)
+{
+    validationBuilder.Services.AddValidatorsFromAssembly(typeof(OfficeDays.Program).Assembly);
 }
 
 void AddAuthorization(WebApplicationBuilder authBuilder, TimeSpan timeSpan)
@@ -140,4 +189,7 @@ void AddAuthorization(WebApplicationBuilder authBuilder, TimeSpan timeSpan)
                .AddPolicy("AdminOnly", policy => policy.RequireClaim("is_admin", "true"));
 }
 
-public partial class Program;
+namespace OfficeDays
+{
+    public partial class Program;
+}
