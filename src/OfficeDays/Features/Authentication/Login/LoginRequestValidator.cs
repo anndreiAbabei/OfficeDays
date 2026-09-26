@@ -5,10 +5,22 @@ namespace OfficeDays.Features.Authentication.Login;
 
 public sealed class LoginRequestValidator : AbstractValidator<LoginRequest>
 {
-    public LoginRequestValidator()
+    public LoginRequestValidator(IValidator<LoginRequestBody> bodyValidator)
     {
-        RuleFor(input => input.Body).Must(body =>
-            !string.IsNullOrWhiteSpace(body.Username) && !string.IsNullOrEmpty(body.Password))
-            .WithMessage("Username and password are required.").OverridePropertyName("request");
+        RuleFor(input => input.Body)
+            .NotNull()
+            .SetValidator(bodyValidator);
+    }
+}
+
+public sealed class LoginRequestBodyValidator : AbstractValidator<LoginRequestBody>
+{
+    public LoginRequestBodyValidator()
+    {
+        RuleFor(v => v.Username)
+            .NotEmpty();
+        
+        RuleFor(v => v.Password)
+            .NotEmpty();
     }
 }

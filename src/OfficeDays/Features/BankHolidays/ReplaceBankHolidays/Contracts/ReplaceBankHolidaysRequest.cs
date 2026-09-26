@@ -6,11 +6,11 @@ namespace OfficeDays.Features.BankHolidays.ReplaceBankHolidays.Contracts;
 public sealed record ReplaceBankHolidaysRequest : IRequest
 {
     [FromRoute(Name = "countryCode")]
-    public string CountryCode { get; init; } = default!;
+    public required string CountryCode { get; init; }
 
     [FromRoute(Name = "year")]
-    public int Year { get; init; }
+    public required int Year { get; init; }
 
     [FromBody]
-    public List<BankHolidayItem>? Body { get; init; }
+    public required List<BankHolidayItem> Body { get; init; }
 }

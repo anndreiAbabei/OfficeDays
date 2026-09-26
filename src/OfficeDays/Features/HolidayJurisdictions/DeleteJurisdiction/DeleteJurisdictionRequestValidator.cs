@@ -7,7 +7,8 @@ public sealed class DeleteJurisdictionRequestValidator : AbstractValidator<Delet
 {
     public DeleteJurisdictionRequestValidator()
     {
-        RuleFor(input => input.Code).Must(code => HolidayJurisdictionCodes.TryNormalize(code, out _))
+        RuleFor(input => input.Code)
+            .Must(code => HolidayJurisdictionCodes.TryNormalize(code, out _))
             .WithMessage("A valid country or subdivision code is required, for example RO, GB-NIR, or US.")
             .OverridePropertyName("code");
     }

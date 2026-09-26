@@ -6,5 +6,5 @@ namespace OfficeDays.Features.Tokens.CreateToken.Contracts;
 public sealed record CreateTokenRequest : IRequest
 {
     [FromBody]
-    public CreateTokenRequestBody Body { get; init; } = default!;
+    public required CreateTokenRequestBody Body { get; init; }
 }

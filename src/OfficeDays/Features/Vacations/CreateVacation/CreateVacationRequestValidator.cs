@@ -5,10 +5,19 @@ namespace OfficeDays.Features.Vacations.CreateVacation;
 
 public sealed class CreateVacationRequestValidator : AbstractValidator<CreateVacationRequest>
 {
-    public CreateVacationRequestValidator()
+    public CreateVacationRequestValidator(IValidator<CreateVacationRequestBody> bodyValidator)
     {
-        RuleFor(input => input.Body).Must(body => body.To >= body.From)
-            .WithMessage("Vacation end date cannot precede its start date.")
-            .OverridePropertyName("to");
+        RuleFor(input => input.Body)
+            .NotNull()
+            .SetValidator(bodyValidator);
+    }
+}
+
+public sealed class CreateVacationRequestBodyValidator : AbstractValidator<CreateVacationRequestBody>
+{
+    public CreateVacationRequestBodyValidator()
+    {
+        RuleFor(input => input.To)
+            .GreaterThanOrEqualTo(input => input.From);
     }
 }

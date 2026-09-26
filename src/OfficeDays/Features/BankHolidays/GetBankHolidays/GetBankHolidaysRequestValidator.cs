@@ -7,10 +7,14 @@ public sealed class GetBankHolidaysRequestValidator : AbstractValidator<GetBankH
 {
     public GetBankHolidaysRequestValidator()
     {
-        RuleFor(input => input.CountryCode).Must(code => HolidayJurisdictionCodes.TryNormalize(code, out _))
+        RuleFor(input => input.CountryCode)
+            .Must(code => HolidayJurisdictionCodes.TryNormalize(code, out _))
             .WithMessage("A valid country or subdivision code is required.")
             .OverridePropertyName("countryCode");
-        RuleFor(input => input.Year).InclusiveBetween(1, 9999)
-            .WithMessage("Year must be between 1 and 9999.").OverridePropertyName("year");
+        
+        RuleFor(input => input.Year)
+            .InclusiveBetween(1, 9999)
+            .WithMessage("Year must be between 1 and 9999.")
+            .OverridePropertyName("year");
     }
 }

@@ -1,3 +1,5 @@
+using OfficeDays.Extensions;
+
 namespace OfficeDays.Security;
 
 public interface ICurrentUser
@@ -7,14 +9,17 @@ public interface ICurrentUser
 
 public sealed class CurrentUser(IHttpContextAccessor contextAccessor) : ICurrentUser
 {
+    private readonly IHttpContextAccessor _contextAccessor = contextAccessor;
+    
     public Guid Id
     {
         get
         {
-            var principal = contextAccessor.HttpContext?.User;
-            if (principal?.Identity?.IsAuthenticated != true)
-                throw new InvalidOperationException("An authenticated user is required.");
-            return principal.GetUserId();
+            var principal = _contextAccessor.HttpContext?.User;
+            
+            return principal?.Identity?.IsAuthenticated != true 
+                       ? throw new InvalidOperationException("An authenticated user is required.") 
+                       : principal.GetUserId();
         }
     }
 }

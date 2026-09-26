@@ -10,19 +10,18 @@ namespace OfficeDays.Security;
 public sealed class ApiTokenAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
     public const string SchemeName = "ApiToken";
-    private readonly AppDbContext _db;
+    private readonly AppDbContext _dbContext;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<ApiTokenAuthenticationHandler> _logger;
 
-    public ApiTokenAuthenticationHandler(
-        IOptionsMonitor<AuthenticationSchemeOptions> options,
-        ILoggerFactory loggerFactory,
-        UrlEncoder encoder,
-        AppDbContext db,
-        TimeProvider timeProvider)
+    public ApiTokenAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,
+                                         ILoggerFactory loggerFactory,
+                                         UrlEncoder encoder,
+                                         AppDbContext dbContext,
+                                         TimeProvider timeProvider)
         : base(options, loggerFactory, encoder)
     {
-        _db = db;
+        _dbContext = dbContext;
         _timeProvider = timeProvider;
         _logger = loggerFactory.CreateLogger<ApiTokenAuthenticationHandler>();
     }
@@ -37,22 +36,21 @@ public sealed class ApiTokenAuthenticationHandler : AuthenticationHandler<Authen
 
         var rawToken = header["Bearer ".Length..].Trim();
         if (rawToken.Length == 0)
-        {
             return AuthenticateResult.Fail("A bearer token is required.");
-        }
 
         var hash = ApiTokenService.Hash(rawToken);
-        var token = await _db.ApiTokens.Include(x => x.User).ThenInclude(x => x.HolidayJurisdiction)
-            .SingleOrDefaultAsync(x => x.TokenHash == hash && x.RevokedAt == null, Context.RequestAborted);
+        var token = await _dbContext.ApiTokens.Include(x => x.User)
+                                    .ThenInclude(x => x.HolidayJurisdiction)
+                                    .SingleOrDefaultAsync(x => x.TokenHash == hash && x.RevokedAt == null, 
+                                                          Context.RequestAborted);
         if (token is null)
         {
-            _logger.LogWarning("Rejected an invalid or revoked API token from {RemoteIpAddress}",
-                Context.Connection.RemoteIpAddress);
+            _logger.LogWarning("Rejected an invalid or revoked API token from {RemoteIpAddress}", Context.Connection.RemoteIpAddress);
             return AuthenticateResult.Fail("The bearer token is invalid or revoked.");
         }
 
         token.LastUsedAt = _timeProvider.GetUtcNow();
-        await _db.SaveChangesAsync(Context.RequestAborted);
+        await _dbContext.SaveChangesAsync(Context.RequestAborted);
         _logger.LogDebug("API token {TokenId} authenticated user {UserId}", token.Id, token.UserId);
 
         var claims = new List<Claim>

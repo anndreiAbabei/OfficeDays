@@ -5,6 +5,7 @@ namespace OfficeDays.Features.Operations.GetVersion;
 
 public sealed class GetVersionEndpoint(IRequestExecutor executor) : IOperationsEndpoint
 {
-    public void MapEndpoint(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapGet("version", executor.Execute<GetVersionRequest>);
+    private readonly IRequestExecutor _executor = executor;
+    
+    public void MapEndpoint(IEndpointRouteBuilder endpoints) => endpoints.MapGet("version", _executor.Execute<GetVersionRequest>);
 }

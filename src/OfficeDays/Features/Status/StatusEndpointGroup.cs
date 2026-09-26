@@ -8,6 +8,7 @@ public sealed class StatusEndpointGroup : IEndpointGroup
 {
     public void MapGroup(IEndpointGroupBuilder endpoints)
     {
-        endpoints.MapEndpoints<IStatusEndpoint>("status").RequireAuthorization();
+        endpoints.MapEndpoints<IStatusEndpoint>("status")
+                 .RequireAuthorization();
     }
 }

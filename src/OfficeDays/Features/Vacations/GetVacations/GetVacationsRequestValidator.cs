@@ -7,10 +7,24 @@ public sealed class GetVacationsRequestValidator : AbstractValidator<GetVacation
 {
     public GetVacationsRequestValidator()
     {
-        RuleFor(request => request).Must(request =>
-            (!request.Year.HasValue && !request.Month.HasValue) ||
-            (request.Year is >= 1 and <= 9999 && request.Month is >= 1 and <= 12))
-            .WithMessage("Both year and month must be supplied and valid.")
-            .OverridePropertyName("request");
+        When(req => req.Year.HasValue, () =>
+        {
+            RuleFor(req => req.Year)
+                .GreaterThanOrEqualTo(1)
+                .LessThanOrEqualTo(9999);
+
+            RuleFor(req => req.Month)
+                .NotNull();
+        });
+        
+        When(req => req.Month.HasValue, () =>
+        {
+            RuleFor(req => req.Month)
+                .GreaterThanOrEqualTo(1)
+                .LessThanOrEqualTo(12);
+
+            RuleFor(req => req.Year)
+                .NotNull();
+        });
     }
 }

@@ -5,10 +5,11 @@ namespace OfficeDays.Features.Operations.GetLiveness;
 
 public sealed class GetLivenessEndpoint : IHealthEndpoint
 {
-    public void MapEndpoint(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapHealthChecks("live", new HealthCheckOptions
-        {
-            Predicate = _ => false,
-            ResponseWriter = HealthResponseWriter.Write
-        });
+    private static readonly HealthCheckOptions _options = new HealthCheckOptions
+    {
+        Predicate = _ => false,
+        ResponseWriter = HealthResponseWriter.Write
+    };
+    
+    public void MapEndpoint(IEndpointRouteBuilder endpoints) => endpoints.MapHealthChecks("live", _options);
 }

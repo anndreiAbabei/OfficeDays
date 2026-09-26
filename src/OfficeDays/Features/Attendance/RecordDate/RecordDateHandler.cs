@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OfficeDays.Data;
+using OfficeDays.Extensions;
 using OfficeDays.Features.Attendance.RecordDate.Contracts;
 using OfficeDays.Features.Common;
 using OfficeDays.Infrastructure;
@@ -63,7 +64,7 @@ public sealed class RecordDateHandler : IRequestHandler<RecordDateRequest>
             return Results.Created($"/api/attendance/{date:yyyy-MM-dd}", row.ToViewModel());
         }
         catch (DbUpdateException exception)
-            when (ApiResults.IsUniqueViolation(exception))
+            when (exception.IsUniqueViolation())
         {
             _dbContext.Entry(row).State = EntityState.Detached;
             existing = await GetAttendanceQuery(_dbContext, userId, date, cancellationToken);

@@ -6,6 +6,6 @@ public interface IHealthEndpoint : IEndpoint;
 
 public sealed class HealthEndpointGroup : IRootEndpointGroup
 {
-    public void MapGroup(IEndpointGroupBuilder endpoints) =>
-        endpoints.MapEndpoints<IHealthEndpoint>("health").AllowAnonymous();
+    public void MapGroup(IEndpointGroupBuilder endpoints) => endpoints.MapEndpoints<IHealthEndpoint>("health")
+                                                                      .AllowAnonymous();
 }

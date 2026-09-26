@@ -6,5 +6,5 @@ namespace OfficeDays.Features.Vacations.CreateVacation.Contracts;
 public sealed record CreateVacationRequest : IRequest
 {
     [FromBody]
-    public CreateVacationRequestBody Body { get; init; } = default!;
+    public required CreateVacationRequestBody Body { get; init; }
 }

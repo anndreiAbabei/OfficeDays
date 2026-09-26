@@ -4,16 +4,30 @@ using System.Reflection;
 
 namespace OfficeDays.Features.Operations.GetVersion;
 
-public sealed class GetVersionHandler(IHttpContextAccessor contextAccessor) : IRequestHandler<GetVersionRequest>
+public sealed class GetVersionHandler : IRequestHandler<GetVersionRequest>
 {
-    private static readonly string Version = typeof(Program).Assembly
-        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
+    private readonly IHttpContextAccessor _contextAccessor;
+    
+    private static readonly string _version = typeof(Program).Assembly
+                                                             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+                                                             .InformationalVersion ?? "0.0.0-err";
+    
+    public GetVersionHandler(IHttpContextAccessor contextAccessor)
+    {
+        _contextAccessor = contextAccessor;
+    }
 
     public ValueTask<IResult> Handle(GetVersionRequest request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var context = contextAccessor.HttpContext ?? throw new InvalidOperationException("No active HTTP request.");
+        
+        var context = _contextAccessor.HttpContext ?? throw new InvalidOperationException("No active HTTP request.");
+        
         context.Response.Headers.CacheControl = "no-store";
-        return ValueTask.FromResult<IResult>(Results.Ok(new GetVersionResponse(Version)));
+
+        var response = new GetVersionResponse(_version);
+        var result = Results.Ok(response);
+        
+        return ValueTask.FromResult(result);
     }
 }

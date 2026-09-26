@@ -16,11 +16,13 @@ public sealed class UiContent
         using var reader = new StreamReader(files.GetFileInfo("index.html").CreateReadStream());
         var html = reader.ReadToEnd();
         var assets = new List<UiAsset>();
-        foreach (var (name, contentType) in new[]
+        var resources = new[]
         {
             ("app.js", "text/javascript; charset=utf-8"),
             ("styles.css", "text/css; charset=utf-8")
-        })
+        };
+        
+        foreach (var (name, contentType) in resources)
         {
             using var stream = files.GetFileInfo(name).CreateReadStream();
             using var buffer = new MemoryStream();

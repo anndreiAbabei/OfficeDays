@@ -8,6 +8,7 @@ public sealed class TokensEndpointGroup : IEndpointGroup
 {
     public void MapGroup(IEndpointGroupBuilder endpoints)
     {
-        endpoints.MapEndpoints<ITokensEndpoint>("tokens").RequireAuthorization();
+        endpoints.MapEndpoints<ITokensEndpoint>("tokens")
+                 .RequireAuthorization();
     }
 }

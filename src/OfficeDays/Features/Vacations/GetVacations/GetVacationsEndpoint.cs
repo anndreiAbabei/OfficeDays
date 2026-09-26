@@ -1,13 +1,14 @@
 using OfficeDays.Features.Vacations.GetVacations.Contracts;
 using OfficeDays.Infrastructure;
-using OfficeDays.Security;
 
 namespace OfficeDays.Features.Vacations.GetVacations;
 
 public sealed class GetVacationsEndpoint(IRequestExecutor executor) : IVacationsEndpoint
 {
+    private readonly IRequestExecutor _executor = executor;
+    
     public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/", executor.Execute<GetVacationsRequest>);
+        endpoints.MapGet("/", _executor.Execute<GetVacationsRequest>);
     }
 }

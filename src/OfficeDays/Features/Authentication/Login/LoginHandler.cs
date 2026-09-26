@@ -8,27 +8,44 @@ using OfficeDays.Features.Authentication.Login.Contracts;
 using OfficeDays.Features.Common;
 using OfficeDays.Infrastructure;
 using System.Security.Claims;
+using OfficeDays.Services;
 
 namespace OfficeDays.Features.Authentication.Login;
 
-public sealed class LoginHandler(AppDbContext db,
-    IPasswordHasher<User> hasher,
-    IHttpContextAccessor contextAccessor,
-    ILogger<LoginHandler> logger) : IRequestHandler<LoginRequest>
+public sealed class LoginHandler : IRequestHandler<LoginRequest>
 {
+    private readonly AppDbContext _db;
+    private readonly IPasswordHasher<User> _hasher;
+    private readonly IHttpContextAccessor _contextAccessor;
+    private readonly IUserService _userService;
+    private readonly ILogger<LoginHandler> _logger;
+    
+    public LoginHandler(AppDbContext db,
+                        IPasswordHasher<User> hasher,
+                        IHttpContextAccessor contextAccessor,
+                        IUserService userService,
+                        ILogger<LoginHandler> logger)
+    {
+        _db = db;
+        _hasher = hasher;
+        _contextAccessor = contextAccessor;
+        _userService = userService;
+        _logger = logger;
+    }
+    
     public async ValueTask<IResult> Handle(LoginRequest input, CancellationToken cancellationToken)
     {
         var request = input.Body;
-        var context = contextAccessor.HttpContext ?? throw new InvalidOperationException("No active HTTP request.");
+        var context = _contextAccessor.HttpContext ?? throw new InvalidOperationException("No active HTTP request.");
 
-        var normalized = ApiResults.NormalizeUsername(request.Username!);
-        var user = await db.Users
+        var normalized = _userService.NormalizeUsername(request.Username);
+        var user = await _db.Users
                            .Include(x => x.HolidayJurisdiction)
                            .SingleOrDefaultAsync(x => x.NormalizedUsername == normalized, cancellationToken);
 
-        if (user is null || hasher.VerifyHashedPassword(user, user.PasswordHash, request.Password!) == PasswordVerificationResult.Failed)
+        if (user is null || _hasher.VerifyHashedPassword(user, user.PasswordHash, request.Password) == PasswordVerificationResult.Failed)
         {
-            logger.LogFailedLogin(request.Username, context.Connection.RemoteIpAddress);
+            _logger.LogFailedLogin(request.Username, context.Connection.RemoteIpAddress);
 
             return Results.Problem(statusCode: StatusCodes.Status401Unauthorized,
                                    title: "Invalid credentials",
@@ -42,7 +59,7 @@ public sealed class LoginHandler(AppDbContext db,
                                   new ClaimsPrincipal(identity),
                                   new AuthenticationProperties { IsPersistent = true });
 
-        logger.LogSignedIn(user.Id);
+        _logger.LogSignedIn(user.Id);
 
         return Results.Ok(user.ToViewModel());
     }

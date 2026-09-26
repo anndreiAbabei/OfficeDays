@@ -6,8 +6,12 @@ namespace OfficeDays.Features.HolidayJurisdictions.UpdateJurisdiction;
 
 public sealed class UpdateJurisdictionEndpoint(IRequestExecutor executor) : IHolidayJurisdictionsEndpoint
 {
+    private readonly IRequestExecutor _executor = executor;
+    
     public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapPut("{code}", executor.Execute<UpdateJurisdictionRequest>).RequireAuthorization("AdminOnly").AddEndpointFilter<CookieAntiforgeryFilter>();
+        endpoints.MapPut("{code}", _executor.Execute<UpdateJurisdictionRequest>)
+                 .RequireAuthorization("AdminOnly")
+                 .AddEndpointFilter<CookieAntiforgeryFilter>();
     }
 }

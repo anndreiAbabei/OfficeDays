@@ -6,8 +6,8 @@ namespace OfficeDays.Features.BankHolidays.GetBankHolidays.Contracts;
 public sealed record GetBankHolidaysRequest : IRequest
 {
     [FromRoute(Name = "countryCode")]
-    public string CountryCode { get; init; } = default!;
+    public required string CountryCode { get; init; }
 
     [FromRoute(Name = "year")]
-    public int Year { get; init; }
+    public required int Year { get; init; }
 }

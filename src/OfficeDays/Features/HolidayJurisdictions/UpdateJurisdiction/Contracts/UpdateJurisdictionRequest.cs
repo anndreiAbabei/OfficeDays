@@ -6,8 +6,8 @@ namespace OfficeDays.Features.HolidayJurisdictions.UpdateJurisdiction.Contracts;
 public sealed record UpdateJurisdictionRequest : IRequest
 {
     [FromRoute(Name = "code")]
-    public string Code { get; init; } = default!;
+    public required string Code { get; init; }
 
     [FromBody]
-    public UpdateJurisdictionRequestBody Body { get; init; } = default!;
+    public required UpdateJurisdictionRequestBody Body { get; init; }
 }

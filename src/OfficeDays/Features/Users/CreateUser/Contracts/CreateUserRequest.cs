@@ -6,5 +6,5 @@ namespace OfficeDays.Features.Users.CreateUser.Contracts;
 public sealed record CreateUserRequest : IRequest
 {
     [FromBody]
-    public CreateUserRequestBody Body { get; init; } = default!;
+    public required CreateUserRequestBody Body { get; init; }
 }

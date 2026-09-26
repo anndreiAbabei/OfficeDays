@@ -5,7 +5,15 @@ namespace OfficeDays.Features.Users.CreateUser;
 
 public static class CreateUserMapping
 {
-    public static CreateUserResponse ToViewModel(this User user) =>
-        new CreateUserResponse(user.Id, user.Username, user.TimeZoneId,
-            user.HolidayJurisdiction.Code, user.HolidayJurisdiction.Name, user.IsAdmin, user.Email, user.RequiredOfficePercentage);
+    public static CreateUserResponse ToViewModel(this User user) => new CreateUserResponse
+    {
+        Id = user.Id,
+        Username = user.Username,
+        TimeZoneId = user.TimeZoneId,
+        CountryCode = user.HolidayJurisdiction.Code,
+        CountryName = user.HolidayJurisdiction.Name,
+        IsAdmin = user.IsAdmin,
+        Email = user.Email,
+        RequiredOfficePercentage = user.RequiredOfficePercentage
+    };
 }

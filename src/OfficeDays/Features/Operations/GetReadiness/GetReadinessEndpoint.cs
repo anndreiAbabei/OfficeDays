@@ -5,9 +5,10 @@ namespace OfficeDays.Features.Operations.GetReadiness;
 
 public sealed class GetReadinessEndpoint : IHealthEndpoint
 {
-    public void MapEndpoint(IEndpointRouteBuilder endpoints) =>
-        endpoints.MapHealthChecks("ready", new HealthCheckOptions
-        {
-            ResponseWriter = HealthResponseWriter.Write
-        });
+    private static readonly HealthCheckOptions _options = new HealthCheckOptions
+    {
+        ResponseWriter = HealthResponseWriter.Write
+    };
+
+    public void MapEndpoint(IEndpointRouteBuilder endpoints) => endpoints.MapHealthChecks("ready", _options);
 }

@@ -5,15 +5,24 @@ using OfficeDays.Infrastructure;
 
 namespace OfficeDays.Features.HolidayJurisdictions.GetJurisdictions;
 
-public sealed class GetJurisdictionsHandler(AppDbContext db) : IRequestHandler<GetJurisdictionsRequest>
+public sealed class GetJurisdictionsHandler : IRequestHandler<GetJurisdictionsRequest>
 {
+    private readonly AppDbContext _dbContext;
+    
+    public GetJurisdictionsHandler(AppDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+    
     public async ValueTask<IResult> Handle(GetJurisdictionsRequest input, CancellationToken cancellationToken)
     {
+        var rows = await _dbContext.HolidayJurisdictions
+                                   .AsNoTracking()
+                                   .OrderBy(x => x.Name)
+                                   .ToListAsync(cancellationToken);
 
-        var rows = await db.HolidayJurisdictions.AsNoTracking()
-                           .OrderBy(x => x.Name)
-                           .ToListAsync(cancellationToken);
+        var result = rows.ToViewModel();
 
-        return Results.Ok(rows.Select(x => x.ToViewModel()));
+        return Results.Ok(result);
     }
 }

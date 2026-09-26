@@ -7,10 +7,24 @@ public sealed class GetStatusRequestValidator : AbstractValidator<GetStatusReque
 {
     public GetStatusRequestValidator()
     {
-        RuleFor(request => request).Must(request =>
-            (!request.Year.HasValue && !request.Month.HasValue) ||
-            (request.Year is >= 1 and <= 9999 && request.Month is >= 1 and <= 12))
-            .WithMessage("Both year and month must be supplied and valid.")
-            .OverridePropertyName("request");
+        When(r => r.Year.HasValue, () =>
+        {
+            RuleFor(r => r.Year)
+                .GreaterThan(0)
+                .LessThan(9999);
+
+            RuleFor(r => r.Month)
+                .NotNull();
+        });
+        
+        When(r => r.Month.HasValue, () =>
+        {
+            RuleFor(r => r.Month)
+                .GreaterThan(0)
+                .LessThan(9999);
+
+            RuleFor(r => r.Year)
+                .NotNull();
+        });
     }
 }

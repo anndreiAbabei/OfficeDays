@@ -21,9 +21,9 @@ public sealed class CookieAntiforgeryFilter : IEndpointFilter
             }
             catch (AntiforgeryValidationException)
             {
-                return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
-                    title: "Invalid antiforgery token",
-                    detail: "Refresh the page and try again.");
+                return Results.Problem(statusCode: StatusCodes.Status400BadRequest, 
+                                       title: "Invalid antiforgery token",
+                                       detail: "Refresh the page and try again.");
             }
         }
 

@@ -6,5 +6,5 @@ namespace OfficeDays.Features.HolidayJurisdictions.DeleteJurisdiction.Contracts;
 public sealed record DeleteJurisdictionRequest : IRequest
 {
     [FromRoute(Name = "code")]
-    public string Code { get; init; } = default!;
+    public required string Code { get; init; }
 }
