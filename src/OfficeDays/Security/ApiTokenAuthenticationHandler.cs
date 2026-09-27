@@ -10,21 +10,23 @@ namespace OfficeDays.Security;
 public sealed class ApiTokenAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
     public const string SchemeName = "ApiToken";
-    private readonly AppDbContext _db;
+    private readonly AppDbContext _dbContext;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<ApiTokenAuthenticationHandler> _logger;
+    private readonly IApiTokenService _apiTokenService;
 
-    public ApiTokenAuthenticationHandler(
-        IOptionsMonitor<AuthenticationSchemeOptions> options,
-        ILoggerFactory loggerFactory,
-        UrlEncoder encoder,
-        AppDbContext db,
-        TimeProvider timeProvider)
+    public ApiTokenAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,
+                                         ILoggerFactory loggerFactory,
+                                         UrlEncoder encoder,
+                                         AppDbContext dbContext,
+                                         TimeProvider timeProvider,
+                                         IApiTokenService apiTokenService)
         : base(options, loggerFactory, encoder)
     {
-        _db = db;
+        _dbContext = dbContext;
         _timeProvider = timeProvider;
         _logger = loggerFactory.CreateLogger<ApiTokenAuthenticationHandler>();
+        _apiTokenService = apiTokenService;
     }
 
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -32,28 +34,37 @@ public sealed class ApiTokenAuthenticationHandler : AuthenticationHandler<Authen
         var header = Request.Headers.Authorization.ToString();
         if (!header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
+            _logger.LogNoBearerCredentials();
             return AuthenticateResult.NoResult();
         }
 
         var rawToken = header["Bearer ".Length..].Trim();
         if (rawToken.Length == 0)
         {
+            _logger.LogMissingToken(Context.Connection.RemoteIpAddress);
             return AuthenticateResult.Fail("A bearer token is required.");
         }
 
-        var hash = ApiTokenService.Hash(rawToken);
-        var token = await _db.ApiTokens.Include(x => x.User).ThenInclude(x => x.HolidayJurisdiction)
-            .SingleOrDefaultAsync(x => x.TokenHash == hash && x.RevokedAt == null, Context.RequestAborted);
+        var hash = _apiTokenService.Hash(rawToken);
+        var token = await _dbContext.ApiTokens.Include(x => x.User)
+                                    .ThenInclude(x => x.HolidayJurisdiction)
+                                    .SingleOrDefaultAsync(x => x.TokenHash == hash,
+                                                          Context.RequestAborted);
         if (token is null)
         {
-            _logger.LogWarning("Rejected an invalid or revoked API token from {RemoteIpAddress}",
-                Context.Connection.RemoteIpAddress);
+            _logger.LogInvalidToken(Context.Connection.RemoteIpAddress);
+            return AuthenticateResult.Fail("The bearer token is invalid or revoked.");
+        }
+
+        if (token.RevokedAt is not null)
+        {
+            _logger.LogRevokedToken(token.Id, Context.Connection.RemoteIpAddress);
             return AuthenticateResult.Fail("The bearer token is invalid or revoked.");
         }
 
         token.LastUsedAt = _timeProvider.GetUtcNow();
-        await _db.SaveChangesAsync(Context.RequestAborted);
-        _logger.LogDebug("API token {TokenId} authenticated user {UserId}", token.Id, token.UserId);
+        await _dbContext.SaveChangesAsync(Context.RequestAborted);
+        _logger.LogTokenAuthenticated(token.Id, token.UserId);
 
         var claims = new List<Claim>
         {

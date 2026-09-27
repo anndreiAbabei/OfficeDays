@@ -12,13 +12,17 @@ public sealed class DatabaseHealthCheck : IHealthCheck
     {
         _scopeFactory = scopeFactory;
     }
+    
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         
-        // Execute a real query against the application schema, including on an empty table.
-        await db.Users.AsNoTracking().Select(user => user.Id).Take(1).ToListAsync(cancellationToken);
+        await db.Users
+                .AsNoTracking()
+                .Select(user => user.Id)
+                .Take(1)
+                .ToListAsync(cancellationToken);
         
         return HealthCheckResult.Healthy();
     }

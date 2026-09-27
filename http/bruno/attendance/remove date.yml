@@ -1,0 +1,20 @@
+info:
+  name: remove date
+  type: http
+  seq: 4
+
+http:
+  method: DELETE
+  url: https://{{ApiHost}}/api/attendance/:date
+  params:
+    - name: date
+      value: 2026-09-26
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -5,8 +5,8 @@ public readonly record struct CalculationPeriod(DateOnly Start, DateOnly End, st
     public static CalculationPeriod ForMonth(int year, int month)
     {
         var start = new DateOnly(year, month, 1);
-        
-        return new CalculationPeriod(start, start.AddMonths(1).AddDays(-1), $"{year:D4}-{month:D2}");
+
+        return new CalculationPeriod(start, new DateOnly(year, month, DateTime.DaysInMonth(year, month)), $"{year:D4}-{month:D2}");
     }
 }
 
@@ -18,13 +18,13 @@ public sealed record AttendanceStatus(string Period,
                                       int RemainingOfficeDays,
                                       decimal ProgressPercentage);
 
-public static class AttendanceCalculator
+public sealed class AttendanceCalculator : IAttendanceCalculator
 {
-    public static AttendanceStatus Calculate(CalculationPeriod period,
-                                             IEnumerable<DateOnly> bankHolidays,
-                                             IEnumerable<(DateOnly From, DateOnly To)> vacations,
-                                             IEnumerable<DateOnly> officeDates,
-                                             int requiredOfficePercentage = 50)
+    public AttendanceStatus Calculate(CalculationPeriod period,
+                                      IEnumerable<DateOnly> bankHolidays,
+                                      IEnumerable<(DateOnly From, DateOnly To)> vacations,
+                                      IEnumerable<DateOnly> officeDates,
+                                      int requiredOfficePercentage = 50)
     {
         if (period.End < period.Start)
         {
@@ -37,7 +37,7 @@ public static class AttendanceCalculator
         var holidays = bankHolidays.ToHashSet();
         var vacationDates = ExpandVacations(vacations, period);
         var eligibleDates = EnumerateDates(period.Start, period.End).Where(IsWeekday)
-                                                                    .Where(date => !holidays.Contains(date) && 
+                                                                    .Where(date => !holidays.Contains(date) &&
                                                                                    !vacationDates.Contains(date))
                                                                     .ToHashSet();
 
@@ -67,10 +67,10 @@ public static class AttendanceCalculator
 
             var start = from < period.Start ? period.Start : from;
             var end = to > period.End ? period.End : to;
-            
+
             if (start > end)
                 continue;
-            
+
             foreach (var date in EnumerateDates(start, end))
                 dates.Add(date);
         }

@@ -1,0 +1,7 @@
+name: local
+variables:
+  - name: ApiHost
+    value: localhost:5400
+  - secret: true
+    name: ApiToken
+    description: ""

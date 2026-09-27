@@ -1,0 +1,17 @@
+namespace OfficeDays.Features.Ui.GetIndex;
+
+public sealed class GetIndexEndpoint(UiContent content) : IUiEndpoint
+{
+    public void MapEndpoint(IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapGet("/index.html", Index);
+        endpoints.MapFallback(Index).WithMetadata(new HttpMethodMetadata(["GET", "HEAD"]));
+        return;
+
+        IResult Index(HttpContext context)
+        {
+            context.Response.Headers.CacheControl = "no-store";
+            return Results.Bytes(content.Index, "text/html; charset=utf-8");
+        }
+    }
+}

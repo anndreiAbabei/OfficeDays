@@ -1,0 +1,5 @@
+name: prod
+color: "#CE4F3B"
+variables:
+  - name: ApiHost
+    value: office.playhd.vip
