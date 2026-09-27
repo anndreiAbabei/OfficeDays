@@ -121,7 +121,7 @@ public sealed class ApiIntegrationTests
         var response = await client.PostAsJsonAsync("/api/users", new
         {
             username = "andrew", password = "A-personal-password!", timeZoneId = "Europe/Bucharest",
-            countryCode = "RO", isAdmin = true
+            countryCode = "RO", email = "andrew@example.com", isAdmin = true
         });
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var created = await Read(response);
@@ -291,8 +291,12 @@ public sealed class ApiIntegrationTests
         var incomplete = await client.GetAsync("/api/status?year=2099");
         Assert.Equal(HttpStatusCode.BadRequest, incomplete.StatusCode);
 
-        var invalid = await client.GetAsync("/api/status?year=2099&month=13");
-        Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+        foreach (var month in new[] { 0, 13, 9998 })
+        {
+            var invalid = await client.GetAsync($"/api/status?year=2099&month={month}");
+            Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+            Assert.True((await Read(invalid)).GetProperty("errors").TryGetProperty("Month", out _));
+        }
 
         await DeleteUser(factory, "statusdefaults");
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/api/status")).StatusCode);
@@ -331,16 +335,16 @@ public sealed class ApiIntegrationTests
         using var client = factory.CreateClient();
 
         var invalid = await client.PostAsJsonAsync("/api/users", new
-            { username = "x", password = "short", timeZoneId = "Not/AZone" });
+            { username = "x", password = "short", timeZoneId = "Not/AZone", countryCode = "RO", email = "invalid@example.com" });
         Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
 
         await CreateUser(client, "CaseSensitiveName");
         var duplicate = await client.PostAsJsonAsync("/api/users", new
-            { username = "casesensitivename", password = "Normal-user-password!", timeZoneId = "Europe/Bucharest", countryCode = "RO" });
+            { username = "casesensitivename", password = "Normal-user-password!", timeZoneId = "Europe/Bucharest", countryCode = "RO", email = "duplicate@example.com" });
         Assert.Equal(HttpStatusCode.Conflict, duplicate.StatusCode);
 
         var unknownJurisdiction = await client.PostAsJsonAsync("/api/users", new
-            { username = "unknowncountry", password = "Normal-user-password!", timeZoneId = "Europe/Bucharest", countryCode = "US" });
+            { username = "unknowncountry", password = "Normal-user-password!", timeZoneId = "Europe/Bucharest", countryCode = "US", email = "unknowncountry@example.com" });
         Assert.Equal(HttpStatusCode.BadRequest, unknownJurisdiction.StatusCode);
     }
 
@@ -429,6 +433,10 @@ public sealed class ApiIntegrationTests
         await Login(client, "Admin", "VeryStrongAdminPassword!");
         var csrf = await Csrf(client);
 
+        var seed = await PutJson(client, "/api/bank-holidays/RO/2026",
+            new[] { new { date = "2026-05-01", name = "Preserved holiday" } }, csrf);
+        Assert.Equal(HttpStatusCode.OK, seed.StatusCode);
+
         Assert.Equal(HttpStatusCode.BadRequest,
             (await client.GetAsync("/api/bank-holidays/RO/0")).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest,
@@ -448,6 +456,10 @@ public sealed class ApiIntegrationTests
         nullPayload.Headers.Add("X-CSRF-TOKEN", csrf);
         nullPayload.Content = JsonContent.Create<List<object>?>(null);
         Assert.Equal(HttpStatusCode.BadRequest, (await client.SendAsync(nullPayload)).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await PutJson(client, "/api/bank-holidays/RO/2026", new object?[] { null }, csrf)).StatusCode);
+        var holidays = await client.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/RO/2026");
+        Assert.Equal("2026-05-01", Assert.Single(holidays!).GetProperty("date").GetString());
     }
 
     [Fact]
@@ -468,9 +480,9 @@ public sealed class ApiIntegrationTests
     }
 
     [Theory]
-    [InlineData(null)]
+    [InlineData("person@example.com")]
     [InlineData(" person@example.com ")]
-    public async Task Email_can_be_created_updated_and_cleared(string? email)
+    public async Task Email_can_be_created_updated_and_normalized(string email)
     {
         using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
@@ -480,7 +492,7 @@ public sealed class ApiIntegrationTests
             timeZoneId = "Europe/Bucharest", countryCode = "RO", email
         });
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
-        Assert.Equal(email?.Trim(), (await Read(created)).GetProperty("email").GetString());
+        Assert.Equal(email.Trim(), (await Read(created)).GetProperty("email").GetString());
         await CreateUser(client, "otheruser");
         await Login(client, "emailuser", "Normal-user-password!");
         var csrf = await Csrf(client);
@@ -491,14 +503,58 @@ public sealed class ApiIntegrationTests
         using (var scope = factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            Assert.Null((await db.Users.SingleAsync(x => x.Username == "otheruser")).Email);
+            Assert.Equal("otheruser@example.com", (await db.Users.SingleAsync(x => x.Username == "otheruser")).Email);
         }
         foreach (var empty in new string?[] { null, "", "   " })
         {
-            var cleared = await PutJson(client, "/api/users/me", new { email = empty }, csrf);
-            Assert.Equal(HttpStatusCode.OK, cleared.StatusCode);
-            Assert.Null((await Read(cleared)).GetProperty("email").GetString());
+            var rejected = await PutJson(client, "/api/users/me", new { email = empty }, csrf);
+            Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
+            Assert.True((await Read(rejected)).GetProperty("errors").TryGetProperty("Body.Email", out _));
+            Assert.Equal("updated@example.com", (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("email").GetString());
         }
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task User_creation_requires_a_nonempty_email(string? email)
+    {
+        using var factory = new OfficeDaysFactory();
+        using var client = factory.CreateClient();
+        var response = await client.PostAsJsonAsync("/api/users", new
+        {
+            username = "missingemail", password = "Normal-user-password!",
+            timeZoneId = "Europe/Bucharest", countryCode = "RO", email
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.True((await Read(response)).GetProperty("errors").TryGetProperty("Body.Email", out _));
+        using var scope = factory.Services.CreateScope();
+        Assert.False(await scope.ServiceProvider.GetRequiredService<AppDbContext>()
+            .Users.AnyAsync(user => user.Username == "missingemail"));
+    }
+
+    [Fact]
+    public async Task User_creation_and_update_reject_omitted_email()
+    {
+        using var factory = new OfficeDaysFactory();
+        using var client = factory.CreateClient();
+        var created = await client.PostAsJsonAsync("/api/users", new
+        {
+            username = "omittedemail", password = "Normal-user-password!",
+            timeZoneId = "Europe/Bucharest", countryCode = "RO"
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, created.StatusCode);
+        Assert.True((await Read(created)).GetProperty("errors").TryGetProperty("Body.Email", out _));
+
+        await CreateUser(client, "existingemail");
+        await Login(client, "existingemail", "Normal-user-password!");
+        var updated = await PutJson(client, "/api/users/me", new { requiredOfficePercentage = 25 }, await Csrf(client));
+        Assert.Equal(HttpStatusCode.BadRequest, updated.StatusCode);
+        Assert.True((await Read(updated)).GetProperty("errors").TryGetProperty("Body.Email", out _));
+        var profile = await client.GetFromJsonAsync<JsonElement>("/api/auth/me");
+        Assert.Equal("existingemail@example.com", profile.GetProperty("email").GetString());
+        Assert.Equal(50, profile.GetProperty("requiredOfficePercentage").GetInt32());
     }
 
     [Fact]
@@ -513,7 +569,7 @@ public sealed class ApiIntegrationTests
         Assert.Equal(HttpStatusCode.BadRequest,
             (await client.PutAsJsonAsync("/api/users/me", new { email = "user@example.com" })).StatusCode);
         var csrf = await Csrf(client);
-        foreach (var invalid in new[] { "invalid", "a@b@example.com", new string('a', 243) + "@example.com" })
+        foreach (var invalid in new[] { "invalid", "a@b@example.com", "@example.com", "person@" })
         {
             Assert.Equal(HttpStatusCode.BadRequest,
                 (await PutJson(client, "/api/users/me", new { email = invalid }, csrf)).StatusCode);
@@ -523,7 +579,7 @@ public sealed class ApiIntegrationTests
                 timeZoneId = "Europe/Bucharest", countryCode = "RO", email = invalid
             })).StatusCode);
         }
-        Assert.Null((await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("email").GetString());
+        Assert.Equal("emailvalidation@example.com", (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("email").GetString());
     }
 
     [Theory]
@@ -537,7 +593,7 @@ public sealed class ApiIntegrationTests
         var created = await client.PostAsJsonAsync("/api/users", new
         {
             username = "percentageuser", password = "Normal-user-password!",
-            timeZoneId = "Europe/Bucharest", countryCode = "RO", requiredOfficePercentage = percentage
+            timeZoneId = "Europe/Bucharest", countryCode = "RO", email = "percentage@example.com", requiredOfficePercentage = percentage
         });
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
         Assert.Equal(percentage, (await Read(created)).GetProperty("requiredOfficePercentage").GetInt32());
@@ -550,7 +606,7 @@ public sealed class ApiIntegrationTests
         Assert.Equal((int)Math.Ceiling(status.GetProperty("eligibleWorkingDays").GetInt32() * percentage / 100m),
             status.GetProperty("requiredOfficeDays").GetInt32());
 
-        var updated = await PutJson(client, "/api/users/me", new { requiredOfficePercentage = 25 }, csrf);
+        var updated = await PutJson(client, "/api/users/me", new { email = "percentage@example.com", requiredOfficePercentage = 25 }, csrf);
         Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
         Assert.Equal(25, (await Read(updated)).GetProperty("requiredOfficePercentage").GetInt32());
         // Older clients that only update email must preserve the percentage.
@@ -575,19 +631,19 @@ public sealed class ApiIntegrationTests
         Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/users", new
         {
             username = "invalidpercentage", password = "Normal-user-password!",
-            timeZoneId = "Europe/Bucharest", countryCode = "RO", requiredOfficePercentage = percentage
+            timeZoneId = "Europe/Bucharest", countryCode = "RO", email = "percentage@example.com", requiredOfficePercentage = percentage
         })).StatusCode);
         await CreateUser(client, "percentagevalidation");
         await Login(client, "percentagevalidation", "Normal-user-password!");
         Assert.Equal(HttpStatusCode.BadRequest, (await PutJson(client, "/api/users/me",
-            new { requiredOfficePercentage = percentage }, await Csrf(client))).StatusCode);
+            new { email = "percentagevalidation@example.com", requiredOfficePercentage = percentage }, await Csrf(client))).StatusCode);
         Assert.Equal(50, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("requiredOfficePercentage").GetInt32());
     }
 
     private static async Task CreateUser(HttpClient client, string username, string countryCode = "RO")
     {
         var response = await client.PostAsJsonAsync("/api/users", new
-            { username, password = "Normal-user-password!", timeZoneId = "Europe/Bucharest", countryCode });
+            { username, password = "Normal-user-password!", timeZoneId = "Europe/Bucharest", countryCode, email = $"{username}@example.com" });
         response.EnsureSuccessStatusCode();
     }
 

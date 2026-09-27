@@ -23,9 +23,9 @@ public sealed class GetTokensHandler : IRequestHandler<GetTokensRequest>
         var rows = await _dbContext.ApiTokens
                                  .AsNoTracking()
                                  .Where(x => x.UserId == _currentUser.Id)
-                                 .OrderByDescending(x => x.CreatedAt)
                                  .ToListAsync(cancellationToken);
         
-        return Results.Ok(rows.ToViewModel());
+        // SQLite cannot order DateTimeOffset values; filter by user in SQL, then sort their tokens.
+        return Results.Ok(rows.OrderByDescending(x => x.CreatedAt).ToViewModel());
     }
 }

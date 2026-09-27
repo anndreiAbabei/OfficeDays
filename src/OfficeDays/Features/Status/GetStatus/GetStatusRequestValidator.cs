@@ -20,8 +20,7 @@ public sealed class GetStatusRequestValidator : AbstractValidator<GetStatusReque
         When(r => r.Month.HasValue, () =>
         {
             RuleFor(r => r.Month)
-                .GreaterThan(0)
-                .LessThan(9999);
+                .InclusiveBetween(1, 12);
 
             RuleFor(r => r.Year)
                 .NotNull();
