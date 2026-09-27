@@ -18,8 +18,8 @@ public sealed class UpdateUserRequestBodyValidator : AbstractValidator<UpdateUse
     public UpdateUserRequestBodyValidator()
     {
         RuleFor(body => body.Email)
-            .NotNull()
-            .EmailAddress();
+            .EmailAddress()
+            .When(body => !string.IsNullOrWhiteSpace(body.Email));
 
         When(body => body.RequiredOfficePercentage.HasValue, () =>
         {

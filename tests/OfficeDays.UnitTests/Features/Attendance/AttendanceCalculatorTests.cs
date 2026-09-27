@@ -1,6 +1,6 @@
 using OfficeDays.Services;
 
-namespace OfficeDays.UnitTests;
+namespace OfficeDays.UnitTests.Features.Attendance;
 
 public sealed class AttendanceCalculatorTests
 {

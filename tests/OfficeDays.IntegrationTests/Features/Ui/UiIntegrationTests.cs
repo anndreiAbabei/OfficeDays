@@ -2,7 +2,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
-namespace OfficeDays.IntegrationTests;
+namespace OfficeDays.IntegrationTests.Features.Ui;
 
 public sealed class UiIntegrationTests
 {

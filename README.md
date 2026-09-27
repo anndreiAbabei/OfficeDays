@@ -21,7 +21,8 @@ The repository intentionally has a small structure:
 ```text
 src/OfficeDays                    ASP.NET Core application, API, UI, domain logic, and EF Core
 src/OfficeDays/Features           vertical feature slices with local contracts, validation, and endpoint mappings
-tests/OfficeDays.UnitTests        isolated attendance-calculation tests
+src/OfficeDays/Configuration      application services and feature registration
+tests/OfficeDays.UnitTests        isolated calculation and feature-registration tests
 tests/OfficeDays.IntegrationTests real HTTP pipeline tests with an isolated SQLite database
 ```
 
@@ -30,6 +31,10 @@ The application uses .NET 10, ASP.NET Core minimal APIs, EF Core, and SQLite. Th
 Each API operation lives in `Features/<Area>/<Operation>` with its endpoint, request/response contracts, handler, FluentValidation validator, mapping, and source-generated logging methods as needed. Request wrappers bind route/query properties and an explicit `[FromBody]` payload. `RequestExecutor` validates and invokes the scoped handler; handlers return `IResult` and access EF Core directly. It logs request names and invalid field names, never request payloads.
 
 Endpoint groups own route prefixes and authorization. `ICurrentUser` provides the authenticated user ID. Root groups keep health and UI routes outside `/api`; health endpoints use ASP.NET Core health checks, and UI endpoints serve a shared startup snapshot of assets. `RecordToday` and `RecordDate` deliberately keep their recording logic independent.
+
+Feature discovery registers public concrete classes in the application assembly. Each request must have exactly one handler, and each endpoint must implement one feature endpoint marker interface and be mapped exactly once by an endpoint group. Startup validates these conventions and the final handler registrations before initializing the database. Dependency validation also runs in every environment; singleton endpoints and endpoint groups must not capture scoped services. Resolve request-scoped dependencies through endpoint delegates instead.
+
+`Configuration` owns service and feature registration. `Program.cs` composes those registrations, middleware, endpoint mapping, and database initialization.
 
 Stored dates such as attendance, vacation, and holidays use `DateOnly`. Audit timestamps use UTC. Calculated values are never persisted.
 
@@ -359,12 +364,14 @@ curl -i -H 'X-Correlation-ID: support-case-123' http://localhost:8080/api/versio
 Run everything with:
 
 ```bash
-dotnet test OfficeDays.sln
+dotnet test OfficeDays.slnx
 ```
 
 The unit suite covers odd/even rule behavior, weekdays and weekends, holidays, all vacation overlap cases, remaining-day clamping, ineligible attendance, leap years, and period boundaries.
 
 The integration suite uses `WebApplicationFactory`, the real middleware/endpoints, and a fresh migrated SQLite file per test. It covers registration/login, admin jurisdiction management, country-scoped holiday replacement, token creation/use/revocation and ownership isolation, idempotent bearer attendance and removal, vacation ownership/lifecycle, and persisted status calculations.
+
+Feature tests mirror the application areas under `Features`. Cross-cutting startup, migration, and correlation-ID tests live under `Infrastructure`, security logging tests under `Security`, and shared fixtures and HTTP helpers under `Support`. Registration tests cover missing or duplicate handlers, invalid endpoint grouping, incomplete or duplicate endpoint mapping, and invalid dependency lifetimes. User tests cover omitted, null, empty, and whitespace-only optional email values as well as invalid nonempty addresses.
 
 Migration tests explicitly verify that startup applies every migration to a fresh database, that the migrated schema supports the current model, and that running initialization again preserves bootstrap data. They also upgrade an older database and verify that existing data and migration defaults are preserved. Run just these tests with:
 

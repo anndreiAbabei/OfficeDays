@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OfficeDays.Data;
 
-namespace OfficeDays.IntegrationTests;
+namespace OfficeDays.IntegrationTests.Features.Operations;
 
 public sealed class OperationsIntegrationTests
 {

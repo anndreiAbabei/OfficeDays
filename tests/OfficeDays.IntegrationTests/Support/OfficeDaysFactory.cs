@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace OfficeDays.IntegrationTests;
+namespace OfficeDays.IntegrationTests.Support;
 
 public sealed class OfficeDaysFactory : WebApplicationFactory<Program>
 {

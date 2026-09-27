@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OfficeDays.Security;
 
-namespace OfficeDays.IntegrationTests;
+namespace OfficeDays.IntegrationTests.Security;
 
 public sealed class SecurityLoggingIntegrationTests
 {

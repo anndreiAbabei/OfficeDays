@@ -10,7 +10,7 @@ using OfficeDays.Features.Operations.GetVersion.Contracts;
 using OfficeDays.Infrastructure;
 using OfficeDays.Middleware;
 
-namespace OfficeDays.IntegrationTests;
+namespace OfficeDays.IntegrationTests.Infrastructure;
 
 public sealed class CorrelationIdIntegrationTests
 {

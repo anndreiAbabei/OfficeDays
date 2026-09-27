@@ -37,8 +37,8 @@ public sealed class CreateUserRequestBodyValidator : AbstractValidator<CreateUse
             .WithMessage("A valid country or subdivision code is required, for example RO, GB-NIR, or US.");
             
         RuleFor(input => input.Email)
-            .NotEmpty()
-            .EmailAddress();
+            .EmailAddress()
+            .When(input => !string.IsNullOrWhiteSpace(input.Email));
             
         When(input => input.RequiredOfficePercentage.HasValue, () =>
             {
