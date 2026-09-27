@@ -8,6 +8,7 @@ namespace OfficeDays.Features.Tokens.CreateToken;
 
 public sealed class CreateTokenHandler : IRequestHandler<CreateTokenRequest>
 {
+    private readonly IApiTokenService _apiTokenService;
     private readonly ICurrentUser _currentUser;
     private readonly AppDbContext _db;
     private readonly TimeProvider _timeProvider;
@@ -16,8 +17,10 @@ public sealed class CreateTokenHandler : IRequestHandler<CreateTokenRequest>
     public CreateTokenHandler(ICurrentUser currentUser,
                               AppDbContext db,
                               TimeProvider timeProvider,
-                              ILogger<CreateTokenHandler> logger)
+                              ILogger<CreateTokenHandler> logger,
+                              IApiTokenService apiTokenService)
     {
+        _apiTokenService = apiTokenService;
         _currentUser = currentUser;
         _db = db;
         _timeProvider = timeProvider;
@@ -28,13 +31,13 @@ public sealed class CreateTokenHandler : IRequestHandler<CreateTokenRequest>
     {
         var request = input.Body;
 
-        var rawToken = ApiTokenService.Generate();
+        var rawToken = _apiTokenService.Generate();
         var token = new ApiToken
         {
             Id = Guid.NewGuid(),
             UserId = _currentUser.Id,
             Name = request.Name.Trim(),
-            TokenHash = ApiTokenService.Hash(rawToken),
+            TokenHash = _apiTokenService.Hash(rawToken),
             CreatedAt = _timeProvider.GetUtcNow()
         };
         

@@ -40,7 +40,10 @@ public sealed class CreateUserHandler : IRequestHandler<CreateUserRequest>
         var jurisdiction = await _dbContext.HolidayJurisdictions
                                    .SingleOrDefaultAsync(x => x.Code == countryCode, cancellationToken);
         if (jurisdiction is null)
+        {
+            _logger.LogJurisdictionNotFound(countryCode);
             return Results.ValidationProblem(new Dictionary<string, string[]> { ["countryCode"] = ["The selected holiday jurisdiction does not exist."] });
+        }
                 
         if (await _dbContext.Users.AnyAsync(x => x.NormalizedUsername == normalized, cancellationToken))
         {

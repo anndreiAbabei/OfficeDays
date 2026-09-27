@@ -18,13 +18,13 @@ public sealed record AttendanceStatus(string Period,
                                       int RemainingOfficeDays,
                                       decimal ProgressPercentage);
 
-public static class AttendanceCalculator
+public sealed class AttendanceCalculator : IAttendanceCalculator
 {
-    public static AttendanceStatus Calculate(CalculationPeriod period,
-                                             IEnumerable<DateOnly> bankHolidays,
-                                             IEnumerable<(DateOnly From, DateOnly To)> vacations,
-                                             IEnumerable<DateOnly> officeDates,
-                                             int requiredOfficePercentage = 50)
+    public AttendanceStatus Calculate(CalculationPeriod period,
+                                      IEnumerable<DateOnly> bankHolidays,
+                                      IEnumerable<(DateOnly From, DateOnly To)> vacations,
+                                      IEnumerable<DateOnly> officeDates,
+                                      int requiredOfficePercentage = 50)
     {
         if (period.End < period.Start)
         {

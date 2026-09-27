@@ -10,15 +10,15 @@ namespace OfficeDays.Features.BankHolidays.ReplaceBankHolidays;
 public sealed class ReplaceBankHolidaysHandler : IRequestHandler<ReplaceBankHolidaysRequest>
 {
     private readonly ICurrentUser _currentUser;
-    private readonly AppDbContext _db;
+    private readonly AppDbContext _dbContext;
     private readonly ILogger<ReplaceBankHolidaysHandler> _logger;
     
     public ReplaceBankHolidaysHandler(ICurrentUser currentUser,
-                                      AppDbContext db,
+                                      AppDbContext dbContext,
                                       ILogger<ReplaceBankHolidaysHandler> logger)
     {
         _currentUser = currentUser;
-        _db = db;
+        _dbContext = dbContext;
         _logger = logger;
     }
     
@@ -29,23 +29,26 @@ public sealed class ReplaceBankHolidaysHandler : IRequestHandler<ReplaceBankHoli
         var request = input.Body;
         HolidayJurisdictionCodes.TryNormalize(countryCode, out var normalizedCode);
 
-        var jurisdiction = await _db.HolidayJurisdictions.SingleOrDefaultAsync(x => x.Code == normalizedCode, cancellationToken);
+        var jurisdiction = await _dbContext.HolidayJurisdictions.SingleOrDefaultAsync(x => x.Code == normalizedCode, cancellationToken);
         
-        if (jurisdiction is null) 
+        if (jurisdiction is null)
+        {
+            _logger.LogJurisdictionNotFound(normalizedCode);
             return Results.NotFound();
+        }
 
         var start = new DateOnly(year, 1, 1);
         var end = new DateOnly(year, 12, 31);
         
-        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
-        await _db.BankHolidays
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        await _dbContext.BankHolidays
                  .Where(x => x.HolidayJurisdictionId == jurisdiction.Id &&
                              x.Date >= start && x.Date <= end)
                  .ExecuteDeleteAsync(cancellationToken);
         
         var rows = request.Select(x => x.ToEntity(jurisdiction)).ToList();
-        _db.BankHolidays.AddRange(rows);
-        await _db.SaveChangesAsync(cancellationToken);
+        _dbContext.BankHolidays.AddRange(rows);
+        await _dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         
         _logger.LogHolidaysReplaced(_currentUser.Id, jurisdiction.Code, year, rows.Count);

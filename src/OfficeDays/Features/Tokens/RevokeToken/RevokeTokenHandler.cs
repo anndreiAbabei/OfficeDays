@@ -30,8 +30,11 @@ public sealed class RevokeTokenHandler : IRequestHandler<RevokeTokenRequest>
         var userId = _currentUser.Id;
         var token = await _dbContext.ApiTokens.SingleOrDefaultAsync(x => x.Id == id && x.UserId == userId, cancellationToken);
         
-        if (token is null) 
+        if (token is null)
+        {
+            _logger.LogTokenNotFound(id, userId);
             return Results.NotFound();
+        }
         
         if (token.RevokedAt is null)
         {

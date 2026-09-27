@@ -103,6 +103,8 @@ void AddServices(WebApplicationBuilder svcBuilder)
     svcBuilder.Services.AddSingleton<IUserDateService, UserDateService>();
     svcBuilder.Services.AddSingleton<IRequestExecutor, RequestExecutor>();
     svcBuilder.Services.AddSingleton<IUserService, UserService>();
+    svcBuilder.Services.AddSingleton<IAttendanceCalculator, AttendanceCalculator>();
+    svcBuilder.Services.AddSingleton<IApiTokenService, ApiTokenService>();
     svcBuilder.Services.AddHttpContextAccessor();
     svcBuilder.Services.AddSingleton<OfficeDays.Features.Ui.UiContent>();
     svcBuilder.Services.AddScoped<ICurrentUser, CurrentUser>();

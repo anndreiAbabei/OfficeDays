@@ -8,11 +8,15 @@ namespace OfficeDays.Features.Authentication.GetCurrentUser;
 
 public sealed class GetCurrentUserHandler : IRequestHandler<GetCurrentUserRequest>
 {
+    private readonly ILogger<GetCurrentUserHandler> _logger;
     private readonly ICurrentUser _currentUser;
     private readonly AppDbContext _dbContext;
     
-    public GetCurrentUserHandler(ICurrentUser currentUser, AppDbContext dbContext)
+    public GetCurrentUserHandler(ICurrentUser currentUser,
+                                 AppDbContext dbContext,
+                                 ILogger<GetCurrentUserHandler> logger)
     {
+        _logger = logger;
         _currentUser = currentUser;
         _dbContext = dbContext;
     }
@@ -23,7 +27,10 @@ public sealed class GetCurrentUserHandler : IRequestHandler<GetCurrentUserReques
                                    .SingleOrDefaultAsync(x => x.Id == _currentUser.Id, cancellationToken);
 
         if (user is null)
+        {
+            _logger.LogUserNotFound(_currentUser.Id);
             return Results.NotFound();
+        }
         
         return Results.Ok(user.ToViewModel());
     }

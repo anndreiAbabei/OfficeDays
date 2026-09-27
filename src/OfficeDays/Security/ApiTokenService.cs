@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.WebUtilities;
 
 namespace OfficeDays.Security;
 
-public static class ApiTokenService
+public sealed class ApiTokenService : IApiTokenService
 {
-    public static string Generate()
+    public string Generate()
     {
         Span<byte> bytes = stackalloc byte[32];
         RandomNumberGenerator.Fill(bytes);
@@ -14,5 +14,5 @@ public static class ApiTokenService
         return "odt_" + WebEncoders.Base64UrlEncode(bytes);
     }
 
-    public static string Hash(string rawToken) => Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(rawToken)));
+    public string Hash(string rawToken) => Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(rawToken)));
 }

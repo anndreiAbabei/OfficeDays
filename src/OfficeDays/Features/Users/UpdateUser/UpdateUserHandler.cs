@@ -9,14 +9,17 @@ namespace OfficeDays.Features.Users.UpdateUser;
 
 public sealed class UpdateUserHandler : IRequestHandler<UpdateUserRequest>
 {
+    private readonly ILogger<UpdateUserHandler> _logger;
     private readonly ICurrentUser _currentUser;
     private readonly AppDbContext _dbContext;
     private readonly IUserService _userService;
 
     public UpdateUserHandler(ICurrentUser currentUser,
                              AppDbContext dbContext,
-                             IUserService userService)
+                             IUserService userService,
+                             ILogger<UpdateUserHandler> logger)
     {
+        _logger = logger;
         _currentUser = currentUser;
         _dbContext = dbContext;
         _userService = userService;
@@ -30,7 +33,10 @@ public sealed class UpdateUserHandler : IRequestHandler<UpdateUserRequest>
                            .SingleOrDefaultAsync(x => x.Id == _currentUser.Id, cancellationToken);
 
         if (user is null)
+        {
+            _logger.LogUserNotFound(_currentUser.Id);
             return Results.NotFound();
+        }
 
         user.Email = _userService.NormalizeEmail(request.Email);
         

@@ -9,14 +9,20 @@ namespace OfficeDays.Features.Status.GetStatus;
 
 public sealed class GetStatusHandler : IRequestHandler<GetStatusRequest>
 {
+    private readonly IAttendanceCalculator _attendanceCalculator;
+    private readonly ILogger<GetStatusHandler> _logger;
     private readonly ICurrentUser _currentUser;
     private readonly AppDbContext _db;
     private readonly IUserDateService _dates;
     
     public GetStatusHandler(ICurrentUser currentUser,
                             AppDbContext db,
-                            IUserDateService dates)
+                            IUserDateService dates,
+                            ILogger<GetStatusHandler> logger,
+                            IAttendanceCalculator attendanceCalculator)
     {
+        _attendanceCalculator = attendanceCalculator;
+        _logger = logger;
         _currentUser = currentUser;
         _db = db;
         _dates = dates;
@@ -29,8 +35,11 @@ public sealed class GetStatusHandler : IRequestHandler<GetStatusRequest>
         
         var user = await _db.Users.FindAsync([_currentUser.Id], cancellationToken);
         
-        if (user is null) 
+        if (user is null)
+        {
+            _logger.LogUserNotFound(_currentUser.Id);
             return Results.NotFound();
+        }
 
         CalculationPeriod period;
         if (!year.HasValue && !month.HasValue)
@@ -56,7 +65,7 @@ public sealed class GetStatusHandler : IRequestHandler<GetStatusRequest>
                                    .Select(x => x.Date)
                                    .ToListAsync(cancellationToken);
         
-        var result = AttendanceCalculator.Calculate(period, holidayDates, vacationRows.Select(x => (x.From, x.To)), officeDates, user.RequiredOfficePercentage);
+        var result = _attendanceCalculator.Calculate(period, holidayDates, vacationRows.Select(x => (x.From, x.To)), officeDates, user.RequiredOfficePercentage);
         
         return Results.Ok(result.ToViewModel());
     }

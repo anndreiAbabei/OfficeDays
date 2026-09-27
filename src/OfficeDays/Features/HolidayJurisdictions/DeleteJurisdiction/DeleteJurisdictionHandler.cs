@@ -25,13 +25,17 @@ public sealed class DeleteJurisdictionHandler : IRequestHandler<DeleteJurisdicti
 
         var jurisdiction = await _dbContext.HolidayJurisdictions.SingleOrDefaultAsync(x => x.Code == normalizedCode, cancellationToken);
         
-        if (jurisdiction is null) 
+        if (jurisdiction is null)
+        {
+            _logger.LogJurisdictionNotFound(normalizedCode);
             return Results.NotFound();
+        }
 
         var inUse = await _dbContext.Users.AnyAsync(x => x.HolidayJurisdictionId == jurisdiction.Id, cancellationToken) ||
                     await _dbContext.BankHolidays.AnyAsync(x => x.HolidayJurisdictionId == jurisdiction.Id, cancellationToken);
         if (inUse)
         {
+            _logger.LogJurisdictionInUse(jurisdiction.Code);
             var problem = new ProblemDetails
             {
                 Status = StatusCodes.Status409Conflict,

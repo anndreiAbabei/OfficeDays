@@ -8,10 +8,12 @@ namespace OfficeDays.Features.BankHolidays.GetBankHolidays;
 
 public sealed class GetBankHolidaysHandler : IRequestHandler<GetBankHolidaysRequest>
 {
+    private readonly ILogger<GetBankHolidaysHandler> _logger;
     private readonly AppDbContext _db;
     
-    public GetBankHolidaysHandler(AppDbContext db)
+    public GetBankHolidaysHandler(AppDbContext db, ILogger<GetBankHolidaysHandler> logger)
     {
+        _logger = logger;
         _db = db;
     }
     
@@ -24,8 +26,11 @@ public sealed class GetBankHolidaysHandler : IRequestHandler<GetBankHolidaysRequ
         var jurisdiction = await _db.HolidayJurisdictions.AsNoTracking()
                                    .SingleOrDefaultAsync(x => x.Code == normalizedCode, cancellationToken);
         
-        if (jurisdiction is null) 
+        if (jurisdiction is null)
+        {
+            _logger.LogJurisdictionNotFound(normalizedCode);
             return Results.NotFound();
+        }
 
         var start = new DateOnly(year, 1, 1);
         var end = new DateOnly(year, 12, 31);

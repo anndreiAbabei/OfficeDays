@@ -28,7 +28,10 @@ public sealed class RemoveVacationHandler : IRequestHandler<RemoveVacationReques
         var row = await _dbContext.Vacations.SingleOrDefaultAsync(x => x.Id == id && x.UserId == userId, cancellationToken);
         
         if (row is null)
+        {
+            _logger.LogVacationNotFound(id, userId);
             return Results.NotFound();
+        }
         
         _dbContext.Vacations.Remove(row);
         await _dbContext.SaveChangesAsync(cancellationToken);

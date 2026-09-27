@@ -26,7 +26,10 @@ public sealed class UpdateJurisdictionHandler : IRequestHandler<UpdateJurisdicti
         var jurisdiction = await _dbContext.HolidayJurisdictions.SingleOrDefaultAsync(x => x.Code == normalizedCode, cancellationToken);
         
         if (jurisdiction is null)
+        {
+            _logger.LogJurisdictionNotFound(normalizedCode);
             return Results.NotFound();
+        }
 
         jurisdiction.Name = request.Name!.Trim();
         

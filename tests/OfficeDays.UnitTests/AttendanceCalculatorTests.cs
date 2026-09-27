@@ -4,6 +4,8 @@ namespace OfficeDays.UnitTests;
 
 public sealed class AttendanceCalculatorTests
 {
+    private readonly AttendanceCalculator _calculator = new AttendanceCalculator();
+
     [Theory]
     [InlineData(0, 0)]
     [InlineData(25, 6)]
@@ -13,7 +15,7 @@ public sealed class AttendanceCalculatorTests
     public void Custom_percentage_rounds_up_required_days(int percentage, int expected)
     {
         var period = new CalculationPeriod(new DateOnly(2026, 9, 1), new DateOnly(2026, 9, 29), "test");
-        var result = AttendanceCalculator.Calculate(period, [], [], [], percentage);
+        var result = _calculator.Calculate(period, [], [], [], percentage);
         Assert.Equal(expected, result.RequiredOfficeDays);
         Assert.Equal(21 - expected, result.MaximumWfhDays);
         Assert.Equal(expected, result.RemainingOfficeDays);
@@ -26,7 +28,7 @@ public sealed class AttendanceCalculatorTests
     public void Invalid_percentage_is_rejected(int percentage)
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            AttendanceCalculator.Calculate(CalculationPeriod.ForMonth(2026, 9), [], [], [], percentage));
+            _calculator.Calculate(CalculationPeriod.ForMonth(2026, 9), [], [], [], percentage));
     }
 
     [Fact]
@@ -141,10 +143,10 @@ public sealed class AttendanceCalculatorTests
         Assert.Equal(2, result.EligibleWorkingDays);
     }
 
-    private static AttendanceStatus Calculate(DateOnly from, DateOnly to,
+    private AttendanceStatus Calculate(DateOnly from, DateOnly to,
         IEnumerable<DateOnly>? holidays = null,
         IEnumerable<(DateOnly From, DateOnly To)>? vacations = null,
         IEnumerable<DateOnly>? office = null) =>
-        AttendanceCalculator.Calculate(new CalculationPeriod(from, to, "test"),
+        _calculator.Calculate(new CalculationPeriod(from, to, "test"),
             holidays ?? [], vacations ?? [], office ?? []);
 }
