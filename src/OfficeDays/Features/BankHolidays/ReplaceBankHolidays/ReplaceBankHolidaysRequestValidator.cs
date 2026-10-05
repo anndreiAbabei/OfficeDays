@@ -20,7 +20,6 @@ public sealed class ReplaceBankHolidaysRequestValidator : AbstractValidator<Repl
         RuleFor(input => input.Body)
             .Cascade(CascadeMode.Stop)
             .NotNull()
-            .NotEmpty()
             .ForEach(bh => bh.NotNull()
                              .SetValidator(bankHolidayItemValidator))
             .Custom((input, context) =>

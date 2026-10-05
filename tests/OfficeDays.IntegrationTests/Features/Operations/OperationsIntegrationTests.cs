@@ -20,7 +20,6 @@ public sealed class OperationsIntegrationTests
         Assert.Equal(typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!
             .InformationalVersion, json.RootElement.GetProperty("version").GetString());
         Assert.True(response.Headers.CacheControl!.NoStore);
-        Assert.Contains("id=\"app-version\"", await client.GetStringAsync("/"));
     }
 
     [Fact]

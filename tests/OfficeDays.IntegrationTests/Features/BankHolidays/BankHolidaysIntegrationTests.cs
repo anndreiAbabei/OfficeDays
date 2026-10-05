@@ -13,6 +13,23 @@ namespace OfficeDays.IntegrationTests.Features.BankHolidays;
 public sealed class BankHolidaysIntegrationTests
 {
     [Fact]
+    public async Task Admin_can_remove_the_last_holiday_without_affecting_other_years()
+    {
+        using var factory = new OfficeDaysFactory();
+        using var client = factory.CreateClient();
+        await Login(client, "Admin", "VeryStrongAdminPassword!");
+        var csrf = await Csrf(client);
+        await PutJson(client, "/api/bank-holidays/RO/2026",
+            new[] { new { date = "2026-01-01", name = "New Year" } }, csrf);
+        await PutJson(client, "/api/bank-holidays/RO/2027",
+            new[] { new { date = "2027-01-01", name = "New Year" } }, csrf);
+        var response = await PutJson(client, "/api/bank-holidays/RO/2026", Array.Empty<object>(), csrf);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Empty((await client.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/RO/2026"))!);
+        Assert.Single((await client.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/RO/2027"))!);
+    }
+
+    [Fact]
     public async Task Admin_can_replace_holidays_but_normal_user_cannot()
     {
         using var factory = new OfficeDaysFactory();

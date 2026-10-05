@@ -19,14 +19,18 @@ With 21 eligible days at 50%, this means at most 10 WFH days and therefore at le
 The repository intentionally has a small structure:
 
 ```text
-src/OfficeDays                    ASP.NET Core application, API, UI, domain logic, and EF Core
+src/OfficeDays                    ASP.NET Core API, static UI hosting, domain logic, and EF Core
+src/OfficeDays.Web                SvelteKit / Svelte / TypeScript frontend
+src/OfficeDays.Web/src/routes     dashboard, login, register, profile, tokens, admin
+src/OfficeDays.Web/src/lib        shared API/session utilities and feature components
+src/OfficeDays.Web/e2e            browser flows against an isolated real .NET API
 src/OfficeDays/Features           vertical feature slices with local contracts, validation, and endpoint mappings
 src/OfficeDays/Configuration      application services and feature registration
 tests/OfficeDays.UnitTests        isolated calculation and feature-registration tests
 tests/OfficeDays.IntegrationTests real HTTP pipeline tests with an isolated SQLite database
 ```
 
-The application uses .NET 10, ASP.NET Core minimal APIs, EF Core, and SQLite. The UI is one server-hosted page built with plain JavaScript and CSS. `AttendanceCalculator` is independent of HTTP and persistence, and accepts a general date range so future period types do not require rewriting the rule.
+The application uses .NET 10, ASP.NET Core minimal APIs, EF Core, and SQLite. The UI is a statically built SvelteKit single-page application. Frontend and API are separate projects in one repository, shipped in one Docker container with only the .NET runtime. Node.js is used only for development/building. Cookie authentication, antiforgery protection, business rules, and persistence remain in the API. `AttendanceCalculator` is independent of HTTP and persistence, and accepts a general date range so future period types do not require rewriting the rule.
 
 Each API operation lives in `Features/<Area>/<Operation>` with its endpoint, request/response contracts, handler, FluentValidation validator, mapping, and source-generated logging methods as needed. Request wrappers bind route/query properties and an explicit `[FromBody]` payload. `RequestExecutor` validates and invokes the scoped handler; handlers return `IResult` and access EF Core directly. It logs request names and invalid field names, never request payloads.
 
@@ -41,11 +45,25 @@ Stored dates such as attendance, vacation, and holidays use `DateOnly`. Audit ti
 ## Requirements
 
 - .NET 10 SDK for local development
+- Node.js 24 LTS and npm for frontend development/building (not needed on the production host)
 - Docker with Compose for container deployment
 - An IANA timezone name for each user, such as `Europe/Bucharest`
 - A holiday jurisdiction for each user, such as `RO`, `GB-ENG`, or `GB-NIR`
 
 ## Run locally
+
+Build the UI first (the generated files are ignored by Git):
+
+```bash
+cd src/OfficeDays.Web
+npm ci
+npm run build
+cd ../..
+```
+
+`dotnet build`, `dotnet run`, and `dotnet publish` copy this build into the API's `wwwroot`. Rebuild the UI and restart .NET after frontend changes when testing the production-style setup. Do not edit generated `wwwroot` files.
+
+For live frontend development, keep the API running on `http://localhost:5200` and run `npm run dev` from `src/OfficeDays.Web`. Open the Vite URL; its `/api` proxy preserves same-origin cookies and CSRF behavior. Set `API_ORIGIN` when the API uses another address. Node 24 can be selected with `nvm use` in the frontend directory.
 
 The first start requires bootstrap administrator environment variables. They are intentionally absent from `appsettings.json`. Passwords must contain at least 12 characters.
 
@@ -104,7 +122,7 @@ docker compose up --build -d
 docker compose logs -f office-days
 ```
 
-The service listens on port `8080`. Database migrations and initial Admin creation happen automatically. The bind-mounted directory will contain:
+The service listens on port `5802`. The Docker build installs locked frontend dependencies, checks types, runs UI unit/component tests, and builds the static UI before publishing .NET. Compose still runs one service/container; no Node.js server is deployed. Database migrations and initial Admin creation happen automatically. The bind-mounted directory will contain:
 
 ```text
 data/officedays.db   SQLite database
@@ -223,14 +241,19 @@ Usernames are unique without regard to case. The country code must identify an e
 
 ## Web UI
 
-After login, everything is on one dashboard:
+The UI has separate, code-split routes:
 
-- month/year navigation and compliance status
-- attendance history with a minimal past-day add/remove fallback
-- vacation range add/remove
-- API token creation and revocation
-- admin-only holiday-jurisdiction management
-- an admin-only bank holiday editor
+- `/`: month/year navigation, compliance widgets, attendance history and vacation add/remove
+- `/login` and `/register`: existing cookie sign-in and self-registration
+- `/profile`: optional email and required office percentage
+- `/tokens`: API token creation, one-time reveal, copying and revocation
+- `/admin`: admin-only jurisdiction management and bank holiday editing
+
+Old `/#login`, `/#register`, and `/dashboard` links remain supported. Direct links and browser refreshes are served by .NET's SPA fallback. Unknown API/asset URLs remain 404s.
+
+The dashboard fetches summary, attendance and vacations independently. Summary rendering does not wait for the two lists, and dashboard visits do not request tokens or admin data. It preserves the existing green palette, light/dark theme and cards. Phones use stacked content; desktops use sidebar navigation and side-by-side attendance/vacation sections. Reports are not added in this migration.
+
+Bank holiday edits remain local until **Save year**; navigation warns before discarding unsaved changes. Failed holiday reads cannot be saved as an empty replacement.
 
 Manual attendance uses idempotent `PUT /api/attendance/{yyyy-MM-dd}` and does not allow future dates. Shortcut attendance uses `POST /api/attendance` with no body by default. It also accepts an optional JSON body `{ "isManual": false }`; omitted `isManual` defaults to false. Send `{ "isManual": true }` to record today manually. PUT always creates manual entries. Both endpoints preserve the original source when the date already exists.
 
@@ -238,7 +261,7 @@ Attendance responses include `isManual`. In the Office days list, automatic entr
 
 ## API tokens
 
-On the dashboard, enter a friendly name under **API tokens** and choose **Create token**. Copy the resulting token immediately: it is displayed once and cannot be recovered. The database stores only a SHA-256 hash of a cryptographically random 256-bit token.
+Open **API tokens** in navigation, enter a friendly name and choose **Create token**. Copy the resulting token immediately: it is displayed once and cannot be recovered. The database stores only a SHA-256 hash of a cryptographically random 256-bit token.
 
 The token list shows creation, last-use, and revocation information. **Revoke** retains the audit record while immediately preventing further authentication. Users can only list, create, or revoke their own tokens.
 
@@ -361,11 +384,27 @@ curl -i -H 'X-Correlation-ID: support-case-123' http://localhost:8080/api/versio
 
 ## Tests
 
-Run everything with:
+Build and test the frontend before running the .NET suites (UI hosting tests use the actual generated assets):
 
 ```bash
+cd src/OfficeDays.Web
+npm ci
+npm run check
+npm test
+npm run build
+cd ../..
 dotnet test OfficeDays.slnx
 ```
+
+The UI unit/component suite covers timezone/month boundaries, session-expiry handling, CSRF token refresh, API errors, summary loading/progress, profile saves, attendance/vacation mutations, and independent dashboard loading. Browser tests exercise real registration, login, attendance/vacations, profile persistence, token revocation, admin editors and route protection in desktop Chromium, Android-sized Chromium and iPhone-sized WebKit:
+
+```bash
+cd src/OfficeDays.Web
+npx playwright install chromium webkit
+npm run test:e2e
+```
+
+Browser tests start their own .NET server on port 5187 with a unique temporary SQLite database and test-only bootstrap credentials. They do not use your normal application database. They capture desktop/mobile screenshots and assert there is no horizontal overflow. WebKit emulation is not a substitute for checking on a physical iPhone before deployment. A Chromium-only cold-cache test applies 150 ms latency, 200 KB/s download and 4× CPU slowdown, records time to summary data, and enforces a 100 KiB compressed initial JavaScript budget. The JSON report and screenshots are in the ignored `test-results` directory.
 
 The unit suite covers odd/even rule behavior, weekdays and weekends, holidays, all vacation overlap cases, remaining-day clamping, ineligible attendance, leap years, and period boundaries.
 
@@ -423,15 +462,9 @@ application is running, since the WAL can contain uncheckpointed data.
 
 ## UI asset caching
 
-The application serves JavaScript and CSS at content-addressed URLs such as
-`/assets/<sha256>/app.js`. Each file's URL changes automatically when its contents
-change, for both local runs and Docker deployments. Files are loaded at application
-startup; restart the app after editing UI assets during local development.
+SvelteKit generates fingerprinted JavaScript/CSS URLs under `/_app/immutable/`. .NET snapshots the complete build at startup and serves those files with a one-year immutable cache policy. HTML and non-fingerprinted metadata use `Cache-Control: no-store`; deleted or unknown chunks return 404, never the app shell. Only public `/_app` assets are compressed with Brotli/gzip; authenticated API responses are excluded.
 
-The HTML response (including `/index.html` and client-side fallback routes) sends
-`Cache-Control: no-store` so it references the current asset URLs. Fingerprinted
-assets can be cached for a year because each URL identifies fixed content. Legacy
-`/app.js` and `/styles.css` routes also send `no-store`.
+The static frontend needs JavaScript before it fetches personalized summary data. This deployment deliberately has no SvelteKit server rendering. Keep the dashboard's initial dependencies small and measure a fresh authenticated mobile visit through to actual summary values. Browser tests confirm that delayed lists do not delay the summary; local timing is not a guarantee of homelab or mobile-network performance.
 
 Keep Komodo's **Build Images → Pre Build Images** enabled so deployments rebuild
 the application from the selected Git branch. Save and deploy after merging changes.

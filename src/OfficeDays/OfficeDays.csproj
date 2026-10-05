@@ -20,4 +20,19 @@
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
   </ItemGroup>
 
+  <!-- The frontend is built separately; Docker builds it before publishing .NET. -->
+  <Target Name="CopyFrontend" BeforeTargets="PrepareForBuild" Condition="Exists('../OfficeDays.Web/build/index.html')">
+    <ItemGroup>
+      <Content Remove="wwwroot/**/*" />
+    </ItemGroup>
+    <RemoveDir Directories="wwwroot" />
+    <ItemGroup>
+      <FrontendFiles Include="../OfficeDays.Web/build/**/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(FrontendFiles)" DestinationFiles="@(FrontendFiles->'wwwroot/%(RecursiveDir)%(Filename)%(Extension)')" />
+    <ItemGroup>
+      <Content Include="wwwroot/**/*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
+
 </Project>

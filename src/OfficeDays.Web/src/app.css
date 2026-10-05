@@ -133,3 +133,67 @@ h2 { margin-bottom: .15rem; font-size: 1.04rem; }
 
 .login-card a { color: var(--green-dark); }
 #register-view { margin-top: 4vh; margin-bottom: 4vh; }
+
+/* Shared layouts retain the original palette, typography and card treatment. */
+a { color: var(--green-dark); }
+button, input, select { min-height: 44px; }
+button.small, button.danger { min-height: 44px; }
+input, select { min-width: 0; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+.shell { width: min(1280px, calc(100% - 2rem)); }
+.page-content, .columns > *, .admin-sections > * { min-width: 0; }
+.page-content > h1 { margin-bottom: 1rem; }
+.account-detail { margin: .25rem 0 0; font-size: .85rem; color: var(--muted); overflow-wrap: anywhere; }
+.topbar > div { min-width: 0; }
+.topbar > button { flex-shrink: 0; }
+.app-layout { display: grid; gap: 1rem; }
+.app-nav { display: flex; flex-wrap: wrap; gap: .4rem; align-content: start; }
+.app-nav a { display: flex; align-items: center; min-height: 44px; padding: .6rem .8rem; border-radius: .55rem; text-decoration: none; color: var(--muted); font-weight: 650; }
+.app-nav a:hover { background: var(--secondary); }
+.app-nav a[aria-current="page"] { color: var(--green-dark); background: var(--green-soft); }
+.columns { align-items: start; }
+.admin-sections { display: grid; gap: 1rem; }
+.profile-form { max-width: 44rem; align-items: end; }
+.token-form { margin-top: 1rem; }
+.jurisdiction-form, .holiday-form, .holiday-picker { display: grid; gap: .55rem; align-items: end; margin-top: 1rem; }
+.holiday-picker { margin-bottom: 1rem; }
+.register-card { margin-top: 2rem; margin-bottom: 2rem; }
+.attendance-list { max-height: 25rem; overflow-y: auto; scrollbar-gutter: stable; }
+.item-main .sr-only { position: absolute; }
+.sr-only, .skip-link:not(:focus) { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.skip-link:focus { display: block; padding: 1rem; }
+.copy-row code { min-width: 0; }
+.message, .error { margin-top: .7rem; overflow-wrap: anywhere; }
+@media (min-width: 651px) {
+  .profile-form { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto; }
+  .jurisdiction-form { grid-template-columns: minmax(6rem, 1fr) minmax(0, 2fr) auto; }
+  .holiday-form, .holiday-picker { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
+}
+@media (min-width: 1050px) {
+  .app-layout { grid-template-columns: 180px minmax(0, 1fr); gap: 1.75rem; }
+  .app-nav { flex-direction: column; position: sticky; top: 1rem; align-self: start; }
+}
+@media (max-width: 650px) {
+  .shell { width: calc(100% - 1rem); }
+  .login-card { padding: 1.3rem; margin-top: 2rem; }
+  .card { padding: .9rem; }
+  .app-nav { gap: .2rem; }
+  .app-nav a { padding: .5rem .65rem; font-size: .9rem; }
+  .copy-row { flex-wrap: wrap; }
+  .copy-row code { flex-basis: 100%; }
+  .item-list li { flex-wrap: wrap; }
+  .item-list .item-main { flex: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .progress div { transition: none; } }
+@media (max-width: 650px) {
+  /* Keep native iOS form controls at 16px to avoid focus zoom. */
+  input, select { font-size: 1rem; }
+}
+select {
+  appearance: none;
+  padding-right: 1.8rem;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+}

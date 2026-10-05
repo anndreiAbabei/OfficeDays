@@ -9,3 +9,12 @@ data
 *.db-shm
 *.db-wal
 *.db-journal
+
+# Frontend generated artifacts
+**/node_modules/
+**/.svelte-kit/
+**/OfficeDays.Web/build/
+**/test-results/
+**/playwright-report/
+**/coverage/
+src/OfficeDays/wwwroot/
