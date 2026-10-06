@@ -6,10 +6,8 @@ let unauthorized = () => {};
 export function onUnauthorized(handler: () => void) { unauthorized = handler; }
 export function resetCsrf() { csrf = undefined; }
 async function csrfToken(): Promise<string> {
-  csrf ??= request<{ token: string }>('/api/auth/csrf').then(data => data.token).catch(error => {
-    csrf = undefined;
-    throw error;
-  });
+  csrf ??= request<{ token: string }>('/api/auth/csrf').then(data => data.token)
+      .catch(error => { csrf = undefined; throw error;});
   return csrf;
 }
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
