@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ItemList from '$lib/components/ItemList.svelte';
   import { untrack } from 'svelte';
   import { onMount } from 'svelte';
   import { request, mutate, errorMessage } from '$lib/api';
@@ -35,7 +36,7 @@
   </form>
   <Feedback {error} {message} />
   {#if error}<button class="secondary small" onclick={load} disabled={loading}>Retry office days</button>{/if}
-  <ul class="item-list attendance-list" aria-busy={loading}>
+  <ItemList {loading} scrollable>
     {#if loading && !items.length}<li class="empty">Loading office days…</li>
     {:else}
       {#each items as item (item.date)}
@@ -45,5 +46,13 @@
         </strong></div><button class="danger small" disabled={busy} aria-label={`Remove office day ${displayDate(item.date)}`} onclick={() => change('DELETE', item.date)}>Remove</button></li>
       {:else}<li class="empty">No office days recorded for this month.</li>{/each}
     {/if}
-  </ul>
+  </ItemList>
 </section>
+
+<style>
+  .attendance-check.automatic { color: var(--green-dark); }
+  .attendance-check.manual { color: #a87500; }
+  .item-main strong .attendance-check { display: inline; }
+  .item-main .sr-only { position: absolute; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+</style>

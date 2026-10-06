@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ItemList from '$lib/components/ItemList.svelte';
   import { untrack } from 'svelte';
   import { onMount } from 'svelte';
   import { request, mutate, errorMessage } from '$lib/api';
@@ -32,10 +33,18 @@
   </form>
   <Feedback {error} {message} />
   {#if error}<button class="secondary small" onclick={load} disabled={loading}>Retry vacations</button>{/if}
-  <ul class="item-list" aria-busy={loading}>
+  <ItemList {loading}>
     {#if loading && !items.length}<li class="empty">Loading vacations…</li>
     {:else}{#each items as item (item.id)}
       <li><div class="item-main"><strong>{displayDate(item.from)}{item.from === item.to ? '' : ` – ${displayDate(item.to)}`}</strong></div><button class="danger small" disabled={busy} aria-label={`Remove vacation ${displayDate(item.from)}`} onclick={() => change(item.id)}>Remove</button></li>
     {:else}<li class="empty">No vacation overlapping this month.</li>{/each}{/if}
-  </ul>
+  </ItemList>
 </section>
+
+<style>
+  .range-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: .55rem; align-items: end; }
+  @media (max-width: 650px) {
+    .range-form { grid-template-columns: 1fr 1fr; }
+    .range-form button { grid-column: 1 / -1; }
+  }
+</style>

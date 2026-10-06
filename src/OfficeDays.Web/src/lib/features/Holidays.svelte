@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ItemList from '$lib/components/ItemList.svelte';
   import { untrack } from 'svelte';
   import { beforeNavigate } from '$app/navigation';
   import { request, mutate, errorMessage } from '$lib/api';
@@ -61,7 +62,7 @@
   </form>
   <Feedback {error} {message} />
   {#if error && !loaded}<button class="secondary small" onclick={() => load(selected, year)} disabled={loading}>Retry holidays</button>{/if}
-  <ul class="item-list" aria-busy={loading}>
+  <ItemList {loading}>
     {#if loading}<li class="empty">Loading bank holidays…</li>
     {:else}{#each items as item (item.date)}
       <li><div class="item-main"><strong>{displayDate(item.date)}</strong><small>{item.name}</small></div><div class="row">
@@ -69,5 +70,13 @@
         <button class="danger small" disabled={busy} onclick={() => { items = items.filter(row => row.date !== item.date); dirty = true; message = 'Changes are local. Save the year to apply.'; }}>Remove</button>
       </div></li>
     {:else}<li class="empty">No configured holidays for this year.</li>{/each}{/if}
-</ul>
+</ItemList>
 </section>
+
+<style>
+  .holiday-form, .holiday-picker { display: grid; gap: .55rem; align-items: end; margin-top: 1rem; }
+  .holiday-picker { margin-bottom: 1rem; }
+  @media (min-width: 651px) {
+    .holiday-form, .holiday-picker { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
+  }
+</style>

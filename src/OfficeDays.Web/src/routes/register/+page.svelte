@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AuthCard from '$lib/components/AuthCard.svelte';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { errorMessage, mutate, request } from '$lib/api';
@@ -60,8 +61,7 @@
   }
 </script>
 <svelte:head><title>Create an account · Office Days</title></svelte:head>
-<section class="login-card register-card">
-  <div class="brand-mark">OD</div>
+<AuthCard registration>
   
   <h1>Create an account</h1>
   <p class="muted">Start tracking your office days.</p>
@@ -81,4 +81,4 @@
   <Feedback error={error || calendarError} />
   {#if calendarError}<button class="secondary" onclick={loadCalendars} disabled={loading}>Retry loading calendars</button>{/if}
   <p>Already have an account? <a href="/login">Sign in</a></p>
-</section>
+</AuthCard>

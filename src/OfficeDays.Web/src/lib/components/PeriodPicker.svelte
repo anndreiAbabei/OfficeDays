@@ -15,3 +15,12 @@
   <label>Year<input type="number" min="1" max="9999" required value={period.year} onchange={yearChanged} /></label>
   <button class="icon secondary" aria-label="Next month" disabled={period.year === 9999 && period.month === 12} onclick={() => onchange(shiftPeriod(period, 1))}>→</button>
 </section>
+
+<style>
+  .period-picker { display: grid; grid-template-columns: auto 1fr 7rem auto; gap: .7rem; align-items: end; margin-bottom: 1rem; }
+  .period-picker .icon { min-height: 2.55rem; }
+  @media (max-width: 650px) {
+    .period-picker { grid-template-columns: auto 1fr auto; }
+    .period-picker label:last-of-type { grid-column: 2; grid-row: 2; }
+  }
+</style>

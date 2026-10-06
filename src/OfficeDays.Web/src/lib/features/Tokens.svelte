@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ItemList from '$lib/components/ItemList.svelte';
   import { onMount } from 'svelte';
   import { request, mutate, errorMessage } from '$lib/api';
   import { displayTime } from '$lib/dates';
@@ -42,12 +43,27 @@
   {#if rawToken}<aside class="token-reveal"><strong>Copy this token now. It cannot be retrieved again.</strong><div class="copy-row"><code>{rawToken}</code><button class="secondary" onclick={copy}>{copied ? 'Copied' : 'Copy'}</button></div></aside>{/if}
   <Feedback {error} {message} />
   {#if error}<button class="secondary small" onclick={load} disabled={loading}>Retry tokens</button>{/if}
-  <ul class="item-list" aria-busy={loading}>
+  <ItemList {loading}>
     {#if loading && !tokens.length}<li class="empty">Loading tokens…</li>
     {:else}{#each tokens as token (token.id)}
       <li><div class="item-main"><strong>{token.name}</strong><small>Created {displayTime(token.createdAt)} · Last used {displayTime(token.lastUsedAt)}</small><span class="status-pill" class:revoked={token.status === 'Revoked'}>{token.status}</span></div>
         {#if token.status !== 'Revoked'}<button class="danger small" disabled={busy} onclick={() => revoke(token)}>Revoke</button>{/if}
       </li>
     {:else}<li class="empty">No API tokens yet.</li>{/each}{/if}
-  </ul>
+  </ItemList>
 </section>
+
+<style>
+  .copy-row { display: flex; align-items: center; gap: .7rem; }
+  .token-reveal { margin-top: 1rem; padding: .9rem; border: 1px solid var(--warning-border); border-radius: .65rem; background: var(--warning); }
+  .copy-row { margin-top: .65rem; }
+  .copy-row code { flex: 1; padding: .6rem; overflow-wrap: anywhere; border-radius: .35rem; background: var(--input); }
+  .status-pill { display: inline-block; margin-top: .2rem; padding: .12rem .4rem; border-radius: 999px; color: var(--green-dark); background: var(--green-soft); font-size: .72rem; }
+  .status-pill.revoked { color: var(--muted); background: var(--revoked); }
+  .token-form { margin-top: 1rem; }
+  .copy-row code { min-width: 0; }
+  @media (max-width: 650px) {
+    .copy-row { flex-wrap: wrap; }
+    .copy-row code { flex-basis: 100%; }
+  }
+</style>

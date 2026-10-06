@@ -251,6 +251,8 @@ The UI has separate, code-split routes:
 
 Old `/#login`, `/#register`, and `/dashboard` links remain supported. Direct links and browser refreshes are served by .NET's SPA fallback. Unknown API/asset URLs remain 404s.
 
+Component-specific CSS lives in each `.svelte` file’s scoped `<style>` block, alongside its TypeScript and markup. Shared `AuthCard` and `ItemList` components own their reusable styling. `src/OfficeDays.Web/src/app.css` contains only global element defaults and shared utilities; `src/lib/styles/theme.css` defines the light/dark theme tokens.
+
 The dashboard fetches summary, attendance and vacations independently. Summary rendering does not wait for the two lists, and dashboard visits do not request tokens or admin data. It preserves the existing green palette, light/dark theme and cards. Phones use stacked content; desktops use sidebar navigation and side-by-side attendance/vacation sections. Reports are not added in this migration.
 
 Bank holiday edits remain local until **Save year**; navigation warns before discarding unsaved changes. Failed holiday reads cannot be saved as an empty replacement.

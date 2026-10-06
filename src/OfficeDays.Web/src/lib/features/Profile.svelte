@@ -24,3 +24,10 @@
   </form>
   <Feedback {error} {message} />
 </section>
+
+<style>
+  .profile-form { max-width: 44rem; align-items: end; }
+  @media (min-width: 651px) {
+    .profile-form { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto; }
+  }
+</style>

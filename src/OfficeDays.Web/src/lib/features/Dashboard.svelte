@@ -25,3 +25,12 @@
   <AttendanceList {period} {timeZone} onchange={refreshSummary} />
   <VacationList {period} onchange={refreshSummary} />
 </div>
+
+<style>
+  .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  @media (max-width: 650px) {
+    .columns { grid-template-columns: 1fr; }
+  }
+  .columns > :global(*) { min-width: 0; }
+  .columns { align-items: start; }
+</style>

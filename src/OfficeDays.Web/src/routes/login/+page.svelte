@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AuthCard from '$lib/components/AuthCard.svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { mutate, errorMessage } from '$lib/api';
@@ -32,8 +33,7 @@
   }
 </script>
 <svelte:head><title>Sign in · Office Days</title></svelte:head>
-<section class="login-card">
-  <div class="brand-mark">OD</div>
+<AuthCard>
   
   <h1>Office Days Tracker</h1>
   
@@ -47,4 +47,4 @@
   
   <Feedback {error} message={page.url.searchParams.has('registered') ? 'Account created. Sign in to continue.' : ''} />
   <p>New here? <a href="/register">Create an account</a></p>
-</section>
+</AuthCard>

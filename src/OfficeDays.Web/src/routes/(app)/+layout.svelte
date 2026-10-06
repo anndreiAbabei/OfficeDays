@@ -30,3 +30,31 @@
     <div class="page-content"><Feedback {error} />{@render children()}</div>
   </div>
 {/if}
+
+<style>
+  .topbar { display: flex; align-items: center; gap: .7rem; }
+  .topbar { justify-content: space-between; }
+  .topbar { margin-bottom: 1.25rem; }
+  .eyebrow { margin-bottom: .1rem; color: var(--green); font-size: .72rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+  @media (max-width: 650px) {
+    .topbar { align-items: start; }
+  }
+  .page-content { min-width: 0; }
+  .page-content > :global(h1) { margin-bottom: 1rem; }
+  .account-detail { margin: .25rem 0 0; font-size: .85rem; color: var(--muted); overflow-wrap: anywhere; }
+  .topbar > div { min-width: 0; }
+  .topbar > button { flex-shrink: 0; }
+  .app-layout { display: grid; gap: 1rem; }
+  .app-nav { display: flex; flex-wrap: wrap; gap: .4rem; align-content: start; }
+  .app-nav a { display: flex; align-items: center; min-height: 44px; padding: .6rem .8rem; border-radius: .55rem; text-decoration: none; color: var(--muted); font-weight: 650; }
+  .app-nav a:hover { background: var(--secondary); }
+  .app-nav a[aria-current="page"] { color: var(--green-dark); background: var(--green-soft); }
+  @media (min-width: 1050px) {
+    .app-layout { grid-template-columns: 180px minmax(0, 1fr); gap: 1.75rem; }
+    .app-nav { flex-direction: column; position: sticky; top: 1rem; align-self: start; }
+  }
+  @media (max-width: 650px) {
+    .app-nav { gap: .2rem; }
+    .app-nav a { padding: .5rem .65rem; font-size: .9rem; }
+  }
+</style>
