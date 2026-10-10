@@ -5,12 +5,21 @@
   import type { Status, Period } from '$lib/types';
   import StatusSummary from '$lib/components/StatusSummary.svelte';
   import Feedback from '$lib/components/Feedback.svelte';
+  import PlanningCalendar from './PlanningCalendar.svelte';
   import AttendanceList from './AttendanceList.svelte';
   import VacationList from './VacationList.svelte';
   
   let { period, timeZone }: { period: Period; timeZone: string } = $props();
   let status = $state<Status | null>(null); let loading = $state(true); let error = $state('');
   let revision = 0;
+  let calendarRevision = $state(0);
+  let plannedCount = $state<number | null>(null);
+
+  function entriesChanged(): void {
+    calendarRevision++;
+    plannedCount = null;
+    void refreshSummary();
+  }
   
   async function refreshSummary(): Promise<void> {
     const current = ++revision; 
@@ -32,15 +41,18 @@
   }
   onMount(() => { void refreshSummary(); });
 </script>
-<StatusSummary {status} {loading} />
+<StatusSummary {status} {loading} {plannedCount} />
 <Feedback {error} />
 {#if error}
   <button class="secondary" onclick={refreshSummary}>Retry summary</button>
 {/if}
 
+<PlanningCalendar {period} {timeZone} revision={calendarRevision}
+  oncountchange={count => plannedCount = count} onchange={refreshSummary} />
+
 <div class="columns">
-  <AttendanceList {period} {timeZone} onchange={refreshSummary} />
-  <VacationList {period} onchange={refreshSummary} />
+  <AttendanceList {period} {timeZone} onchange={entriesChanged} />
+  <VacationList {period} onchange={entriesChanged} />
 </div>
 
 <style>

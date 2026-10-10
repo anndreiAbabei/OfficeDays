@@ -5,6 +5,7 @@ namespace OfficeDays.Data;
 
 public sealed class AppDbContext : DbContext
 {
+    public DbSet<OfficePlan> OfficePlans => Set<OfficePlan>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Attendance> Attendances => Set<Attendance>();
     public DbSet<Vacation> Vacations => Set<Vacation>();
@@ -42,6 +43,13 @@ public sealed class AppDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => new { x.UserId, x.Date }).IsUnique();
             entity.HasOne(x => x.User).WithMany(x => x.Attendances).HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<OfficePlan>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.UserId, x.Date }).IsUnique();
+            entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Vacation>(entity =>

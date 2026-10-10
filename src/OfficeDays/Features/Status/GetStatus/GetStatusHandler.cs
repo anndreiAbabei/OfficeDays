@@ -44,8 +44,8 @@ public sealed class GetStatusHandler : IRequestHandler<GetStatusRequest>
         CalculationPeriod period;
         if (!year.HasValue && !month.HasValue)
         {
-            var today = _dates.Today(user);
-            period = CalculationPeriod.ForMonth(today.Year, today.Month);
+            var currentDate = _dates.Today(user);
+            period = CalculationPeriod.ForMonth(currentDate.Year, currentDate.Month);
         }
         else
             period = CalculationPeriod.ForMonth(year!.Value, month!.Value);
@@ -67,6 +67,11 @@ public sealed class GetStatusHandler : IRequestHandler<GetStatusRequest>
         
         var result = _attendanceCalculator.Calculate(period, holidayDates, vacationRows.Select(x => (x.From, x.To)), officeDates, user.RequiredOfficePercentage);
         
-        return Results.Ok(result.ToViewModel());
+        var plans = await _db.OfficePlans.Where(x => x.UserId == user.Id && x.Date >= period.Start && x.Date <= period.End)
+            .Select(x => x.Date).ToListAsync(cancellationToken);
+        var today = _dates.Today(user);
+        var days = PlanningCalculator.Calculate(period, today, plans, officeDates,
+            holidayDates.Select(date => (date, "")), vacationRows.Select(x => (x.From, x.To)));
+        return Results.Ok(result.ToViewModel() with { UpcomingPlannedDays = PlanningCalculator.UpcomingCount(days, today) });
     }
 }

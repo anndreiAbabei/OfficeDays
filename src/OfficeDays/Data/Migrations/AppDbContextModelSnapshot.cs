@@ -15,7 +15,7 @@ namespace OfficeDays.Data.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.10");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
 
             modelBuilder.Entity("OfficeDays.Domain.ApiToken", b =>
                 {
@@ -128,6 +128,29 @@ namespace OfficeDays.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("HolidayJurisdictions");
+                });
+
+            modelBuilder.Entity("OfficeDays.Domain.OfficePlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Date")
+                        .IsUnique();
+
+                    b.ToTable("OfficePlans");
                 });
 
             modelBuilder.Entity("OfficeDays.Domain.User", b =>
@@ -245,6 +268,17 @@ namespace OfficeDays.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("HolidayJurisdiction");
+                });
+
+            modelBuilder.Entity("OfficeDays.Domain.OfficePlan", b =>
+                {
+                    b.HasOne("OfficeDays.Domain.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("OfficeDays.Domain.User", b =>

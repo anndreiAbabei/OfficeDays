@@ -30,6 +30,7 @@ public sealed class MigrationIntegrationTests
         var jurisdiction = Assert.Single(await db.HolidayJurisdictions.AsNoTracking().ToListAsync());
         Assert.Equal(jurisdiction.Id, admin.HolidayJurisdictionId);
         Assert.Empty(await db.Attendances.AsNoTracking().ToListAsync());
+        Assert.Empty(await db.OfficePlans.AsNoTracking().ToListAsync());
         Assert.Empty(await db.Vacations.AsNoTracking().ToListAsync());
         Assert.Empty(await db.ApiTokens.AsNoTracking().ToListAsync());
         Assert.Empty(await db.BankHolidays.AsNoTracking().ToListAsync());
