@@ -6,9 +6,15 @@
   import type { Period } from '$lib/types';
   let period = $state<Period>(localDate($user!.timeZoneId));
 </script>
-<svelte:head><title>Dashboard · Office Days</title></svelte:head>
+
+<svelte:head>
+  <title>Dashboard · Office Days</title>
+</svelte:head>
+
 <h1>{months[period.month - 1]} {period.year}</h1>
+
 <PeriodPicker {period} onchange={value => period = value} />
+
 {#key `${period.year}-${period.month}`}
   <Dashboard {period} timeZone={$user!.timeZoneId} />
 {/key}

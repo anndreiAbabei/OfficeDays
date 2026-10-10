@@ -5,16 +5,20 @@
   import type { Jurisdiction } from '$lib/types';
   import Feedback from '$lib/components/Feedback.svelte';
   import Holidays from './Holidays.svelte';
+  
   let { countryCode, timeZone }: { countryCode: string; timeZone: string } = $props();
   let items = $state<Jurisdiction[]>([]); let code = $state(''); let name = $state('');
   let busy = $state(false); let loading = $state(true); let error = $state(''); let message = $state('');
+  
   async function load() {
     loading = true; error = '';
     try { items = await request<Jurisdiction[]>('/api/holiday-jurisdictions'); }
     catch (failure) { error = errorMessage(failure); }
     finally { loading = false; }
   }
+  
   onMount(() => { void load(); });
+  
   async function change(method: string, item?: Jurisdiction) {
     let body: unknown = { code, name };
     if (method === 'DELETE') { if (!confirm(`Remove ${item!.name}?`)) return; body = undefined; }
@@ -53,9 +57,19 @@
 </div>
 
 <style>
-  .admin-sections > :global(*) { min-width: 0; }
-  .admin-sections { display: grid; gap: 1rem; }
-  .jurisdiction-form { display: grid; gap: .55rem; align-items: end; margin-top: 1rem; }
+  .admin-sections > :global(*) { 
+    min-width: 0; 
+  }
+  .admin-sections { 
+    display: grid;
+    gap: 1rem; 
+  }
+  .jurisdiction-form { 
+    display: grid; 
+    gap: .55rem; 
+    align-items: end; 
+    margin-top: 1rem; 
+  }
   @media (min-width: 651px) {
     .jurisdiction-form { grid-template-columns: minmax(6rem, 1fr) minmax(0, 2fr) auto; }
   }
