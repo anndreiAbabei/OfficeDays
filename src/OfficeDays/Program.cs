@@ -21,6 +21,9 @@ app.UseExceptionHandler();
 if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
     app.UseHsts();
 
+// Compress only public build assets, never cookie-authenticated API responses.
+app.UseWhen(context => context.Request.Path.StartsWithSegments("/_app"),
+    assets => assets.UseResponseCompression());
 app.UseBearerTokenHttpsProtection();
 app.UseAuthentication();
 app.UseAuthorization();

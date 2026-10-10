@@ -1,3 +1,10 @@
+FROM node:24-alpine AS frontend
+WORKDIR /source/web
+COPY src/OfficeDays.Web/package*.json ./
+RUN npm ci --no-audit --no-fund
+COPY src/OfficeDays.Web/ ./
+RUN npm run check && npm run test && npm run build
+
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /source
 
@@ -8,6 +15,7 @@ COPY tests/OfficeDays.IntegrationTests/OfficeDays.IntegrationTests.csproj tests/
 RUN dotnet restore src/OfficeDays/OfficeDays.csproj
 
 COPY src/OfficeDays/ src/OfficeDays/
+COPY --from=frontend /source/web/build/ src/OfficeDays/wwwroot/
 RUN dotnet publish src/OfficeDays/OfficeDays.csproj -c Release --no-restore -o /output \
     -p:InformationalVersion="$(dotnet msbuild src/OfficeDays/OfficeDays.csproj -getProperty:Version)+build.$(date -u +%Y%m%d.%H%M%S)"
 

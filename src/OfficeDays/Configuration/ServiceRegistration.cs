@@ -25,6 +25,11 @@ public static class ServiceRegistration
             throw new InvalidOperationException("Authentication:CookieExpireTimeSpan must be a positive TimeSpan.");
 
         builder.Logging.AddJsonConsole(options => options.IncludeScopes = true);
+        builder.Services.AddResponseCompression(options =>
+        {
+            options.EnableForHttps = true;
+            options.MimeTypes = ["text/javascript", "text/css", "application/json"];
+        });
         AddHealthCheck(builder);
         AddKeyPath(builder);
         AddAntiforgery(builder);

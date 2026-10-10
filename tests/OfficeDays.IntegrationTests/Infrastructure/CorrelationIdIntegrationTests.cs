@@ -19,7 +19,7 @@ public sealed class CorrelationIdIntegrationTests
     [InlineData("GET", "/health/live", 200)]
     [InlineData("GET", "/health/ready", 200)]
     [InlineData("GET", "/", 200)]
-    [InlineData("GET", "/app.js", 200)]
+    [InlineData("GET", "/_app/version.json", 200)]
     [InlineData("GET", "/api/attendance", 401)]
     [InlineData("POST", "/api/auth/login", 400)]
     [InlineData("POST", "/missing-route", 405)]

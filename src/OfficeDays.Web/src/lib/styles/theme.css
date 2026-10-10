@@ -1,0 +1,46 @@
+/* Shared light/dark design tokens. Component styles consume these variables. */
+:root { color-scheme: light;
+  --ink: #18201c;
+  --muted: #66706a;
+  --paper: #ffffff;
+  --ground: #f3f5f1;
+  --line: #dce2dc;
+  --green: #287a55;
+  --green-dark: #1f6144;
+  --green-soft: #e6f3eb;
+  --danger: #a33a3a;
+  --on-green: #ffffff;
+  --input: #ffffff;
+  --input-border: #cbd3cc;
+  --secondary: #edf0ec;
+  --secondary-hover: #e0e5df;
+  --subtle-line: #edf0ed;
+  --progress-track: #e7ebe7;
+  --warning: #fffbea;
+  --warning-border: #d6c675;
+  --revoked: #ecefec;
+  --shadow: rgb(20 40 28 / 4%);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+@media (prefers-color-scheme: dark) {
+  :root { color-scheme: dark;
+    --ink: #e6ece8;
+    --muted: #9eaaa2;
+    --paper: #181d19;
+    --ground: #0f1310;
+    --line: #303832;
+    --green: #58b982;
+    --green-dark: #78d09d;
+    --green-soft: #193326;
+    --danger: #ff9292;
+    --on-green: #0c2115;
+    --input: #111612;
+    --input-border: #424c45;
+    --secondary: #29302b;
+    --secondary-hover: #353e37;
+    --subtle-line: #2a312c;
+    --progress-track: #29312b;
+    --warning: #332f1d;
+    --warning-border: #6c6130;
+    --revoked: #29302b;
+    --shadow: rgb(0 0 0 / 22%); }
+}
