@@ -156,7 +156,8 @@
   
   .status-pill {
     display: inline-block; 
-    margin-top: .2rem; 
+    margin-top: .2rem;
+    margin-left: .2rem;
     padding: .12rem .4rem; 
     border-radius: 999px; 
     color: var(--green-dark); 
