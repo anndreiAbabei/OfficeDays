@@ -13,12 +13,12 @@ it('renders summary while secondary requests remain pending; never requests toke
   await waitFor(() => expect(screen.getByText('12')).toBeInTheDocument());
   expect(screen.getByText('Loading office days…')).toBeInTheDocument();
   expect(screen.getByText('Loading vacations…')).toBeInTheDocument();
-  expect(fetcher.mock.calls.map(([path]) => path).sort()).toEqual(['/api/attendance?year=2026&month=10', '/api/status?year=2026&month=10', '/api/vacations?year=2026&month=10']);
+  expect(fetcher.mock.calls.map(([path]) => path).sort()).toEqual(['/api/attendance?year=2026&month=10', '/api/planning?year=2026&month=10', '/api/status?year=2026&month=10', '/api/vacations?year=2026&month=10']);
 });
 it('keeps attendance usable when the summary endpoint fails', async () => {
   vi.stubGlobal('fetch', vi.fn().mockImplementation(async (path: string) => path.startsWith('/api/status')
     ? new Response(JSON.stringify({ detail: 'Summary unavailable' }), { status: 503 })
-    : new Response('[]')));
+    : new Response(path.startsWith('/api/planning') ? JSON.stringify({ today: '2026-10-10', upcomingPlannedDays: 0, days: [] }) : '[]')));
   
   render(Dashboard, { period: { year: 2026, month: 10 }, timeZone: 'UTC' });
   

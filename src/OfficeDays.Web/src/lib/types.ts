@@ -17,6 +17,7 @@ export interface Status {
   officeDays: number; 
   remainingOfficeDays: number; 
   progressPercentage: number;
+  upcomingPlannedDays: number;
 }
 
 export interface Attendance { 
@@ -51,4 +52,22 @@ export interface ApiToken {
 export interface Period { 
   year: number; 
   month: number 
+}
+
+export interface PlanningDay {
+  date: string;
+  isPlanned: boolean;
+  isEligible: boolean;
+  isAttended: boolean;
+  isToday: boolean;
+  canToggle: boolean;
+  status: 'attended' | 'holiday' | 'missed' | 'planned' | 'none';
+  holidays: string[];
+  isVacation: boolean;
+}
+
+export interface PlanningMonth {
+  today: string;
+  upcomingPlannedDays: number;
+  days: PlanningDay[];
 }

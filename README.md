@@ -422,6 +422,24 @@ dotnet test tests/OfficeDays.IntegrationTests --filter FullyQualifiedName~Migrat
 
 Rider-compatible manual API requests are available under `http/`. Select the `local` or `docker` HTTP Client environment and provide secrets through the ignored `http/http-client.private.env.json` file or the documented operating-system variables.
 
+## Planning office days
+
+The dashboard calendar follows the selected month. Tap an eligible date today or in the future to toggle an office plan; changes save immediately. Past plans cannot be changed. Weekends, vacations, and the user's jurisdiction holidays cannot receive plans. Failed saves revert the calendar and display an error.
+
+Green marks recorded attendance, yellow marks upcoming plans, red marks past plans with no attendance recorded, and blue marks vacation or bank holidays. Attendance takes precedence over time off, which takes precedence over planning. Today has a separate outline and label. Holiday names appear in tooltips and in the day details when selected. Colors are also explained by a legend and symbols.
+
+The **Upcoming planned** card counts eligible plans from the user's local today through the end of the selected month, excluding recorded attendance. Plans remain stored after attendance or overlapping vacation is added. Planning does not change actual attendance totals or the remaining office requirement.
+
+Authenticated API operations:
+
+- `GET /api/planning?year=2026&month=10` returns `today`, `upcomingPlannedDays`, and `days`. Each day includes `date`, `isPlanned`, `isEligible`, `isAttended`, `isToday`, `canToggle`, `status`, `holidays`, and `isVacation`.
+- `PUT /api/planning/{yyyy-MM-dd}` adds a plan for an eligible date today or later.
+- `DELETE /api/planning/{yyyy-MM-dd}` removes a plan today or later, including a plan subsequently overlapped by time off. Past-date writes return a validation error.
+
+PUT and DELETE take no body and return 204, including repeated requests with the same eligible state. Cookie writes require the existing CSRF header. Requests operate only on the authenticated user's plans. The monthly status response also includes `upcomingPlannedDays`.
+
+The `AddOfficePlans` migration creates the separate table with a unique user/date index and runs automatically on startup. Existing attendance is not converted into plans.
+
 ## Database migrations
 
 Migrations are committed under `src/OfficeDays/Data/Migrations` and applied at startup. To create a migration after changing the model:

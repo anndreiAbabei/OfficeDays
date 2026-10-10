@@ -7,4 +7,5 @@ public sealed record GetStatusResponse(
     int RequiredOfficeDays,
     int OfficeDays,
     int RemainingOfficeDays,
-    decimal ProgressPercentage);
+    decimal ProgressPercentage,
+    int UpcomingPlannedDays = 0);

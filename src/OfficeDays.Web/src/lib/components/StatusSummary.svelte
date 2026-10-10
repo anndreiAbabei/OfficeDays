@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Status } from '$lib/types';
   
-  let { status = null, loading = false }: { status?: Status | null; loading?: boolean } = $props();
+  let { status = null, loading = false, plannedCount = null }: { status?: Status | null; loading?: boolean; plannedCount?: number | null } = $props();
   let progress: number = $derived(Math.max(0, Math.min(100, status?.progressPercentage ?? 0)));
 </script>
 
@@ -27,6 +27,13 @@
       <small>days</small>
     </div>
   </article>
+  <article class="metric card">
+    <span>Upcoming planned</span>
+    <div class="metric-value">
+      <strong>{plannedCount ?? status?.upcomingPlannedDays ?? '—'}</strong>
+      <small>days</small>
+    </div>
+  </article>
 </section>
 <section class="card progress-card" aria-busy={loading}>
   <div class="row spread">
@@ -47,7 +54,7 @@
   }
   .status-grid { 
     display: grid; 
-    grid-template-columns: repeat(3, 1fr); 
+    grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
   }
   .metric { 

@@ -82,6 +82,7 @@ public static class ServiceRegistration
         svcBuilder.Services.AddSingleton(TimeProvider.System);
         svcBuilder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         svcBuilder.Services.AddScoped<CookieAntiforgeryFilter>();
+        svcBuilder.Services.AddScoped<PlanningCalendarReader>();
         svcBuilder.Services.AddSingleton<IUserDateService, UserDateService>();
         svcBuilder.Services.AddSingleton<IRequestExecutor, RequestExecutor>();
         svcBuilder.Services.AddSingleton<IUserService, UserService>();
