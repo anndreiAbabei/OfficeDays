@@ -31,9 +31,11 @@
         oncountchange(result.upcomingPlannedDays);
       }
     } catch (failure) {
-      if (current === generation) error = errorMessage(failure);
+      if (current === generation) 
+        error = errorMessage(failure);
     } finally {
-      if (current === generation) loading = false;
+      if (current === generation) 
+        loading = false;
     }
   }
 
@@ -59,11 +61,17 @@
     const previous = data;
     const next = togglePlan(day);
     const delta = day.isAttended ? 0 : next.isPlanned ? 1 : -1;
-    data = { ...data, days: data.days.map(item => item.date === day.date ? next : item),
-      upcomingPlannedDays: data.upcomingPlannedDays + delta };
+    
+    data = { 
+      ...data, 
+      days: data.days.map(item => item.date === day.date ? next : item), 
+      upcomingPlannedDays: data.upcomingPlannedDays + delta 
+    };
+    
     oncountchange(data.upcomingPlannedDays);
     busy = true;
     error = '';
+    
     try {
       await mutate(`/api/planning/${day.date}`, next.isPlanned ? 'PUT' : 'DELETE');
     } catch (failure) {
@@ -71,6 +79,7 @@
       oncountchange(previous.upcomingPlannedDays);
       error = errorMessage(failure);
       busy = false;
+      
       return;
     }
     busy = false;
@@ -86,30 +95,53 @@
       <p class="muted">Tap an eligible day to add or remove a plan. Changes save automatically.</p>
     </div>
   </div>
+  
   <Feedback {error} />
-  {#if error}<button class="secondary small" onclick={load} disabled={busy || loading}>Retry calendar</button>{/if}
+  {#if error}
+    <button class="secondary small" onclick={load} disabled={busy || loading}>
+      Retry calendar
+    </button>
+  {/if}
+  
   {#if !data}
     <p class="muted">{loading ? 'Loading calendar…' : 'Calendar unavailable.'}</p>
   {:else}
     <div class="calendar" aria-label="Office planning calendar">
-      {#each weekdays as weekday}<div class="weekday">{weekday}</div>{/each}
-      {#each Array(offset) as _}<div aria-hidden="true"></div>{/each}
+      {#each weekdays as weekday}
+        <div class="weekday">{weekday}</div>
+      {/each}
+      
+      {#each Array(offset) as _}
+        <div aria-hidden="true"></div>
+      {/each}
+      
       {#each data.days as day (day.date)}
-        <button type="button" class="day {day.status}" class:today={day.isToday}
-          class:ineligible={!day.isEligible} class:readonly={!day.canToggle}
-          aria-label={`${displayDate(day.date)} · ${describeDay(day)}${day.canToggle ? ' · Toggle plan' : ' · Planning unavailable'}`}
-          aria-pressed={day.isPlanned} aria-current={day.isToday ? 'date' : undefined}
-          title={describeDay(day)} disabled={busy || loading}
-          onfocus={() => selectedDate = day.date}
-          onclick={() => select(day)}>
-          <span class="number">{Number(day.date.slice(-2))}</span>
-          <span class="symbol" aria-hidden="true">{day.status === 'attended' ? '✓' : day.status === 'missed' ? '!' : day.status === 'holiday' ? '−' : day.isPlanned ? '•' : ''}{day.isPlanned && (day.status === 'attended' || day.status === 'holiday') ? ' •' : ''}</span>
-          {#if day.isToday}<span class="today-label">Today</span>{/if}
+        <button type="button" 
+                class="day {day.status}" 
+                class:today={day.isToday}
+                class:ineligible={!day.isEligible} 
+                class:readonly={!day.canToggle}
+                aria-label={`${displayDate(day.date)} · ${describeDay(day)}${day.canToggle ? ' · Toggle plan' : ' · Planning unavailable'}`}
+                aria-pressed={day.isPlanned} aria-current={day.isToday ? 'date' : undefined}
+                title={describeDay(day)} disabled={busy || loading}
+                onfocus={() => selectedDate = day.date}
+                onclick={() => select(day)}>
+          <span class="number">
+            {Number(day.date.slice(-2))}
+          </span>
+          <span class="symbol" aria-hidden="true">
+            {day.status === 'attended' ? '✓' : day.status === 'missed' ? '!' : day.status === 'holiday' ? '−' : day.isPlanned ? '•' : ''}
+            {day.isPlanned && (day.status === 'attended' || day.status === 'holiday') ? ' •' : ''}
+          </span>
+          {#if day.isToday}
+            <span class="today-label">Today</span>
+          {/if}
         </button>
       {/each}
     </div>
     <p class="day-details" aria-live="polite">{selected ? `${displayDate(selected.date)} · ${describeDay(selected)}` : 'Select any day to read its details.'}</p>
   {/if}
+  
   <ul class="legend" aria-label="Calendar legend">
     <li><span class="swatch attended">✓</span> Attended</li>
     <li><span class="swatch planned">•</span> Planned</li>
@@ -120,23 +152,114 @@
 </section>
 
 <style>
-  .planning { margin-bottom: 1rem; }
-  .calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .45rem; }
-  .weekday { text-align: center; font-size: .8rem; color: var(--muted); padding: .4rem 0; }
-  .day { position: relative; min-height: 4.5rem; padding: .55rem; display: flex; align-items: flex-start; justify-content: space-between; border: 1px solid var(--line); border-radius: .6rem; background: var(--paper); color: var(--ink); box-shadow: none; }
-  .day.readonly { cursor: default; }
-  .day.ineligible.none { background: var(--progress-track); color: var(--muted); }
-  .attended { background: #d8eddf; color: #18542e; }
-  .planned { background: #fff0b8; color: #695000; }
-  .missed { background: #f9dcdc; color: #8b2424; }
-  .holiday { background: #dcecff; color: #204d85; }
-  .day.today, .swatch.today { outline: 2px solid #7055bb; outline-offset: 1px; }
-  .day:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
-  .today-label { position: absolute; bottom: .25rem; left: .5rem; font-size: .65rem; font-weight: 700; }
-  .day-details { min-height: 1.5em; font-size: .85rem; margin: .85rem 0; }
-  .legend { display: flex; flex-wrap: wrap; gap: .65rem 1.2rem; list-style: none; padding: 0; margin: .8rem 0 0; font-size: .8rem; }
-  .legend li { display: flex; align-items: center; gap: .4rem; }
-  .swatch { display: inline-flex; align-items: center; justify-content: center; width: 1rem; height: 1rem; border-radius: .2rem; }
+  .planning { 
+    margin-bottom: 1rem; 
+  }
+  
+  .calendar {
+    display: grid; 
+    grid-template-columns: repeat(7, minmax(0, 1fr)); 
+    gap: .45rem; 
+  }
+  
+  .weekday { 
+    text-align: center; 
+    font-size: .8rem; 
+    color: var(--muted); 
+    padding: .4rem 0; 
+  }
+  
+  .day { 
+    position: relative; 
+    min-height: 4.5rem; 
+    padding: .55rem; 
+    display: flex; 
+    align-items: flex-start; 
+    justify-content: space-between; 
+    border: 1px solid var(--line); 
+    border-radius: .6rem; 
+    background: var(--paper); 
+    color: var(--ink); 
+    box-shadow: none; 
+  }
+  
+  .day.readonly { 
+    cursor: default; 
+  }
+  
+  .day.ineligible.none {
+    background: var(--progress-track); 
+    color: var(--muted); 
+  }
+  
+  .attended { 
+    background: #d8eddf; 
+    color: #18542e; 
+  }
+  
+  .planned { 
+    background: #fff0b8; 
+    color: #695000; 
+  }
+  
+  .missed { 
+    background: #f9dcdc; 
+    color: #8b2424; 
+  }
+  .holiday { 
+    background: #dcecff; 
+    color: #204d85; 
+  }
+  
+  .day.today, .swatch.today { 
+    outline: 2px solid #7055bb; 
+    outline-offset: 1px; 
+  }
+  
+  .day:focus-visible { 
+    outline: 3px solid var(--ink); 
+    outline-offset: 3px; 
+  }
+  
+  .today-label { 
+    position: absolute; 
+    bottom: .25rem; 
+    left: .5rem; 
+    font-size: .65rem; 
+    font-weight: 700; 
+  }
+  
+  .day-details { 
+    min-height: 1.5em; 
+    font-size: .85rem; 
+    margin: .85rem 0; 
+  }
+  
+  .legend { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: .65rem 1.2rem; 
+    list-style: none; 
+    padding: 0; 
+    margin: .8rem 0 0; 
+    font-size: .8rem; 
+  }
+  
+  .legend li { 
+    display: flex; 
+    align-items: center; 
+    gap: .4rem; 
+  }
+  
+  .swatch { 
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center; 
+    width: 1rem; 
+    height: 1rem; 
+    border-radius: .2rem; 
+  }
+  
   @media (prefers-color-scheme: dark) {
     .attended { background: #193d29; color: #a7e1bd; }
     .planned { background: #453b18; color: #ffe18b; }
