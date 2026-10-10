@@ -6,6 +6,7 @@
   import { describeDay, togglePlan } from './planning';
   import Feedback from '$lib/components/Feedback.svelte';
 
+  const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   let { period, timeZone, revision = 0, oncountchange, onchange }: {
     period: Period; timeZone: string; revision?: number;
     oncountchange: (count: number) => void; onchange: () => void;
@@ -16,7 +17,6 @@
   let error = $state('');
   let selectedDate = $state('');
   let generation = 0;
-  const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   let offset = $derived((new Date(`${isoDate(period.year, period.month)}T00:00:00Z`).getUTCDay() + 6) % 7);
   let selected = $derived(data?.days.find(day => day.date === selectedDate));
 
@@ -52,6 +52,7 @@
         onchange();
       }
     }, 30_000);
+    
     return () => { clearInterval(timer); generation++; };
   });
 
@@ -82,6 +83,7 @@
       
       return;
     }
+    
     busy = false;
     onchange();
     await load();

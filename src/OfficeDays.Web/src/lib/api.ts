@@ -64,4 +64,6 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
 export function mutate<T>(path: string, method: string, body?: unknown): Promise<T> {
   return request<T>(path, { method, body: body === undefined ? undefined : JSON.stringify(body) });
 }
-export const errorMessage = (error: unknown) => error instanceof Error ? error.message : 'Something went wrong. Please try again.';
+export const errorMessage = (error: unknown) => error instanceof Error 
+    ? error.message 
+    : 'Something went wrong. Please try again.';

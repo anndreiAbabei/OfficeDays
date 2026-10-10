@@ -27,6 +27,7 @@ it('refreshes CSRF after identity changes', async () => {
   
   expect(fetcher.mock.calls.filter(([path]) => path.endsWith('/csrf'))).toHaveLength(2);
 });
+
 it('surfaces validation errors and does not invalidate a session on a failed login', async () => {
   const unauthorized = vi.fn(); onUnauthorized(unauthorized);
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json({ errors: { email: ['Enter a valid email.'] } }, 400)));
@@ -39,6 +40,7 @@ it('surfaces validation errors and does not invalidate a session on a failed log
   expect(unauthorized).not.toHaveBeenCalled();
   await expect(request('/api/status')).rejects.toThrow(); expect(unauthorized).toHaveBeenCalledOnce();
 });
+
 it('allows retry when CSRF loading fails', async () => {
   const fetcher = vi.fn().mockRejectedValueOnce(new Error('Offline')).mockResolvedValueOnce(json({ token: 'retry' })).mockResolvedValueOnce(new Response(null, { status: 204 }));
   vi.stubGlobal('fetch', fetcher);
