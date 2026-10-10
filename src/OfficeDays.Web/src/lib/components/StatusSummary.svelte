@@ -2,6 +2,14 @@
   import type { Status } from '$lib/types';
   
   let { status = null, loading = false, plannedCount = null }: { status?: Status | null; loading?: boolean; plannedCount?: number | null } = $props();
+  let upcomingPlanned = $derived(plannedCount ?? status?.upcomingPlannedDays);
+  let daysToPlan = $derived(status && upcomingPlanned !== undefined 
+          ? Math.max(0, status.remainingOfficeDays - upcomingPlanned) 
+          : null);
+  let planningMessage = $derived(daysToPlan === null ? ''
+    : status?.remainingOfficeDays === 0 ? 'Office requirement met.'
+    : daysToPlan === 0 ? 'All remaining days planned.'
+    : `${daysToPlan} more ${daysToPlan === 1 ? 'day' : 'days'} to plan.`);
   let progress: number = $derived(Math.max(0, Math.min(100, status?.progressPercentage ?? 0)));
 </script>
 
@@ -30,9 +38,11 @@
   <article class="metric card">
     <span>Upcoming planned</span>
     <div class="metric-value">
-      <strong>{plannedCount ?? status?.upcomingPlannedDays ?? '—'}</strong>
-      <small>days</small>
+      <strong class="planning-ratio" aria-label={`${upcomingPlanned ?? 'Unknown'} planned / ${status?.remainingOfficeDays ?? 'unknown'} remaining office days`}>{upcomingPlanned ?? '—'} / {status?.remainingOfficeDays ?? '—'}</strong>
     </div>
+    {#if planningMessage}
+      <p class="planning-hint" aria-live="polite">{planningMessage}</p>
+    {/if}
   </article>
 </section>
 <section class="card progress-card" aria-busy={loading}>
@@ -80,6 +90,17 @@
     letter-spacing: -.15em;
     font-variant-numeric: tabular-nums;
   }
+  .metric .planning-ratio {
+    font-size: clamp(1.7rem, 3vw, 2.5rem);
+    letter-spacing: normal;
+    white-space: nowrap;
+  }
+  .planning-hint {
+    grid-column: 1 / -1;
+    margin: .2rem 0 0;
+    color: var(--muted);
+    font-size: .8rem;
+  }
   .metric small { 
     color: var(--muted); 
   }
@@ -107,10 +128,10 @@
   }
   @media (max-width: 650px) {
     .status-grid { grid-template-columns: 1fr; gap: .6rem; }
-    .metric { grid-template-columns: 1fr auto; }
+    .metric { grid-template-columns: minmax(0, 1fr) auto; }
     .metric span { grid-column: auto; }
-    .metric-value { display: contents; }
-    .metric strong { font-size: 1.7rem; }
+    .metric-value { justify-self: end; }
+    .metric strong, .metric .planning-ratio { font-size: 1.7rem; }
     .metric small { display: none; }
   }
   @media (prefers-reduced-motion: reduce) {
