@@ -61,6 +61,7 @@ public sealed class PlanDateHandler : IRequestHandler<PlanDateRequest>
             when (exception.IsUniqueViolation())
         {
             _db.Entry(row).State = EntityState.Detached;
+            _logger.LogResolvedConcurrentUpdate(exception, user.Id, request.Date);
         }
         
         _logger.LogPlanChanged(user.Id, request.Date);

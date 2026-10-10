@@ -193,26 +193,26 @@
   }
   
   .attended { 
-    background: #d8eddf; 
-    color: #18542e; 
+    background: var(--calendar-attended-bg);
+    color: var(--calendar-attended-text);
   }
   
   .planned { 
-    background: #fff0b8; 
-    color: #695000; 
+    background: var(--calendar-planned-bg);
+    color: var(--calendar-planned-text);
   }
   
   .missed { 
-    background: #f9dcdc; 
-    color: #8b2424; 
+    background: var(--calendar-missed-bg);
+    color: var(--calendar-missed-text);
   }
   .holiday { 
-    background: #dcecff; 
-    color: #204d85; 
+    background: var(--calendar-holiday-bg);
+    color: var(--calendar-holiday-text);
   }
   
   .day.today, .swatch.today { 
-    outline: 2px solid #7055bb; 
+    outline: 2px solid var(--calendar-today-outline);
     outline-offset: 1px; 
   }
   
@@ -260,13 +260,6 @@
     border-radius: .2rem; 
   }
   
-  @media (prefers-color-scheme: dark) {
-    .attended { background: #193d29; color: #a7e1bd; }
-    .planned { background: #453b18; color: #ffe18b; }
-    .missed { background: #472626; color: #ffb4b4; }
-    .holiday { background: #20374f; color: #b3d7ff; }
-    .day.today, .swatch.today { outline-color: #bba3ff; }
-  }
   @media (max-width: 650px) {
     .calendar { gap: .3rem; }
     .day { min-height: 3.5rem; padding: .3rem; }
