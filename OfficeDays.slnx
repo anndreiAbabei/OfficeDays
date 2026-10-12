@@ -6,6 +6,7 @@
   </Configurations>
   <Folder Name="/docs/">
     <File Path="README.md" />
+    <File Path="rebuild.sh" />
     <File Path="todo.md" />
   </Folder>
   <Folder Name="/docs/http/">

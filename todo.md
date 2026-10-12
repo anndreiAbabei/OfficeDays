@@ -4,9 +4,12 @@
 - [ ] Export user data
 - [ ] Backup/restore user data
 - [ ] Report page
-- [ ] Create shortcut file and download it
+- [ ] Create iOS shortcut file and download it
 - [ ] Show team day in calendar
 - [ ] Light mode and dark mode in Profile page
 - [ ] Accessibility (reduce motion, contrast, etc...)
 - [ ] Mobile layout on vacation card
-- [ ] Added "Created by @andrei" - GitHub page
+- [x] Added "Created by @andrei" - GitHub page
+- [ ] Enable the pwa
+- [ ] Allow offline changes 
+- [ ] Cookies banner 

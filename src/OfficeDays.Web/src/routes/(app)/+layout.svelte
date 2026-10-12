@@ -31,7 +31,7 @@
 {#if $user}
   <header class="topbar">
     <div>
-      <p class="eyebrow">Office Days Tracker</p>
+      <a href="/" class="eyebrow">Office Days Tracker</a>
       <p class="account-detail">
         {$user.username} · {$user.countryName} ({$user.countryCode}) · {$user.timeZoneId}
       </p>
@@ -75,8 +75,13 @@
     font-weight: 800; 
     letter-spacing: .11em; 
     text-transform: uppercase; 
+    text-decoration: none;
   }
-  
+
+  .eyebrow:hover {
+    color: var(--green-dark);
+  }
+
   @media (max-width: 650px) {
     .topbar { align-items: start; }
   }
