@@ -30,12 +30,14 @@ public static class ServiceRegistration
             options.EnableForHttps = true;
             options.MimeTypes = ["text/javascript", "text/css", "application/json"];
         });
+        
         AddHealthCheck(builder);
         AddKeyPath(builder);
         AddAntiforgery(builder);
         AddDatabase(builder);
         AddServices(builder);
         AddAuthorization(builder, cookieExpireTimeSpan);
+        
         return builder;
     }
 
@@ -43,12 +45,13 @@ public static class ServiceRegistration
     {
         webApplicationBuilder.Services.AddProblemDetails();
         webApplicationBuilder.Services.AddHealthChecks()
-                             .AddCheck<OfficeDays.Features.Operations.DatabaseHealthCheck>("database", timeout: TimeSpan.FromSeconds(5));
+                             .AddCheck<Features.Operations.DatabaseHealthCheck>("database", timeout: TimeSpan.FromSeconds(5));
     }
 
     private static void AddKeyPath(WebApplicationBuilder kpBuilder)
     {
         var keysPath = kpBuilder.Configuration["DataProtection:KeysPath"];
+        
         if (string.IsNullOrWhiteSpace(keysPath))
             kpBuilder.Services.AddDataProtection();
         else
@@ -73,7 +76,7 @@ public static class ServiceRegistration
     private static void AddDatabase(WebApplicationBuilder dbBuilder)
     {
         dbBuilder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(dbBuilder.Configuration.GetConnectionString("Default") ??
-                                                                                  "Data Source=officedays.db"));
+                                                                                   "Data Source=officedays.db"));
         dbBuilder.Services.AddSingleton<DatabaseInitializer>();
     }
 
@@ -89,7 +92,7 @@ public static class ServiceRegistration
         svcBuilder.Services.AddSingleton<IAttendanceCalculator, AttendanceCalculator>();
         svcBuilder.Services.AddSingleton<IApiTokenService, ApiTokenService>();
         svcBuilder.Services.AddHttpContextAccessor();
-        svcBuilder.Services.AddSingleton<OfficeDays.Features.Ui.UiContent>();
+        svcBuilder.Services.AddSingleton<Features.Ui.UiContent>();
         svcBuilder.Services.AddScoped<ICurrentUser, CurrentUser>();
     }
 
@@ -102,10 +105,9 @@ public static class ServiceRegistration
                    })
                    .AddPolicyScheme("Smart", "Cookie or API token", options =>
                    {
-                       options.ForwardDefaultSelector = context =>
-                           context.Request.Headers.Authorization.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
-                               ? ApiTokenAuthenticationHandler.SchemeName
-                               : CookieAuthenticationDefaults.AuthenticationScheme;
+                       options.ForwardDefaultSelector = context => context.Request.Headers.Authorization.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                                                                       ? ApiTokenAuthenticationHandler.SchemeName
+                                                                       : CookieAuthenticationDefaults.AuthenticationScheme;
                    })
                    .AddCookie(options =>
                    {
@@ -126,9 +128,7 @@ public static class ServiceRegistration
                            return Task.CompletedTask;
                        };
                    })
-                   .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationHandler>(ApiTokenAuthenticationHandler.SchemeName, _ =>
-                   {
-                   });
+                   .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationHandler>(ApiTokenAuthenticationHandler.SchemeName, _ => {});
 
         authBuilder.Services.AddAuthorizationBuilder()
                    .AddPolicy("AdminOnly", policy => policy.RequireClaim("is_admin", "true"));

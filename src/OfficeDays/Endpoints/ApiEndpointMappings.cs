@@ -17,6 +17,7 @@ public static class ApiEndpointMappings
                 ? new EndpointGroupBuilder(app.Services, app.MapGroup(""), mappings)
                 : groupBuilder);
         }
+        
         mappings.ValidateComplete();
     }
 }

@@ -9,6 +9,7 @@ public static class FeatureRegistration
     {
         var assembly = typeof(Program).Assembly;
         var catalog = FeatureCatalog.Discover(assembly.GetExportedTypes());
+        
         foreach (var group in catalog.Groups)
             services.AddSingleton(typeof(IEndpointGroup), group);
         foreach (var endpoint in catalog.Endpoints)
@@ -23,6 +24,7 @@ public static class FeatureRegistration
             catalog.ValidateServices(services);
             return catalog;
         });
+        
         return services;
     }
 }
