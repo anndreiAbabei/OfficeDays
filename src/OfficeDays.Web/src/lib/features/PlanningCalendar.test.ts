@@ -91,3 +91,29 @@ it('keeps today outline with attendance color and exposes holiday details on tou
   
   expect(fetcher.mock.calls.some(([, options]) => options?.method)).toBe(false);
 });
+
+it.each(['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as const)(
+  'outlines the full %s column and removes it when cleared', async teamDay => {
+    const days = Array.from({ length: 31 }, (_, index) => day(
+      `2026-10-${String(index + 1).padStart(2, '0')}`,
+      index === 14 ? { isToday: true, status: 'holiday', canToggle: false, isEligible: false, holidays: ['Holiday'] } : {}
+    ));
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({
+      today: '2026-10-15', upcomingPlannedDays: 0, days
+    }))));
+    const props = { period: { year: 2026, month: 10 }, timeZone: 'UTC', teamDay,
+      oncountchange: vi.fn(), onchange: vi.fn() };
+    const { container, rerender } = render(PlanningCalendar, props);
+    await screen.findByRole('button', { name: /Oct 15/ });
+    const column = container.querySelector('.team-column') as HTMLElement;
+    expect(column.style.gridColumn).toBe(String(['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].indexOf(teamDay) + 1));
+    expect(column.style.gridRow).toBe('1 / 7');
+    expect(screen.getByText('Team day')).toBeVisible();
+    const today = screen.getByRole('button', { name: /Oct 15/ });
+    expect(today).toHaveClass('today', 'holiday');
+    if (teamDay === 'thursday') expect(today).toHaveAccessibleName(/Team day/);
+    await rerender({ ...props, teamDay: null });
+    expect(container.querySelector('.team-column')).toBeNull();
+    expect(screen.queryByText('Team day')).not.toBeInTheDocument();
+  }
+);

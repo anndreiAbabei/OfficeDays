@@ -17,6 +17,10 @@ public sealed class UpdateUserRequestBodyValidator : AbstractValidator<UpdateUse
 {
     public UpdateUserRequestBodyValidator()
     {
+        RuleFor(body => body.TeamDay)
+            .Must(day => day is null or "monday" or "tuesday" or "wednesday" or "thursday" or "friday")
+            .WithMessage("Team day must be Monday to Friday (lowercase), or null.");
+
         RuleFor(body => body.Email)
             .EmailAddress()
             .When(body => !string.IsNullOrWhiteSpace(body.Email));

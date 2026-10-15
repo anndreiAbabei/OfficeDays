@@ -23,6 +23,7 @@
   --calendar-attended-bg: #d8eddf;
   --calendar-attended-text: #18542e;
   --calendar-planned-bg: #fff0b8;
+  --calendar-team-outline: #c49a20;
   --calendar-planned-text: #695000;
   --calendar-missed-bg: #f9dcdc;
   --calendar-missed-text: #8b2424;
@@ -54,6 +55,7 @@
     --calendar-attended-bg: #193d29;
     --calendar-attended-text: #a7e1bd;
     --calendar-planned-bg: #453b18;
+    --calendar-team-outline: #ffe18b;
     --calendar-planned-text: #ffe18b;
     --calendar-missed-bg: #472626;
     --calendar-missed-text: #ffb4b4;

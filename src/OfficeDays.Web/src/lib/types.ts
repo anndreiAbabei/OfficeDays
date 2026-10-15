@@ -1,3 +1,5 @@
+export type TeamDay = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday';
+
 export interface User {
   id: string; 
   username: string; 
@@ -7,6 +9,7 @@ export interface User {
   countryName: string; 
   isAdmin: boolean; 
   requiredOfficePercentage: number;
+  teamDay: TeamDay | null;
 }
 
 export interface Status {

@@ -12,5 +12,6 @@ public static class UpdateUserMapping
                                                                                            user.HolidayJurisdiction.Name, 
                                                                                            user.IsAdmin, 
                                                                                            user.Email, 
-                                                                                           user.RequiredOfficePercentage);
+                                                                                           user.RequiredOfficePercentage,
+                                                                                           user.Preferences.TeamDay?.ToString().ToLowerInvariant());
 }
