@@ -17,6 +17,7 @@
     <File Path="http\http-client.private.env.json.example" />
     <File Path="http\README.md" />
     <File Path="http\romania-2026.http" />
+    <File Path="http\romania-2027.http" />
     <File Path="http\status.http" />
     <File Path="http\tokens.http" />
     <File Path="http\vacations.http" />
