@@ -16,5 +16,5 @@
 <PeriodPicker {period} onchange={value => period = value} />
 
 {#key `${period.year}-${period.month}`}
-  <Dashboard {period} timeZone={$user!.timeZoneId} />
+  <Dashboard {period} timeZone={$user!.timeZoneId} teamDay={$user!.teamDay} />
 {/key}

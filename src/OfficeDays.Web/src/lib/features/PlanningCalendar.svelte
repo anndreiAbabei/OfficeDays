@@ -2,13 +2,13 @@
   import { onMount, untrack } from 'svelte';
   import { request, mutate, errorMessage } from '$lib/api';
   import { displayDate, isoDate, localDate, periodQuery } from '$lib/dates';
-  import type { Period, PlanningDay, PlanningMonth } from '$lib/types';
+  import type { Period, PlanningDay, PlanningMonth, TeamDay } from '$lib/types';
   import { describeDay, togglePlan } from './planning';
   import Feedback from '$lib/components/Feedback.svelte';
 
   const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  let { period, timeZone, revision = 0, oncountchange, onchange }: {
-    period: Period; timeZone: string; revision?: number;
+  let { period, timeZone, teamDay = null, revision = 0, oncountchange, onchange }: {
+    period: Period; timeZone: string; teamDay?: TeamDay | null; revision?: number;
     oncountchange: (count: number) => void; onchange: () => void;
   } = $props();
   let data = $state<PlanningMonth | null>(null);
@@ -18,7 +18,15 @@
   let selectedDate = $state('');
   let generation = 0;
   let offset = $derived((new Date(`${isoDate(period.year, period.month)}T00:00:00Z`).getUTCDay() + 6) % 7);
+  const workdays: TeamDay[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+  let teamColumn = $derived(teamDay ? workdays.indexOf(teamDay) + 1 : 0);
+  let weekRows = $derived(Math.ceil((offset + (data?.days.length ?? 0)) / 7));
   let selected = $derived(data?.days.find(day => day.date === selectedDate));
+  
+  function dayDescription(day: PlanningDay): string {
+    const weekday = new Date(day.date + 'T00:00:00Z').getUTCDay();
+    return describeDay(day) + (teamColumn && weekday === teamColumn ? ' · Team day' : '');
+  }
 
   async function load(): Promise<void> {
     const current = ++generation;
@@ -109,23 +117,30 @@
     <p class="muted">{loading ? 'Loading calendar…' : 'Calendar unavailable.'}</p>
   {:else}
     <div class="calendar" aria-label="Office planning calendar">
-      {#each weekdays as weekday}
-        <div class="weekday">{weekday}</div>
+      {#if teamColumn}
+        <div class="team-column" aria-hidden="true" 
+             style:grid-column={teamColumn} 
+             style:grid-row={`1 / ${weekRows + 2}`}></div>
+      {/if}
+      {#each weekdays as weekday, column}
+        <div class="weekday" style:grid-column={column + 1} style:grid-row={1}>{weekday}</div>
       {/each}
       
-      {#each Array(offset) as _}
-        <div aria-hidden="true"></div>
+      {#each Array(offset) as _, column}
+        <div aria-hidden="true" style:grid-column={column + 1} style:grid-row={2}></div>
       {/each}
       
-      {#each data.days as day (day.date)}
+      {#each data.days as day, index (day.date)}
         <button type="button" 
-                class="day {day.status}" 
+                class="day {day.status}"
+                style:grid-column={(offset + index) % 7 + 1}
+                style:grid-row={Math.floor((offset + index) / 7) + 2}
                 class:today={day.isToday}
                 class:ineligible={!day.isEligible} 
                 class:readonly={!day.canToggle}
-                aria-label={`${displayDate(day.date)} · ${describeDay(day)}${day.canToggle ? ' · Toggle plan' : ' · Planning unavailable'}`}
+                aria-label={`${displayDate(day.date)} · ${dayDescription(day)}${day.canToggle ? ' · Toggle plan' : ' · Planning unavailable'}`}
                 aria-pressed={day.isPlanned} aria-current={day.isToday ? 'date' : undefined}
-                title={describeDay(day)} disabled={busy || loading}
+                title={dayDescription(day)} disabled={busy || loading}
                 onfocus={() => selectedDate = day.date}
                 onclick={() => select(day)}>
           <span class="number">
@@ -141,14 +156,17 @@
         </button>
       {/each}
     </div>
-    <p class="day-details" aria-live="polite">{selected ? `${displayDate(selected.date)} · ${describeDay(selected)}` : 'Select any day to read its details.'}</p>
+    <p class="day-details" aria-live="polite">{selected ? `${displayDate(selected.date)} · ${dayDescription(selected)}` : 'Select any day to read its details.'}</p>
   {/if}
   
   <ul class="legend" aria-label="Calendar legend">
     <li><span class="swatch attended">✓</span> Attended</li>
     <li><span class="swatch planned">•</span> Planned</li>
-    <li><span class="swatch missed">!</span> Planned · no attendance recorded</li>
-    <li><span class="swatch holiday">−</span> Vacation / bank holiday</li>
+    <li><span class="swatch missed">!</span> Planned · day not recorded</li>
+    <li><span class="swatch holiday">−</span> Vacation / Holiday</li>
+    {#if teamColumn}
+      <li><span class="swatch team-day"></span> Team day</li>
+    {/if}
     <li><span class="swatch today"></span> Today</li>
   </ul>
 </section>
@@ -164,6 +182,19 @@
     gap: .45rem; 
   }
   
+  .team-column {
+    border: 2px solid alpha(from var(--calendar-team-outline) / 20%);
+    border-radius: .7rem;
+    margin: -.18rem;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .swatch.team-day {
+    border: 2px solid alpha(from var(--calendar-team-outline) / 20%);
+    background: transparent;
+  }
+
   .weekday { 
     text-align: center; 
     font-size: .8rem; 

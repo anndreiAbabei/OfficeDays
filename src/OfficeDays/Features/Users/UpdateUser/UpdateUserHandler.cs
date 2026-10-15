@@ -43,6 +43,9 @@ public sealed class UpdateUserHandler : IRequestHandler<UpdateUserRequest>
         if (request.RequiredOfficePercentage.HasValue)
             user.RequiredOfficePercentage = request.RequiredOfficePercentage.Value;
         
+        if (request.HasTeamDay)
+            user.Preferences.TeamDay = request.TeamDay is null ? null : Enum.Parse<DayOfWeek>(request.TeamDay, true);
+
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return Results.Ok(user.ToViewModel());

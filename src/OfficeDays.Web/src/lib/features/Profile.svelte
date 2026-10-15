@@ -1,18 +1,20 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { mutate, errorMessage } from '$lib/api';
-  import type { User } from '$lib/types';
+  import type { TeamDay, User } from '$lib/types';
   import Feedback from '$lib/components/Feedback.svelte';
   
   let { currentUser, onsave }: { currentUser: User; onsave: (user: User) => void } = $props();
   let email = $state(untrack(() => currentUser.email || '')); let percentage = $state(untrack(() => currentUser.requiredOfficePercentage));
+  const teamDays: TeamDay[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+  let teamDay = $state<TeamDay | null>(untrack(() => currentUser.teamDay));
   let busy = $state(false); let error = $state(''); let message = $state('');
   
   async function save(event: SubmitEvent): Promise<void> {
     event.preventDefault(); busy = true; error = ''; message = '';
     try {
-      const updated = await mutate<User>('/api/users/me', 'PUT', { email: email.trim() || null, requiredOfficePercentage: percentage });
-      email = updated.email || ''; percentage = updated.requiredOfficePercentage; onsave(updated); message = 'Profile saved.';
+      const updated = await mutate<User>('/api/users/me', 'PUT', { email: email.trim() || null, requiredOfficePercentage: percentage, teamDay });
+      email = updated.email || ''; percentage = updated.requiredOfficePercentage; teamDay = updated.teamDay; onsave(updated); message = 'Profile saved.';
     } catch (failure) { 
       error = errorMessage(failure); 
     }
@@ -33,6 +35,16 @@
       Required office days (%)
       <input type="number" min="0" max="100" step="1" required bind:value={percentage} />
     </label>
+    <label>
+      Team day
+      <select bind:value={teamDay} aria-describedby="team-day-help">
+        <option value={null}>None</option>
+        {#each teamDays as day}
+          <option value={day}>{day[0].toUpperCase() + day.slice(1)}</option>
+        {/each}
+      </select>
+    </label>
+    <p id="team-day-help" class="muted">Your team’s weekly office day. Highlighted in your calendar.</p>
     <button type="submit" disabled={busy}>
       {busy ? 'Saving…' : 'Save profile'}
     </button>
@@ -46,6 +58,6 @@
     align-items: end; 
   }
   @media (min-width: 651px) {
-    .profile-form { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto; }
+    .profile-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 </style>

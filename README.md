@@ -12,6 +12,11 @@ remaining office days  = max(0, required office days - eligible office attendanc
 
 Users can set a whole percentage from 0–100 during registration or in Profile. Existing accounts default to 50%. Changing the percentage recalculates all viewed months using the current setting. The API accepts `requiredOfficePercentage` on registration and profile updates, and returns it with user details. Omitting it during registration defaults to 50; omitting it during a profile update preserves the saved value.
 
+Users can select a weekly **Team day** in Profile (Monday–Friday), or choose **None** to clear it. The dashboard outlines that weekday’s entire column in yellow and includes a Team day legend. This is a visual reminder across all viewed months, including holidays and vacations; it does not create plans or change attendance requirements. Registration defaults to no team day.
+
+Profile updates accept `teamDay` as `"monday"`, `"tuesday"`, `"wednesday"`, `"thursday"`, `"friday"`, or `null`. Omitting the field preserves the saved value; explicit `null` clears it. Current-user, login, and profile-update responses include `teamDay`. Preferences are stored as a typed JSON object in the Users table; the migration initializes existing accounts with no selection.
+
+
 With 21 eligible days at 50%, this means at most 10 WFH days and therefore at least 11 office days.
 
 ## Architecture
