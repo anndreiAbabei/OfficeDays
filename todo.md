@@ -5,7 +5,7 @@
 - [ ] Backup/restore user data
 - [ ] Report page
 - [ ] Create iOS shortcut file and download it
-- [ ] Show team day in calendar
+- [x] Show team day in calendar
 - [ ] Light mode and dark mode in Profile page
 - [ ] Accessibility (reduce motion, contrast, etc...)
 - [ ] Mobile layout on vacation card

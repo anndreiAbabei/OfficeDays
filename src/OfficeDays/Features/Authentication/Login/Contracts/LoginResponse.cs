@@ -7,4 +7,5 @@ public sealed record LoginResponse(Guid Id,
                                    string CountryName, 
                                    bool IsAdmin, 
                                    string? Email, 
-                                   int RequiredOfficePercentage);
+                                   int RequiredOfficePercentage,
+                                   string? TeamDay = null);

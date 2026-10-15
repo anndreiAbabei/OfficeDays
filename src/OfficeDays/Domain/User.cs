@@ -6,6 +6,7 @@ public sealed class User
     public required string Username { get; init; }
     public required string NormalizedUsername { get; init; }
     public string? Email { get; set; }
+    public UserPreferences Preferences { get; set; } = new();
     public int RequiredOfficePercentage { get; set; } = 50;
     public required string PasswordHash { get; set; }
     public required string TimeZoneId { get; init; }
