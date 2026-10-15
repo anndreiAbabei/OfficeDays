@@ -150,9 +150,6 @@
             {day.status === 'attended' ? '✓' : day.status === 'missed' ? '!' : day.status === 'holiday' ? '−' : day.isPlanned ? '•' : ''}
             {day.isPlanned && (day.status === 'attended' || day.status === 'holiday') ? ' •' : ''}
           </span>
-          {#if day.isToday}
-            <span class="today-label">Today</span>
-          {/if}
         </button>
       {/each}
     </div>
