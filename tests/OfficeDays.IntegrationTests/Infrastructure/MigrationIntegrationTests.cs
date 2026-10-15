@@ -84,7 +84,7 @@ public sealed class MigrationIntegrationTests
             Assert.Equal(new DateOnly(2026, 9, 15), existingAttendance.Date);
             Assert.True(existingAttendance.IsManual);
 
-            db.Attendances.Add(new OfficeDays.Domain.Attendance
+            db.Attendances.Add(new Domain.Attendance
             {
                 Id = Guid.NewGuid(), UserId = userId, Date = new DateOnly(2026, 9, 16),
                 CreatedAt = DateTimeOffset.UtcNow

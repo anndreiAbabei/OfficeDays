@@ -6,9 +6,12 @@
   import { request } from '$lib/api';
   import { loadSession, sessionReady, sessionError } from '$lib/session';
   import type { Snippet } from 'svelte';
+  import type { AppVersion } from "$lib/types";
   
   let { children }: { children: Snippet } = $props();
   let version = $state('Loading version…');
+  let author = $state('Andrei');
+  let gitHubUrl = $state('#');
   
   onMount(() => {
     // Preserve links from the original UI.
@@ -16,7 +19,13 @@
       if (location.hash === '#register' || location.hash === '#login') await goto(`/${location.hash.slice(1)}`, { replaceState: true });
       await loadSession();
     })();
-    void request<{ version: string }>('/api/version').then(data => version = `v${data.version}`).catch(() => version = 'Version unavailable');
+    void request<AppVersion>('/api/version')
+            .then(data => {
+              version = `v${data.version}`;
+              author = data.author;
+              gitHubUrl = data.gitHubRepo
+            })
+            .catch(() => version = 'Version unavailable');
   });
 </script>
 <a class="skip-link" href="#main-content">
@@ -37,7 +46,10 @@
     <p class="muted" role="status">Loading Office Days…</p>
   {/if}
 </main>
-<footer class="app-footer muted">Office Days · {version}</footer>
+<footer class="app-footer muted">
+  <span>Created by <a href="{gitHubUrl}">{author}</a> · </span>
+  <span>Office Days · {version}</span>
+</footer>
 
 <style>
   .shell { 

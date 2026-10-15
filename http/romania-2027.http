@@ -1,0 +1,53 @@
+# Select the `local` or `docker` environment in Rider's "Run with" menu.
+# The token must belong to an administrator.
+@apiToken = {{OFFICEDAYS_TOKEN}}
+
+### Create Romania as a holiday jurisdiction
+# The AddHolidayJurisdictions migration already seeds RO for upgraded and fresh databases,
+# so this request normally returns 409 Conflict. It is included as an explicit setup request.
+POST {{baseUrl}}/api/holiday-jurisdictions
+Authorization: Bearer {{apiToken}}
+Content-Type: application/json
+
+{
+  "code": "RO",
+  "name": "Romania"
+}
+
+### Ensure the existing RO jurisdiction has the desired display name
+PUT {{baseUrl}}/api/holiday-jurisdictions/RO
+Authorization: Bearer {{apiToken}}
+Content-Type: application/json
+
+{
+  "name": "Romania"
+}
+
+### Replace Romania's complete 2027 bank-holiday calendar
+PUT {{baseUrl}}/api/bank-holidays/RO/2027
+Authorization: Bearer {{apiToken}}
+Content-Type: application/json
+
+[
+  { "date": "2027-01-01", "name": "Anul Nou" },
+  { "date": "2027-01-02", "name": "A doua zi după Anul Nou" },
+  { "date": "2027-01-06", "name": "Boboteaza" },
+  { "date": "2027-01-07", "name": "Sfântul Ioan Botezătorul" },
+  { "date": "2027-01-24", "name": "Ziua Unirii Principatelor Române" },
+  { "date": "2027-04-30", "name": "Vinerea Mare" },
+  { "date": "2027-05-01", "name": "Ziua Muncii" },
+  { "date": "2027-05-02", "name": "Paștele Ortodox" },
+  { "date": "2027-05-03", "name": "A doua zi de Paște" },
+  { "date": "2027-06-01", "name": "Ziua Copilului" },
+  { "date": "2027-06-20", "name": "Prima zi de Rusalii" },
+  { "date": "2027-06-21", "name": "A doua zi de Rusalii" },
+  { "date": "2027-08-15", "name": "Adormirea Maicii Domnului" },
+  { "date": "2027-11-30", "name": "Sfântul Andrei" },
+  { "date": "2027-12-01", "name": "Ziua Națională a României" },
+  { "date": "2027-12-25", "name": "Crăciunul" },
+  { "date": "2027-12-26", "name": "A doua zi de Crăciun" }
+]
+
+### Verify Romania's configured 2027 holidays (anonymous)
+GET {{baseUrl}}/api/bank-holidays/RO/2027
+Accept: application/json

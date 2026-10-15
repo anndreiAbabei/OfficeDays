@@ -7,10 +7,10 @@ namespace OfficeDays.Infrastructure;
 public interface IRequestExecutor
 {
     ValueTask<IResult> Execute<TRequest>([AsParameters] TRequest request,
-                                        [FromServices] IRequestHandler<TRequest> handler,
-                                        [FromServices] ILogger<TRequest> logger,
-                                        [FromServices] IValidator<TRequest>? validator = null,
-                                        CancellationToken cancellationToken = default)
+                                         [FromServices] IRequestHandler<TRequest> handler,
+                                         [FromServices] ILogger<TRequest> logger,
+                                         [FromServices] IValidator<TRequest>? validator = null,
+                                         CancellationToken cancellationToken = default)
         where TRequest : IRequest;
 }
 
