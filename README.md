@@ -10,7 +10,22 @@ maximum WFH days       = eligible working days - required office days
 remaining office days  = max(0, required office days - eligible office attendance)
 ```
 
-Users can set a whole percentage from 0–100 during registration or in Profile. Existing accounts default to 50%. Changing the percentage recalculates all viewed months using the current setting. The API accepts `requiredOfficePercentage` on registration and profile updates, and returns it with user details. Omitting it during registration defaults to 50; omitting it during a profile update preserves the saved value.
+Users choose a whole percentage from 0–100 during registration (default 50%). Profile has a separate attendance requirements history: an editable, undeletable initial requirement covers all dates before the first change, including attendance before registration. Additional requirements take effect on the first of a chosen month. Current and past entries are shown newest first; upcoming entries are shown earliest first. Changing or deleting a historical entry recalculates affected dashboard months and future report exports.
+
+The `UserRequiredOfficePercentages` table is the source of truth; the legacy user column is removed. Migration preserves each existing percentage as a baseline with `StartingFrom = 0001-01-01`. This reserved date represents all earlier history, not account creation. `CreatedAt` uses UTC `DateTimeOffset`, consistent with other entities. Each user/month pair is unique, and the database checks percentage bounds and first-of-month dates. Downgrading restores baseline percentages to the legacy column and discards the schedule.
+
+Registration and user response contracts retain `requiredOfficePercentage`. User/login/profile responses resolve it for the user's current local date; monthly status resolves it for the requested month. Profile writes to `/api/users/me` manage email/team day only; legacy `requiredOfficePercentage` fields are ignored. Requirement changes use the separate endpoints below.
+
+Authenticated requirement endpoints (cookie mutations also require CSRF):
+
+```text
+GET    /api/users/me/requirements       { today, items: [{ id, startingFrom, requiredOfficePercentage, createdAt, isBaseline }] }
+POST   /api/users/me/requirements       { "startingFrom": "2027-01-01", "requiredOfficePercentage": 60 }
+PUT    /api/users/me/requirements/{id}  { "startingFrom": "2027-01-01", "requiredOfficePercentage": 70 }
+DELETE /api/users/me/requirements/{id}
+```
+
+Only the signed-in user's entries are accessible. Duplicate effective months return 409; invalid dates/percentages, baseline deletion, and moving or creating a baseline return 400. Editing the baseline percentage retains its reserved date. Deleting another entry extends the preceding percentage until the next scheduled change. Entries are a mutable schedule, not an immutable audit log.
 
 Users can select a weekly **Team day** in Profile (Monday–Friday), or choose **None** to clear it. The dashboard outlines that weekday’s entire column in yellow and includes a Team day legend. This is a visual reminder across all viewed months, including holidays and vacations; it does not create plans or change attendance requirements. Registration defaults to no team day.
 
@@ -250,7 +265,8 @@ The UI has separate, code-split routes:
 
 - `/`: month/year navigation, compliance widgets, attendance history and vacation add/remove
 - `/login` and `/register`: existing cookie sign-in and self-registration
-- `/profile`: optional email and required office percentage
+- `/profile`: optional email, team day, and attendance requirement history
+- `/reports`: personal monthly attendance reports and CSV export
 - `/tokens`: API token creation, one-time reveal, copying and revocation
 - `/admin`: admin-only jurisdiction management and bank holiday editing
 
@@ -258,7 +274,7 @@ Old `/#login`, `/#register`, and `/dashboard` links remain supported. Direct lin
 
 Component-specific CSS lives in each `.svelte` file’s scoped `<style>` block, alongside its TypeScript and markup. Shared `AuthCard` and `ItemList` components own their reusable styling. `src/OfficeDays.Web/src/app.css` contains only global element defaults and shared utilities; `src/lib/styles/theme.css` defines the light/dark theme tokens.
 
-The dashboard fetches summary, attendance and vacations independently. Summary rendering does not wait for the two lists, and dashboard visits do not request tokens or admin data. It preserves the existing green palette, light/dark theme and cards. Phones use stacked content; desktops use sidebar navigation and side-by-side attendance/vacation sections. Reports are not added in this migration.
+The dashboard fetches summary, attendance and vacations independently. Summary rendering does not wait for the two lists, and dashboard visits do not request tokens or admin data. It preserves the existing green palette, light/dark theme and cards. Phones use stacked content; desktops use sidebar navigation and side-by-side attendance/vacation sections.
 
 Bank holiday edits remain local until **Save year**; navigation warns before discarding unsaved changes. Failed holiday reads cannot be saved as an empty replacement.
 
@@ -426,6 +442,27 @@ dotnet test tests/OfficeDays.IntegrationTests --filter FullyQualifiedName~Migrat
 ```
 
 Rider-compatible manual API requests are available under `http/`. Select the `local` or `docker` HTTP Client environment and provide secrets through the ignored `http/http-client.private.env.json` file or the documented operating-system variables.
+
+## Attendance reports
+
+Reports appears after Profile in the navigation. Select a year and an inclusive month range (default January–December), then generate or refresh the report. The page shows summary cards, recorded-versus-required office days, and a monthly table. Reports only include months on or after account registration, using the user's timezone; the entire registration month is included. Earlier ranges return an empty report rather than invented zero-attendance rows.
+
+```text
+GET /api/reports
+GET /api/reports?year=2026&startMonth=6&endMonth=12
+```
+
+The authenticated endpoint defaults to the user's current local year, January–December. Years are 1–9998, months are 1–12, and the ending month must not precede the starting month. Every query is scoped to the current user; there is no user-selection parameter. Responses include the requested range, username, timezone, registration month, local today, generation timestamp, summary, and monthly rows. Responses use `Cache-Control: no-store`.
+
+- Completed months show `targetMet` or `belowTarget`. Months with no recorded attendance count as zero.
+- The current month shows `inProgress` and its full-month requirement. It is excluded from completed-month target counts.
+- Future months show `notStarted`, eligible days, and their scheduled requirement. Recorded attendance and attendance percentages are null, and these months are excluded from summary totals.
+- Eligible days and required office days use the same calculator as the dashboard, including holidays, overlapping vacations, ceiling rounding, and historical percentages. Office days count only eligible recorded attendance, not plans.
+- Monthly attendance percentage is recorded office days divided by full-month eligible days. The summary percentage uses total office days divided by total eligible days across started months (including the current month's full eligible-day count); it is not an average of monthly percentages. No eligible days produces a null percentage, shown as “—”. A completed month with no eligible days has a zero target and is considered met.
+
+Generation reads the user, requirements, holidays, vacation, and attendance within one database transaction, then calculates the report in memory. It does not persist a report or add a database table. The initial requirement still supports pre-registration dashboard calculations, but reports stop at the registration month.
+
+CSV export happens in the browser from the exact report response currently displayed, without a second API request. It includes username, generation time, timezone, month, eligible days, required percentage/days, recorded days, attendance percentage, and result. Later edits only appear after Refresh report. Export is disabled during loading, for empty reports, or while unapplied filters differ from the displayed report. CSV fields are quoted, quotes/newlines are escaped, and formula-like usernames are neutralized for spreadsheet applications.
 
 ## Planning office days
 

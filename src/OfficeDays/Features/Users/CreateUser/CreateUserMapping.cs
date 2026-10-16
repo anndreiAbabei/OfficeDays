@@ -14,6 +14,6 @@ public static class CreateUserMapping
         CountryName = user.HolidayJurisdiction.Name,
         IsAdmin = user.IsAdmin,
         Email = user.Email,
-        RequiredOfficePercentage = user.RequiredOfficePercentage
+        RequiredOfficePercentage = user.RequiredOfficePercentages.Single().RequiredOfficePercentage
     };
 }

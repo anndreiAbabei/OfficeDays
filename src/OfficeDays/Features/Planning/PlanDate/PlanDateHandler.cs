@@ -14,13 +14,13 @@ public sealed class PlanDateHandler : IRequestHandler<PlanDateRequest>
     private readonly AppDbContext _db;
     private readonly ICurrentUser _currentUser;
     private readonly TimeProvider _clock;
-    private readonly PlanningCalendarReader _calendar;
+    private readonly IPlanningCalendarReader _calendar;
     private readonly ILogger<PlanDateHandler> _logger;
     
     public PlanDateHandler(AppDbContext db, 
                            ICurrentUser currentUser, 
                            TimeProvider clock,
-                           PlanningCalendarReader calendar, 
+                           IPlanningCalendarReader calendar, 
                            ILogger<PlanDateHandler> logger)
     {
         _db = db;

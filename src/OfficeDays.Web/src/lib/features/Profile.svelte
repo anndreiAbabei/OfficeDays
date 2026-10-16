@@ -5,7 +5,7 @@
   import Feedback from '$lib/components/Feedback.svelte';
   
   let { currentUser, onsave }: { currentUser: User; onsave: (user: User) => void } = $props();
-  let email = $state(untrack(() => currentUser.email || '')); let percentage = $state(untrack(() => currentUser.requiredOfficePercentage));
+  let email = $state(untrack(() => currentUser.email || ''));
   const teamDays: TeamDay[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
   let teamDay = $state<TeamDay | null>(untrack(() => currentUser.teamDay));
   let busy = $state(false); let error = $state(''); let message = $state('');
@@ -13,8 +13,8 @@
   async function save(event: SubmitEvent): Promise<void> {
     event.preventDefault(); busy = true; error = ''; message = '';
     try {
-      const updated = await mutate<User>('/api/users/me', 'PUT', { email: email.trim() || null, requiredOfficePercentage: percentage, teamDay });
-      email = updated.email || ''; percentage = updated.requiredOfficePercentage; teamDay = updated.teamDay; onsave(updated); message = 'Profile saved.';
+      const updated = await mutate<User>('/api/users/me', 'PUT', { email: email.trim() || null, teamDay });
+      email = updated.email || ''; teamDay = updated.teamDay; onsave(updated); message = 'Profile saved.';
     } catch (failure) { 
       error = errorMessage(failure); 
     }
@@ -30,10 +30,6 @@
     <label>
       Email address
       <input type="email" autocomplete="email" maxlength="254" bind:value={email} />
-    </label>
-    <label>
-      Required office days (%)
-      <input type="number" min="0" max="100" step="1" required bind:value={percentage} />
     </label>
     <label>
       Team day

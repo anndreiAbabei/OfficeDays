@@ -7,6 +7,7 @@ public sealed class AppDbContext : DbContext
 {
     public DbSet<OfficePlan> OfficePlans => Set<OfficePlan>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<UserRequiredOfficePercentage> UserRequiredOfficePercentages => Set<UserRequiredOfficePercentage>();
     public DbSet<Attendance> Attendances => Set<Attendance>();
     public DbSet<Vacation> Vacations => Set<Vacation>();
     public DbSet<ApiToken> ApiTokens => Set<ApiToken>();
@@ -27,9 +28,6 @@ public sealed class AppDbContext : DbContext
             entity.Property(x => x.Username).HasMaxLength(100).IsRequired();
             entity.Property(x => x.NormalizedUsername).HasMaxLength(100).IsRequired();
             entity.Property(x => x.Email).HasMaxLength(254);
-            entity.Property(x => x.RequiredOfficePercentage).HasDefaultValue(50).HasSentinel(50);
-            entity.ToTable(table => table.HasCheckConstraint("CK_Users_RequiredOfficePercentage",
-                "\"RequiredOfficePercentage\" BETWEEN 0 AND 100"));
             entity.Property(x => x.PasswordHash).IsRequired();
             entity.Property(x => x.TimeZoneId).HasMaxLength(100).IsRequired();
             entity.HasIndex(x => x.NormalizedUsername).IsUnique();
@@ -37,6 +35,19 @@ public sealed class AppDbContext : DbContext
                   .WithMany(x => x.Users)
                   .HasForeignKey(x => x.HolidayJurisdictionId)
                   .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<UserRequiredOfficePercentage>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.UserId, x.StartingFrom }).IsUnique();
+            entity.HasOne<User>().WithMany(x => x.RequiredOfficePercentages)
+                  .HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.ToTable(table =>
+            {
+                table.HasCheckConstraint("CK_UserRequiredOfficePercentages_Percentage", "\"RequiredOfficePercentage\" BETWEEN 0 AND 100");
+                table.HasCheckConstraint("CK_UserRequiredOfficePercentages_Month", "substr(\"StartingFrom\", 9, 2) = '01'");
+            });
         });
 
         modelBuilder.Entity<Attendance>(entity =>

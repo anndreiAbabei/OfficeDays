@@ -5,10 +5,22 @@
   import { mutate, errorMessage } from '$lib/api';
   import Feedback from '$lib/components/Feedback.svelte';
   import type { Snippet } from 'svelte';
+  import type { User } from "$lib/types";
   
   let { children }: { children: Snippet } = $props();
   let busy = $state(false);
   let error = $state('');
+  function getPages(user: User): { href: string, label: string }[] {
+    return [
+      { href: '/',                label: 'Dashboard' },
+      { href: '/profile',         label: 'Profile' },
+      { href: '/reports',         label: 'Reports' },
+      { href: '/tokens',          label: 'API tokens' },
+      ...(user.isAdmin 
+              ? [{href: '/admin', label: 'Administration'}] 
+              : [])
+    ];
+  }
   
   $effect(() => { if ($sessionReady && !$user) void goto('/login', { replaceState: true }); });
   
@@ -18,7 +30,9 @@
     
     try { 
       await mutate('/api/auth/logout', 'POST'); 
+      
       signedOut(); 
+      
       await goto('/login'); 
     } catch (failure) {
       error = errorMessage(failure); 
@@ -43,7 +57,7 @@
   
   <div class="app-layout">
     <nav class="app-nav" aria-label="Main navigation">
-      {#each [{ href: '/', label: 'Dashboard' }, { href: '/profile', label: 'Profile' }, { href: '/tokens', label: 'API tokens' }, ...($user.isAdmin ? [{ href: '/admin', label: 'Administration' }] : [])] as link}
+      {#each getPages($user) as link}
         <a href={link.href} aria-current={page.url.pathname === link.href ? 'page' : undefined}>{link.label}</a>
       {/each}
     </nav>

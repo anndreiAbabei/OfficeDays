@@ -14,18 +14,21 @@ public sealed class GetStatusHandler : IRequestHandler<GetStatusRequest>
     private readonly ICurrentUser _currentUser;
     private readonly AppDbContext _db;
     private readonly IUserDateService _dates;
+    private readonly IOfficeRequirementReader _requirements;
     
     public GetStatusHandler(ICurrentUser currentUser,
                             AppDbContext db,
                             IUserDateService dates,
                             ILogger<GetStatusHandler> logger,
-                            IAttendanceCalculator attendanceCalculator)
+                            IAttendanceCalculator attendanceCalculator,
+                            IOfficeRequirementReader requirements)
     {
         _attendanceCalculator = attendanceCalculator;
         _logger = logger;
         _currentUser = currentUser;
         _db = db;
         _dates = dates;
+        _requirements = requirements;
     }
     
     public async ValueTask<IResult> Handle(GetStatusRequest input, CancellationToken cancellationToken)
@@ -54,24 +57,30 @@ public sealed class GetStatusHandler : IRequestHandler<GetStatusRequest>
                                     .Where(x => x.HolidayJurisdictionId == user.HolidayJurisdictionId && x.Date >= period.Start && x.Date <= period.End)
                                     .Select(x => x.Date)
                                     .ToListAsync(cancellationToken);
-        
         var vacationRows = await _db.Vacations
                                     .Where(x => x.UserId == user.Id && x.From <= period.End && x.To >= period.Start)
                                     .Select(x => new { x.From, x.To })
                                     .ToListAsync(cancellationToken);
-        
         var officeDates = await _db.Attendances
                                    .Where(x => x.UserId == user.Id && x.Date >= period.Start && x.Date <= period.End)
                                    .Select(x => x.Date)
                                    .ToListAsync(cancellationToken);
-        
-        var result = _attendanceCalculator.Calculate(period, holidayDates, vacationRows.Select(x => (x.From, x.To)), officeDates, user.RequiredOfficePercentage);
-        
-        var plans = await _db.OfficePlans.Where(x => x.UserId == user.Id && x.Date >= period.Start && x.Date <= period.End)
-            .Select(x => x.Date).ToListAsync(cancellationToken);
+        var vacations = vacationRows.Select(x => (x.From, x.To));
+        var requirementProc = await _requirements.ForDate(user.Id, period.Start, cancellationToken);
+        var result = _attendanceCalculator.Calculate(period, holidayDates, vacations, officeDates, requirementProc);
+        var plans = await _db.OfficePlans
+                             .Where(x => x.UserId == user.Id && x.Date >= period.Start && x.Date <= period.End)
+                             .Select(x => x.Date)
+                             .ToListAsync(cancellationToken);
         var today = _dates.Today(user);
-        var days = PlanningCalculator.Calculate(period, today, plans, officeDates,
-            holidayDates.Select(date => (date, "")), vacationRows.Select(x => (x.From, x.To)));
-        return Results.Ok(result.ToViewModel() with { UpcomingPlannedDays = PlanningCalculator.UpcomingCount(days, today) });
+        var days = PlanningCalculator.Calculate(period, today, plans, officeDates, 
+                                                holidayDates.Select(date => (date, "")), 
+                                                vacationRows.Select(x => (x.From, x.To)));
+        var response = result.ToViewModel() with 
+        { 
+            UpcomingPlannedDays = PlanningCalculator.UpcomingCount(days, today)
+        };
+        
+        return Results.Ok(response);
     }
 }

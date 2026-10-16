@@ -50,11 +50,16 @@ test('register, attendance, vacation, profile, tokens and logout work against th
   await expect(page.getByText('Office day removed.')).toBeVisible();
   await page.getByRole('link', { name: 'Profile', exact: true }).click();
   await page.getByLabel('Email address', { exact: true }).fill('person@example.com');
-  await page.getByLabel('Required office days (%)').fill('60');
   await page.getByRole('button', { name: 'Save profile' }).click();
   await expect(page.getByText('Profile saved.')).toBeVisible();
+  await page.getByRole('button', { name: 'Edit Initial requirement', exact: true }).click();
+  await page.getByLabel('Required office days (%)').fill('60');
+  await page.getByRole('button', { name: 'Save requirement', exact: true }).click();
+  await expect(page.getByText('Attendance requirement saved.')).toBeVisible();
   await page.reload();
-  await expect(page.getByLabel('Required office days (%)')).toHaveValue('60');
+  await expect(page.getByText('Initial requirement · 60%')).toBeVisible();
+  await noOverflow(page);
+  await page.screenshot({ path: testInfo.outputPath('requirements.png'), fullPage: true });
   await page.getByRole('link', { name: 'API tokens', exact: true }).click();
   await page.getByLabel('Token name').fill('Browser test');
   await page.getByRole('button', { name: 'Create token' }).click();

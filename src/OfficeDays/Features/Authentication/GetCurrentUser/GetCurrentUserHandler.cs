@@ -3,22 +3,26 @@ using OfficeDays.Data;
 using OfficeDays.Features.Authentication.GetCurrentUser.Contracts;
 using OfficeDays.Infrastructure;
 using OfficeDays.Security;
+using OfficeDays.Services;
 
 namespace OfficeDays.Features.Authentication.GetCurrentUser;
 
 public sealed class GetCurrentUserHandler : IRequestHandler<GetCurrentUserRequest>
 {
-    private readonly ILogger<GetCurrentUserHandler> _logger;
     private readonly ICurrentUser _currentUser;
     private readonly AppDbContext _dbContext;
+    private readonly IOfficeRequirementReader _requirements;
+    private readonly ILogger<GetCurrentUserHandler> _logger;
     
     public GetCurrentUserHandler(ICurrentUser currentUser,
                                  AppDbContext dbContext,
+                                 IOfficeRequirementReader requirements,
                                  ILogger<GetCurrentUserHandler> logger)
     {
-        _logger = logger;
         _currentUser = currentUser;
         _dbContext = dbContext;
+        _requirements = requirements;
+        _logger = logger;
     }
     
     public async ValueTask<IResult> Handle(GetCurrentUserRequest input, CancellationToken cancellationToken)
@@ -32,6 +36,6 @@ public sealed class GetCurrentUserHandler : IRequestHandler<GetCurrentUserReques
             return Results.NotFound();
         }
         
-        return Results.Ok(user.ToViewModel());
+        return Results.Ok(user.ToViewModel(await _requirements.Current(user, cancellationToken)));
     }
 }

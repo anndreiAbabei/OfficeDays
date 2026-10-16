@@ -1,0 +1,32 @@
+# Select an environment and set apiToken in http-client.private.env.json or the environment.
+@apiToken = {{$env.OFFICEDAYS_API_TOKEN}}
+
+### Current user's full current-year report (January–December, clipped at registration month)
+GET {{baseUrl}}/api/reports
+Authorization: Bearer {{apiToken}}
+Accept: application/json
+
+> {%
+    client.test("Report is private and not cached", function () {
+        client.assert(response.status === 200, "Expected HTTP 200");
+        client.assert(response.body.startMonth === 1 && response.body.endMonth === 12, "Expected a full-year range");
+        client.assert(Array.isArray(response.body.months), "Expected monthly rows");
+        client.assert(response.headers.valueOf("Cache-Control") === "no-store", "Expected no-store");
+    });
+%}
+
+### Selected year and inclusive month range
+GET {{baseUrl}}/api/reports?year=2026&startMonth=6&endMonth=12
+Authorization: Bearer {{apiToken}}
+Accept: application/json
+
+### A reversed range is rejected
+GET {{baseUrl}}/api/reports?year=2026&startMonth=12&endMonth=6
+Authorization: Bearer {{apiToken}}
+Accept: application/json
+
+> {%
+    client.test("Reversed ranges are rejected", function () {
+        client.assert(response.status === 400, "Expected HTTP 400");
+    });
+%}

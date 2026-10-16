@@ -182,11 +182,6 @@ namespace OfficeDays.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("RequiredOfficePercentage")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(50);
-
                     b.Property<string>("TimeZoneId")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -215,9 +210,37 @@ namespace OfficeDays.Data.Migrations
                     b.HasIndex("NormalizedUsername")
                         .IsUnique();
 
-                    b.ToTable("Users", t =>
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("OfficeDays.Domain.UserRequiredOfficePercentage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RequiredOfficePercentage")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("StartingFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "StartingFrom")
+                        .IsUnique();
+
+                    b.ToTable("UserRequiredOfficePercentages", t =>
                         {
-                            t.HasCheckConstraint("CK_Users_RequiredOfficePercentage", "\"RequiredOfficePercentage\" BETWEEN 0 AND 100");
+                            t.HasCheckConstraint("CK_UserRequiredOfficePercentages_Month", "substr(\"StartingFrom\", 9, 2) = '01'");
+
+                            t.HasCheckConstraint("CK_UserRequiredOfficePercentages_Percentage", "\"RequiredOfficePercentage\" BETWEEN 0 AND 100");
                         });
                 });
 
@@ -304,6 +327,15 @@ namespace OfficeDays.Data.Migrations
                     b.Navigation("HolidayJurisdiction");
                 });
 
+            modelBuilder.Entity("OfficeDays.Domain.UserRequiredOfficePercentage", b =>
+                {
+                    b.HasOne("OfficeDays.Domain.User", null)
+                        .WithMany("RequiredOfficePercentages")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("OfficeDays.Domain.Vacation", b =>
                 {
                     b.HasOne("OfficeDays.Domain.User", "User")
@@ -327,6 +359,8 @@ namespace OfficeDays.Data.Migrations
                     b.Navigation("ApiTokens");
 
                     b.Navigation("Attendances");
+
+                    b.Navigation("RequiredOfficePercentages");
 
                     b.Navigation("Vacations");
                 });

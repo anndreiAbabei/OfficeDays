@@ -71,6 +71,16 @@ public sealed class DatabaseInitializer
         var user = new User
         {
             Id = Guid.NewGuid(), 
+            RequiredOfficePercentages = 
+            [
+                new UserRequiredOfficePercentage
+                {
+                    Id = Guid.NewGuid(), 
+                    StartingFrom = UserRequiredOfficePercentage.BaselineDate,
+                    RequiredOfficePercentage = 50, 
+                    CreatedAt = _timeProvider.GetUtcNow()
+                }
+            ],
             Username = "Admin", 
             NormalizedUsername = "ADMIN", 
             PasswordHash = string.Empty,

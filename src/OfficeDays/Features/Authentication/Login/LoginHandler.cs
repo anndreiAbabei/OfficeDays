@@ -17,18 +17,21 @@ public sealed class LoginHandler : IRequestHandler<LoginRequest>
     private readonly IPasswordHasher<User> _hasher;
     private readonly IHttpContextAccessor _contextAccessor;
     private readonly IUserService _userService;
+    private readonly IOfficeRequirementReader _requirements;
     private readonly ILogger<LoginHandler> _logger;
     
     public LoginHandler(AppDbContext db,
                         IPasswordHasher<User> hasher,
                         IHttpContextAccessor contextAccessor,
                         IUserService userService,
+                        IOfficeRequirementReader requirements,
                         ILogger<LoginHandler> logger)
     {
         _db = db;
         _hasher = hasher;
         _contextAccessor = contextAccessor;
         _userService = userService;
+        _requirements = requirements;
         _logger = logger;
     }
     
@@ -59,7 +62,9 @@ public sealed class LoginHandler : IRequestHandler<LoginRequest>
                                   new AuthenticationProperties { IsPersistent = true });
 
         _logger.LogSignedIn(user.Id);
+        var requirement = await _requirements.Current(user, cancellationToken);
+        var result = user.ToViewModel(requirement);
 
-        return Results.Ok(user.ToViewModel());
+        return Results.Ok(result);
     }
 }
