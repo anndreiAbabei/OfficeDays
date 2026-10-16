@@ -209,8 +209,13 @@ public sealed class UsersIntegrationTests
         })).StatusCode);
         await CreateUser(client, "percentagevalidation");
         await Login(client, "percentagevalidation", "Normal-user-password!");
-        Assert.Equal(HttpStatusCode.BadRequest, (await PutJson(client, "/api/users/me",
-            new { email = "percentagevalidation@example.com", requiredOfficePercentage = percentage }, await Csrf(client))).StatusCode);
+        var csrf = await Csrf(client);
+        var history = await client.GetFromJsonAsync<JsonElement>("/api/users/me/requirements");
+        var baselineId = history.GetProperty("items")[0].GetProperty("id").GetGuid();
+        Assert.Equal(HttpStatusCode.BadRequest, (await PostJson(client, "/api/users/me/requirements",
+            new { startingFrom = "2027-01-01", requiredOfficePercentage = percentage }, csrf)).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await PutJson(client, $"/api/users/me/requirements/{baselineId}",
+            new { startingFrom = "0001-01-01", requiredOfficePercentage = percentage }, csrf)).StatusCode);
         Assert.Equal(50, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("requiredOfficePercentage").GetInt32());
     }
 

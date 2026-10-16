@@ -87,7 +87,8 @@ public sealed class RequirementsIntegrationTests
         Assert.Equal(HttpStatusCode.BadRequest, (await PutJson(client, $"{Path}/{baselineId}", Body("2098-01-01", 80), csrf)).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await PutJson(client, $"{Path}/{id}", Body("0001-01-01", 80), csrf)).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await PostJson(client, Path, Body("0001-01-01", 80), csrf)).StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, (await PutJson(client, "/api/users/me", new { requiredOfficePercentage = 10 }, csrf)).StatusCode);
+        // Legacy percentage fields are ignored by the profile contract and must not alter history.
+        Assert.Equal(HttpStatusCode.OK, (await PutJson(client, "/api/users/me", new { requiredOfficePercentage = 10 }, csrf)).StatusCode);
         Assert.Equal(3, (await Items(client)).Length);
         await AssertTarget(client, 2099, 1, 60);
         await AssertTarget(client, 2098, 1, 50);

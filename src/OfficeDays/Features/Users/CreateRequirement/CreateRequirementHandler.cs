@@ -4,7 +4,6 @@ using OfficeDays.Domain;
 using OfficeDays.Extensions;
 using OfficeDays.Infrastructure;
 using OfficeDays.Security;
-using OfficeDays.Features.Users.Requirements;
 using OfficeDays.Features.Users.CreateRequirement.Contracts;
 
 namespace OfficeDays.Features.Users.CreateRequirement;
@@ -14,20 +13,29 @@ public sealed class CreateRequirementHandler : IRequestHandler<CreateRequirement
     private readonly AppDbContext _db;
     private readonly ICurrentUser _currentUser;
     private readonly TimeProvider _clock;
+    private readonly ILogger<CreateRequirementHandler> _logger;
     
-    public CreateRequirementHandler(AppDbContext db, ICurrentUser currentUser, TimeProvider clock)
+    public CreateRequirementHandler(AppDbContext db, 
+                                    ICurrentUser currentUser, 
+                                    TimeProvider clock, 
+                                    ILogger<CreateRequirementHandler> logger)
     {
         _db = db;
         _currentUser = currentUser;
         _clock = clock;
+        _logger = logger;
     }
     
     public async ValueTask<IResult> Handle(CreateRequirementRequest request, CancellationToken cancellationToken)
     {
-        var userExists = !await _db.Users.AnyAsync(x => x.Id == _currentUser.Id, cancellationToken);
+        var userExists = await _db.Users.AnyAsync(x => x.Id == _currentUser.Id, cancellationToken);
         
-        if (userExists) 
+        if (!userExists)
+        {
+            _logger.LogUserNotFound(_currentUser.Id);
+            
             return Results.NotFound();
+        }
         
         var row = new UserRequiredOfficePercentage
         {
@@ -47,12 +55,14 @@ public sealed class CreateRequirementHandler : IRequestHandler<CreateRequirement
         catch (DbUpdateException exception) 
             when (exception.IsUniqueViolation())
         {
+            _logger.LogDuplicateRequirement(exception, _currentUser.Id, row.StartingFrom);
+            
             return Results.Problem(statusCode: StatusCodes.Status409Conflict,
                                    title: "A requirement already exists for this month.", 
                                    detail: "Edit the existing requirement or choose another month.");
         }
 
-        var result = RequirementResponse.From(row);
+        var result = row.ToViewModel();
         
         return Results.Created($"/api/users/me/requirements/{row.Id}", result);
     }

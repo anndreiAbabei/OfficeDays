@@ -14,7 +14,7 @@ Users choose a whole percentage from 0–100 during registration (default 50%). 
 
 The `UserRequiredOfficePercentages` table is the source of truth; the legacy user column is removed. Migration preserves each existing percentage as a baseline with `StartingFrom = 0001-01-01`. This reserved date represents all earlier history, not account creation. `CreatedAt` uses UTC `DateTimeOffset`, consistent with other entities. Each user/month pair is unique, and the database checks percentage bounds and first-of-month dates. Downgrading restores baseline percentages to the legacy column and discards the schedule.
 
-Registration and user response contracts retain `requiredOfficePercentage`. User/login/profile responses resolve it for the user's current local date; monthly status resolves it for the requested month. Profile writes to `/api/users/me` now manage email/team day only and reject non-null legacy `requiredOfficePercentage` writes with guidance to use the new endpoints.
+Registration and user response contracts retain `requiredOfficePercentage`. User/login/profile responses resolve it for the user's current local date; monthly status resolves it for the requested month. Profile writes to `/api/users/me` manage email/team day only; legacy `requiredOfficePercentage` fields are ignored. Requirement changes use the separate endpoints below.
 
 Authenticated requirement endpoints (cookie mutations also require CSRF):
 

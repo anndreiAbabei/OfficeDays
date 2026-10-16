@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using OfficeDays.Infrastructure;
-using OfficeDays.Features.Users.Requirements;
 
 namespace OfficeDays.Features.Users.UpdateRequirement.Contracts;
 
@@ -10,5 +9,5 @@ public sealed record UpdateRequirementRequest : IRequest
     public Guid Id { get; init; }
     
     [FromBody]
-    public required RequirementBody Body { get; init; }
+    public required UpdateRequirementRequestBody Body { get; init; }
 }
