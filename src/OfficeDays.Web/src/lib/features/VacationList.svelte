@@ -8,8 +8,13 @@
   import Feedback from '$lib/components/Feedback.svelte';
   
   let { period, onchange }: { period: Period; onchange: () => void } = $props();
-  let from = $state(untrack(() => isoDate(period.year, period.month))); let to = $state(untrack(() => isoDate(period.year, period.month)));
-  let items = $state<Vacation[]>([]); let loading = $state(true); let busy = $state(false); let error = $state(''); let message = $state('');
+  let from = $state(untrack(() => isoDate(period.year, period.month))); 
+  let to = $state(untrack(() => isoDate(period.year, period.month)));
+  let items = $state<Vacation[]>([]); 
+  let loading = $state(true); 
+  let busy = $state(false); 
+  let error = $state(''); 
+  let message = $state('');
   
   async function load(): Promise<void> {
     loading = true; 

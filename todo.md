@@ -75,8 +75,8 @@ Requirements:
 - Apply the preference consistently across routes and subsequent visits.
 - Keep text, controls, calendar states, and focus indicators readable in every theme.
 
-### [ ] Mobile layout on vacation card
-Improve vacation creation and list actions on narrow screens.
+### [ ] Mobile layout on holiday card
+Improve holiday creation and list actions on narrow screens.
 
 Requirements:
 - Prevent inputs, labels, and buttons from overflowing.
@@ -244,24 +244,24 @@ Requirements:
 
 ## Very large
 
-### [ ] Customizable dashboard cards/widgets
+### [ ] Customisable dashboard cards/widgets
 Let each user select which cards and widgets are visible on their dashboard.
 
 Requirements:
 - Define a widget catalogue with stable identifiers, names, descriptions, and sensible default visibility.
-- Provide a customization screen or mode with preview and save/cancel controls.
+- Provide a customisation screen or mode with preview and save/cancel controls.
 - Persist visibility per user on the backend and restore it across devices and sessions.
-- Define which dashboard elements are optional; keep customization accessible even when all optional widgets are hidden.
+- Define which dashboard elements are optional; keep customisation accessible even when all optional widgets are hidden.
 - Include reset-to-default and preserve the current dashboard for users without saved preferences.
 - Handle new, retired, and unknown widget identifiers without breaking saved configurations.
 - Load data according to visible widgets while accounting for shared requests and dependencies.
 - Keep layouts usable on mobile and desktop, including individual widget loading/error states.
-- Hiding a widget must not delete data, change calculations, or change authorization.
+- Hiding a widget must not delete data, change calculations, or change authorisation.
 - Verify persistence, user isolation, empty selections, reset behaviour, and catalogue changes.
 - Deliver visibility selection first; scope ordering, drag-and-drop, resizing, and multiple saved layouts as separate follow-up phases.
 
 ### [ ] Allow offline changes
-Make supported changes without a connection and synchronize later.
+Make supported changes without a connection and synchronise later.
 
 Requirements:
 - Define supported offline operations and which private data may be stored on the device.
@@ -280,7 +280,7 @@ Requirements:
 - Provide a shared weekly roster and team settings.
 - Define invitation expiry, leaving/removing members, and team deletion behaviour.
 - Keep personal requirements and actual attendance independent of shared planning.
-- Verify authorization for every operation and revoke access after membership removal.
+- Verify authorisation for every operation and revoke access after membership removal.
 
 ## Completed
 

@@ -24,6 +24,7 @@
     const [year, month] = row.startingFrom.split('-').map(Number);
     return `${new Intl.DateTimeFormat('en', { month: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(2000, month - 1, 1)))} ${year}`;
   }
+  
   async function load(): Promise<void> {
     loading = true; error = '';
     try { history = await request<History>(path); }
@@ -37,10 +38,12 @@
     month = row && !row.isBaseline ? row.startingFrom.slice(0, 7) : history!.today.slice(0, 7);
     percentage = row?.requiredOfficePercentage ?? past[0]?.requiredOfficePercentage ?? 50;
   }
+  
   async function refresh(): Promise<void> {
     history = await request<History>(path);
     onsave(await request<User>('/api/auth/me'));
   }
+  
   async function save(event: SubmitEvent): Promise<void> {
     event.preventDefault(); 
     
@@ -70,6 +73,7 @@
       busy = false; 
     }
   }
+  
   async function remove(): Promise<void> {
     if (!deleting || busy) 
       return;
@@ -161,7 +165,9 @@
       </div>
     {/if}
   {/if}
+  
   <Feedback {error} {message} />
+  
 </section>
 
 {#snippet entry(row: Requirement, status: string)}

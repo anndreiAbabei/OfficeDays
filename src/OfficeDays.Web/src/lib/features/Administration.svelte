@@ -7,35 +7,76 @@
   import Holidays from './Holidays.svelte';
   
   let { countryCode, timeZone }: { countryCode: string; timeZone: string } = $props();
-  let items = $state<Jurisdiction[]>([]); let code = $state(''); let name = $state('');
-  let busy = $state(false); let loading = $state(true); let error = $state(''); let message = $state('');
+  let items = $state<Jurisdiction[]>([]); 
+  let code = $state(''); 
+  let name = $state('');
+  let busy = $state(false); 
+  let loading = $state(true); 
+  let error = $state(''); 
+  let message = $state('');
   
-  async function load() {
-    loading = true; error = '';
-    try { items = await request<Jurisdiction[]>('/api/holiday-jurisdictions'); }
-    catch (failure) { error = errorMessage(failure); }
-    finally { loading = false; }
+  async function load(): Promise<void> {
+    loading = true; 
+    error = '';
+    
+    try { 
+      items = await request<Jurisdiction[]>('/api/holiday-jurisdictions'); 
+    }
+    catch (failure) { 
+      error = errorMessage(failure); 
+    }
+    finally { 
+      loading = false; 
+    }
   }
   
   onMount(() => { void load(); });
   
-  async function change(method: string, item?: Jurisdiction) {
+  async function change(method: string, item?: Jurisdiction): Promise<void> {
     let body: unknown = { code, name };
-    if (method === 'DELETE') { if (!confirm(`Remove ${item!.name}?`)) return; body = undefined; }
+    
+    if (method === 'DELETE') { 
+      if (!confirm(`Remove ${item!.name}?`)) 
+        return; 
+      
+      body = undefined; 
+    }
+    
     if (method === 'PUT') {
       const updatedName = prompt('Jurisdiction name', item!.name);
-      if (!updatedName?.trim() || updatedName.trim() === item!.name) return;
+      
+      if (!updatedName?.trim() || updatedName.trim() === item!.name) 
+        return;
+      
       body = { name: updatedName.trim() };
     }
-    busy = true; error = ''; message = '';
+    
+    busy = true; 
+    error = ''; 
+    message = '';
+    
     try {
       await mutate(`/api/holiday-jurisdictions${item ? `/${encodeURIComponent(item.code)}` : ''}`, method, body);
-      if (method === 'POST') { code = ''; name = ''; }
-      message = method === 'DELETE' ? 'Holiday jurisdiction removed.' : 'Holiday jurisdiction saved.'; await load();
-    } catch (failure) { error = errorMessage(failure); }
-    finally { busy = false; }
+      
+      if (method === 'POST') { 
+        code = ''; 
+        name = ''; 
+      }
+      
+      message = method === 'DELETE'
+              ? 'Holiday jurisdiction removed.' 
+              : 'Holiday jurisdiction saved.'; 
+      
+      await load();
+    } catch (failure) { 
+      error = errorMessage(failure); 
+    }
+    finally {
+      busy = false; 
+    }
   }
 </script>
+
 <div class="admin-sections">
   <section class="card">
     <div class="section-heading">

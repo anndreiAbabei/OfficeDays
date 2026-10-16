@@ -10,7 +10,7 @@ maximum WFH days       = eligible working days - required office days
 remaining office days  = max(0, required office days - eligible office attendance)
 ```
 
-Users choose a whole percentage from 0–100 during registration (default 50%). Profile has a separate attendance requirements history: an editable, undeletable initial requirement covers all dates before the first change, including attendance before registration. Additional requirements take effect on the first of a chosen month. Current and past entries are shown newest first; upcoming entries are shown earliest first. Changing or deleting a historical entry recalculates affected dashboard months and future report exports.
+Users choose a whole percentage from 0 to 100 during registration (default 50%). Profile has a separate attendance requirements history: an editable, undeletable initial requirement covers all dates before the first change, including attendance before registration. Additional requirements take effect on the first of a chosen month. Current and past entries are shown newest first; upcoming entries are shown earliest first. Changing or deleting a historical entry recalculates affected dashboard months and future report exports.
 
 The `UserRequiredOfficePercentages` table is the source of truth; the legacy user column is removed. Migration preserves each existing percentage as a baseline with `StartingFrom = 0001-01-01`. This reserved date represents all earlier history, not account creation. `CreatedAt` uses UTC `DateTimeOffset`, consistent with other entities. Each user/month pair is unique, and the database checks percentage bounds and first-of-month dates. Downgrading restores baseline percentages to the legacy column and discards the schedule.
 
@@ -29,7 +29,7 @@ Only the signed-in user's entries are accessible. Duplicate effective months ret
 
 Users can select a weekly **Team day** in Profile (Monday–Friday), or choose **None** to clear it. The dashboard outlines that weekday’s entire column in yellow and includes a Team day legend. This is a visual reminder across all viewed months, including holidays and vacations; it does not create plans or change attendance requirements. Registration defaults to no team day.
 
-Profile updates accept `teamDay` as `"monday"`, `"tuesday"`, `"wednesday"`, `"thursday"`, `"friday"`, or `null`. Omitting the field preserves the saved value; explicit `null` clears it. Current-user, login, and profile-update responses include `teamDay`. Preferences are stored as a typed JSON object in the Users table; the migration initializes existing accounts with no selection.
+Profile updates accept `teamDay` as `"monday"`, `"tuesday"`, `"wednesday"`, `"thursday"`, `"friday"`, or `null`. Omitting the field preserves the saved value; explicit `null` clears it. Current-user, login, and profile-update responses include `teamDay`. Preferences are stored as a typed JSON object in the Users table; the migration initialises existing accounts with no selection.
 
 
 With 21 eligible days at 50%, this means at most 10 WFH days and therefore at least 11 office days.
@@ -54,11 +54,11 @@ The application uses .NET 10, ASP.NET Core minimal APIs, EF Core, and SQLite. Th
 
 Each API operation lives in `Features/<Area>/<Operation>` with its endpoint, request/response contracts, handler, FluentValidation validator, mapping, and source-generated logging methods as needed. Request wrappers bind route/query properties and an explicit `[FromBody]` payload. `RequestExecutor` validates and invokes the scoped handler; handlers return `IResult` and access EF Core directly. It logs request names and invalid field names, never request payloads.
 
-Endpoint groups own route prefixes and authorization. `ICurrentUser` provides the authenticated user ID. Root groups keep health and UI routes outside `/api`; health endpoints use ASP.NET Core health checks, and UI endpoints serve a shared startup snapshot of assets. `RecordToday` and `RecordDate` deliberately keep their recording logic independent.
+Endpoint groups own route prefixes and authorisation. `ICurrentUser` provides the authenticated user ID. Root groups keep health and UI routes outside `/api`; health endpoints use ASP.NET Core health checks, and UI endpoints serve a shared startup snapshot of assets. `RecordToday` and `RecordDate` deliberately keep their recording logic independent.
 
-Feature discovery registers public concrete classes in the application assembly. Each request must have exactly one handler, and each endpoint must implement one feature endpoint marker interface and be mapped exactly once by an endpoint group. Startup validates these conventions and the final handler registrations before initializing the database. Dependency validation also runs in every environment; singleton endpoints and endpoint groups must not capture scoped services. Resolve request-scoped dependencies through endpoint delegates instead.
+Feature discovery registers public concrete classes in the application assembly. Each request must have exactly one handler, and each endpoint must implement one feature endpoint marker interface and be mapped exactly once by an endpoint group. Startup validates these conventions and the final handler registrations before initialising the database. Dependency validation also runs in every environment; singleton endpoints and endpoint groups must not capture scoped services. Resolve request-scoped dependencies through endpoint delegates instead.
 
-`Configuration` owns service and feature registration. `Program.cs` composes those registrations, middleware, endpoint mapping, and database initialization.
+`Configuration` owns service and feature registration. `Program.cs` composes those registrations, middleware, endpoint mapping, and database initialisation.
 
 Stored dates such as attendance, vacation, and holidays use `DateOnly`. Audit timestamps use UTC. Calculated values are never persisted.
 
@@ -83,7 +83,7 @@ cd ../..
 
 `dotnet build`, `dotnet run`, and `dotnet publish` copy this build into the API's `wwwroot`. Rebuild the UI and restart .NET after frontend changes when testing the production-style setup. Do not edit generated `wwwroot` files.
 
-For live frontend development, keep the API running on `http://localhost:5200` and run `npm run dev` from `src/OfficeDays.Web`. Open the Vite URL; its `/api` proxy preserves same-origin cookies and CSRF behavior. Set `API_ORIGIN` when the API uses another address. Node 24 can be selected with `nvm use` in the frontend directory.
+For live frontend development, keep the API running on `http://localhost:5200` and run `npm run dev` from `src/OfficeDays.Web`. Open the Vite URL; its `/api` proxy preserves same-origin cookies and CSRF behaviour. Set `API_ORIGIN` when the API uses another address. Node 24 can be selected with `nvm use` in the frontend directory.
 
 The first start requires bootstrap administrator environment variables. They are intentionally absent from `appsettings.json`. Passwords must contain at least 12 characters.
 
@@ -300,7 +300,7 @@ Browser mutations use ASP.NET Core antiforgery protection. Bearer clients do not
 
 ## Holiday jurisdictions
 
-Holiday jurisdictions represent either a country-wide calendar (`RO`, `US`) or a regional calendar (`GB-ENG`, `GB-NIR`). Codes are normalized to uppercase. The common `UK` prefix is accepted and normalized to the ISO `GB` prefix.
+Holiday jurisdictions represent either a country-wide calendar (`RO`, `US`) or a regional calendar (`GB-ENG`, `GB-NIR`). Codes are normalised to uppercase. The common `UK` prefix is accepted and normalised to the ISO `GB` prefix.
 
 Jurisdiction reads are public so registration clients can discover valid country codes. Creating, renaming, and deleting jurisdictions requires an administrator:
 
@@ -429,13 +429,13 @@ npm run test:e2e
 
 Browser tests start their own .NET server on port 5187 with a unique temporary SQLite database and test-only bootstrap credentials. They do not use your normal application database. They capture desktop/mobile screenshots and assert there is no horizontal overflow. WebKit emulation is not a substitute for checking on a physical iPhone before deployment. A Chromium-only cold-cache test applies 150 ms latency, 200 KB/s download and 4× CPU slowdown, records time to summary data, and enforces a 100 KiB compressed initial JavaScript budget. The JSON report and screenshots are in the ignored `test-results` directory.
 
-The unit suite covers odd/even rule behavior, weekdays and weekends, holidays, all vacation overlap cases, remaining-day clamping, ineligible attendance, leap years, and period boundaries.
+The unit suite covers odd/even rule behaviour, weekdays and weekends, holidays, all vacation overlap cases, remaining-day clamping, ineligible attendance, leap years, and period boundaries.
 
 The integration suite uses `WebApplicationFactory`, the real middleware/endpoints, and a fresh migrated SQLite file per test. It covers registration/login, admin jurisdiction management, country-scoped holiday replacement, token creation/use/revocation and ownership isolation, idempotent bearer attendance and removal, vacation ownership/lifecycle, and persisted status calculations.
 
 Feature tests mirror the application areas under `Features`. Cross-cutting startup, migration, and correlation-ID tests live under `Infrastructure`, security logging tests under `Security`, and shared fixtures and HTTP helpers under `Support`. Registration tests cover missing or duplicate handlers, invalid endpoint grouping, incomplete or duplicate endpoint mapping, and invalid dependency lifetimes. User tests cover omitted, null, empty, and whitespace-only optional email values as well as invalid nonempty addresses.
 
-Migration tests explicitly verify that startup applies every migration to a fresh database, that the migrated schema supports the current model, and that running initialization again preserves bootstrap data. They also upgrade an older database and verify that existing data and migration defaults are preserved. Run just these tests with:
+Migration tests explicitly verify that startup applies every migration to a fresh database, that the migrated schema supports the current model, and that running initialisation again preserves bootstrap data. They also upgrade an older database and verify that existing data and migration defaults are preserved. Run just these tests with:
 
 ```bash
 dotnet test tests/OfficeDays.IntegrationTests --filter FullyQualifiedName~MigrationIntegrationTests
@@ -462,13 +462,13 @@ The authenticated endpoint defaults to the user's current local year, January–
 
 Generation reads the user, requirements, holidays, vacation, and attendance within one database transaction, then calculates the report in memory. It does not persist a report or add a database table. The initial requirement still supports pre-registration dashboard calculations, but reports stop at the registration month.
 
-CSV export happens in the browser from the exact report response currently displayed, without a second API request. It includes username, generation time, timezone, month, eligible days, required percentage/days, recorded days, attendance percentage, and result. Later edits only appear after Refresh report. Export is disabled during loading, for empty reports, or while unapplied filters differ from the displayed report. CSV fields are quoted, quotes/newlines are escaped, and formula-like usernames are neutralized for spreadsheet applications.
+CSV export happens in the browser from the exact report response currently displayed, without a second API request. It includes username, generation time, timezone, month, eligible days, required percentage/days, recorded days, attendance percentage, and result. Later edits only appear after Refresh report. Export is disabled during loading, for empty reports, or while unapplied filters differ from the displayed report. CSV fields are quoted, quotes/newlines are escaped, and formula-like usernames are neutralised for spreadsheet applications.
 
 ## Planning office days
 
 The dashboard calendar follows the selected month. Tap an eligible date today or in the future to toggle an office plan; changes save immediately. Past plans cannot be changed. Weekends, vacations, and the user's jurisdiction holidays cannot receive plans. Failed saves revert the calendar and display an error.
 
-Green marks recorded attendance, yellow marks upcoming plans, red marks past plans with no attendance recorded, and blue marks vacation or bank holidays. Attendance takes precedence over time off, which takes precedence over planning. Today has a separate outline and label. Holiday names appear in tooltips and in the day details when selected. Colors are also explained by a legend and symbols.
+Green marks recorded attendance, yellow marks upcoming plans, red marks past plans with no attendance recorded, and blue marks vacation or bank holidays. Attendance takes precedence over time off, which takes precedence over planning. Today has a separate outline and label. Holiday names appear in tooltips and in the day details when selected. Colours are also explained by a legend and symbols.
 
 The **Upcoming planned** card counts eligible plans from the user's local today through the end of the selected month, excluding recorded attendance. Plans remain stored after attendance or overlapping vacation is added. Planning does not change actual attendance totals or the remaining office requirement.
 
@@ -516,17 +516,17 @@ Public monitoring endpoints:
   HTTP 503 on database failure. JSON includes overall status and database status,
   without exception details. Responses are not cached.
 
-Startup database initialization must finish before the server accepts requests.
+Startup database initialisation must finish before the server accepts requests.
 Readiness verifies a read query, not write access or every table in the schema.
 SQLite `.db-wal`, `.db-shm`, and `.db-journal` files are runtime database sidecars;
 they are excluded from Git and Docker build contexts. Do not delete them while the
-application is running, since the WAL can contain uncheckpointed data.
+application is running, since the WAL can contain uncheck-pointed data.
 
 ## UI asset caching
 
 SvelteKit generates fingerprinted JavaScript/CSS URLs under `/_app/immutable/`. .NET snapshots the complete build at startup and serves those files with a one-year immutable cache policy. HTML and non-fingerprinted metadata use `Cache-Control: no-store`; deleted or unknown chunks return 404, never the app shell. Only public `/_app` assets are compressed with Brotli/gzip; authenticated API responses are excluded.
 
-The static frontend needs JavaScript before it fetches personalized summary data. This deployment deliberately has no SvelteKit server rendering. Keep the dashboard's initial dependencies small and measure a fresh authenticated mobile visit through to actual summary values. Browser tests confirm that delayed lists do not delay the summary; local timing is not a guarantee of homelab or mobile-network performance.
+The static frontend needs JavaScript before it fetches personalised summary data. This deployment deliberately has no SvelteKit server rendering. Keep the dashboard's initial dependencies small and measure a fresh authenticated mobile visit through to actual summary values. Browser tests confirm that delayed lists do not delay the summary; local timing is not a guarantee of homelab or mobile-network performance.
 
 Keep Komodo's **Build Images → Pre Build Images** enabled so deployments rebuild
 the application from the selected Git branch. Save and deploy after merging changes.

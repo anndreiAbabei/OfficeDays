@@ -7,9 +7,11 @@
 
   let { timeZone }: { timeZone: string } = $props();
   let year = $state<number | undefined>(untrack(() => localDate(timeZone).year));
-  let startMonth = $state(1); let endMonth = $state(12);
+  let startMonth = $state(1); 
+  let endMonth = $state(12);
   let report = $state<AttendanceReport | null>(null);
-  let loading = $state(false); let error = $state('');
+  let loading = $state(false); 
+  let error = $state('');
   let filtersChanged = $derived(!!report && (report.year !== year || report.startMonth !== startMonth || report.endMonth !== endMonth));
   let scale = $derived(Math.max(1, ...(report?.months.flatMap(month => [month.officeDays ?? 0, month.requiredOfficeDays]) ?? [])));
   let exportEnabled = $derived(!!report?.months.length && !loading && !filtersChanged);
@@ -17,6 +19,7 @@
   function monthName(date: string): string {
     return `${months[Number(date.slice(5, 7)) - 1]} ${Number(date.slice(0, 4))}`;
   }
+  
   function generatedTime(value: string, zone: string): string {
     return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'medium', timeZone: zone }).format(new Date(value));
   }
@@ -142,7 +145,7 @@
         </article>
       </section>
  
-  <section class="card" aria-labelledby="comparison-heading">
+      <section class="card" aria-labelledby="comparison-heading">
         <h2 id="comparison-heading">
           Office days by month
         </h2>
@@ -150,8 +153,8 @@
           <span><i class="actual-key"></i> Recorded</span>
           <span><i class="target-key"></i> Required</span>
         </p>
-   
-    <div class="chart" aria-label="Recorded versus required office days; exact values in monthly breakdown">
+       
+        <div class="chart" aria-label="Recorded versus required office days; exact values in monthly breakdown">
           {#each report.months as month}
             <div class="chart-row">
               <span class="month-label">

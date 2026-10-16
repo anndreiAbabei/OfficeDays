@@ -6,8 +6,14 @@
   import type { ApiToken } from '$lib/types';
   import Feedback from '$lib/components/Feedback.svelte';
   
-  let tokens = $state<ApiToken[]>([]); let name = $state(''); let rawToken = $state(''); let copied = $state(false);
-  let loading = $state(true); let busy = $state(false); let error = $state(''); let message = $state('');
+  let tokens = $state<ApiToken[]>([]); 
+  let name = $state(''); 
+  let rawToken = $state(''); 
+  let copied = $state(false);
+  let loading = $state(true); 
+  let busy = $state(false);
+  let error = $state(''); 
+  let message = $state('');
   
   async function load(): Promise<void> {
     loading = true; error = '';
@@ -33,6 +39,7 @@
       copied = false; 
       name = ''; 
       message = 'Token created. Copy it before leaving this page.'; 
+      
       await load();
     } catch (failure) { 
       error = errorMessage(failure); 
@@ -53,6 +60,7 @@
     try { 
       await mutate(`/api/tokens/${token.id}`, 'DELETE'); 
       message = 'Token revoked.'; 
+      
       await load(); 
     }
     catch (failure) { 
@@ -62,6 +70,7 @@
       busy = false; 
     }
   }
+  
   async function copy(): Promise<void> {
     try { 
       await navigator.clipboard.writeText(rawToken); 
@@ -135,6 +144,7 @@
     align-items: center; 
     gap: .7rem;
   }
+  
   .token-reveal { 
     margin-top: 1rem; 
     padding: .9rem; 
@@ -146,6 +156,7 @@
   .copy-row { 
     margin-top: .65rem; 
   }
+  
   .copy-row code { 
     flex: 1; 
     padding: .6rem; 

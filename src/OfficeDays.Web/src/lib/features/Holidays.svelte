@@ -6,14 +6,24 @@
   import { displayDate, localDate } from '$lib/dates';
   import type { Holiday, Jurisdiction } from '$lib/types';
   import Feedback from '$lib/components/Feedback.svelte';
+  
   let { jurisdictions, countryCode, timeZone }: { jurisdictions: Jurisdiction[]; countryCode: string; timeZone: string } = $props();
-  let selected = $state(untrack(() => countryCode)); let year = $state(untrack(() => localDate(timeZone).year));
-  let items = $state<Holiday[]>([]); let date = $state(''); let name = $state(''); let dirty = $state(false);
-  let loaded = $state(false); let loading = $state(false); let busy = $state(false); let error = $state(''); let message = $state('');
+  let selected = $state(untrack(() => countryCode)); 
+  let year = $state(untrack(() => localDate(timeZone).year));
+  let items = $state<Holiday[]>([]); 
+  let date = $state(''); 
+  let name = $state(''); 
+  let dirty = $state(false);
+  let loaded = $state(false); 
+  let loading = $state(false); 
+  let busy = $state(false); 
+  let error = $state(''); 
+  let message = $state('');
   let revision = 0;
   
   $effect(() => {
-    if (jurisdictions.length && !jurisdictions.some(item => item.code === selected)) selected = jurisdictions[0].code;
+    if (jurisdictions.length && !jurisdictions.some(item => item.code === selected)) 
+      selected = jurisdictions[0].code;
   });
   
   let validSelection = $derived(jurisdictions.some(item => item.code === selected));

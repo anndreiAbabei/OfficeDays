@@ -5,7 +5,11 @@ export function localDate(timeZone: string, now = new Date()): {year: number, mo
   const parts = new Intl.DateTimeFormat('en', { timeZone, year: 'numeric', month: 'numeric', day: 'numeric' }).formatToParts(now);
   const part = (type: string) => Number(parts.find(p => p.type === type)!.value);
   
-  return { year: part('year'), month: part('month'), day: part('day') };
+  return { 
+    year: part('year'), 
+    month: part('month'), 
+    day: part('day') 
+  };
 }
 
 export function isoDate(year: number, month: number, day = 1): string {
@@ -18,6 +22,7 @@ export function shiftPeriod(period: Period, delta: number): Period {
   
   return { year: Math.floor(bounded / 12) + 1, month: bounded % 12 + 1 };
 }
+
 export const periodQuery = (p: Period) => `year=${p.year}&month=${p.month}`;
 export const displayDate = (value: string) => new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(`${value}T00:00:00Z`));
 export const displayTime = (value: string | null) => value ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : 'Never';
