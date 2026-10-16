@@ -148,15 +148,15 @@
       </form>
     {/if}
     {#if deleting}
-      <div class="confirmation" role="group" aria-label="Confirm requirement deletion">
+      <div class="confirmation" role="group" aria-label="Confirm requirement removal">
         <p>
-          Delete the {label(deleting)} requirement ({deleting.requiredOfficePercentage}%)? 
+          Delete the <b>{label(deleting)} requirement ({deleting.requiredOfficePercentage}%)?</b> 
           The preceding percentage will apply until the next change. 
           Calculations for affected months will update.
         </p>
         <div class="actions">
-          <button type="button" disabled={busy} onclick={remove}>Confirm delete</button>
-          <button type="button" class="secondary" disabled={busy} onclick={() => deleting = null}>Cancel deletion</button>
+          <button type="button" style="background: var(--danger)" disabled={busy} onclick={remove}>Confirm remove</button>
+          <button type="button" class="secondary" disabled={busy} onclick={() => deleting = null}>Cancel remove</button>
         </div>
       </div>
     {/if}
@@ -176,7 +176,7 @@
     <div class="actions">
       <button class="secondary" type="button" disabled={busy} aria-label={`Edit ${label(row)}`} onclick={() => open(row)}>Edit</button>
       {#if !row.isBaseline}
-        <button class="secondary" type="button" disabled={busy} aria-label={`Delete ${label(row)}`} onclick={() => { deleting = row; formOpen = false; error = ''; message = ''; }}>Delete</button>
+        <button class="danger" type="button" disabled={busy} aria-label={`Delete ${label(row)}`} onclick={() => { deleting = row; formOpen = false; error = ''; message = ''; }}>Remove</button>
       {/if}
     </div>
   </div>
@@ -188,8 +188,10 @@
     justify-content: space-between; 
     align-items: center; 
     gap: 1rem; 
-    padding: 1rem 0; 
-    border-bottom: 1px solid var(--border, #ddd); 
+    margin: 1em 0;
+    padding: 1em;
+    border-radius: 6px;
+    background: alpha(from var(--ground) / 20%);
   }
   
   .actions { 
@@ -205,6 +207,7 @@
     border-radius: 1rem; 
     background: var(--surface-soft, #edf2ee); 
     font-size: .85rem; 
+    color: var(--on-green);
   }
   
   .add-requirement { 
