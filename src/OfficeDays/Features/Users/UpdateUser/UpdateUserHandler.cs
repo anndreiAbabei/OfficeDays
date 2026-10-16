@@ -9,6 +9,7 @@ namespace OfficeDays.Features.Users.UpdateUser;
 
 public sealed class UpdateUserHandler : IRequestHandler<UpdateUserRequest>
 {
+    private readonly IOfficeRequirementReader _requirements;
     private readonly ILogger<UpdateUserHandler> _logger;
     private readonly ICurrentUser _currentUser;
     private readonly AppDbContext _dbContext;
@@ -17,9 +18,11 @@ public sealed class UpdateUserHandler : IRequestHandler<UpdateUserRequest>
     public UpdateUserHandler(ICurrentUser currentUser,
                              AppDbContext dbContext,
                              IUserService userService,
-                             ILogger<UpdateUserHandler> logger)
+                             ILogger<UpdateUserHandler> logger,
+                             IOfficeRequirementReader requirements)
     {
         _logger = logger;
+        _requirements = requirements;
         _currentUser = currentUser;
         _dbContext = dbContext;
         _userService = userService;
@@ -40,14 +43,14 @@ public sealed class UpdateUserHandler : IRequestHandler<UpdateUserRequest>
 
         user.Email = _userService.NormalizeEmail(request.Email);
         
-        if (request.RequiredOfficePercentage.HasValue)
-            user.RequiredOfficePercentage = request.RequiredOfficePercentage.Value;
-        
         if (request.HasTeamDay)
             user.Preferences.TeamDay = request.TeamDay is null ? null : Enum.Parse<DayOfWeek>(request.TeamDay, true);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+        
+        var requirement = await _requirements.Current(user, cancellationToken);
+        var result = user.ToViewModel(requirement);
 
-        return Results.Ok(user.ToViewModel());
+        return Results.Ok(result);
     }
 }

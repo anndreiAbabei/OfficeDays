@@ -12,7 +12,6 @@ public sealed class UserTests
         const string expectedUsername = "Test";
         const string expectedNormalizedUsername = "test";
         const string expectedEmail = "test@office.local";
-        const int expectedRequiredOfficePercentage = 26;
         const string expectedPasswordHash = "test-password";
         const string expectedTimeZoneId = "ro";
         const int expectedHolidayJurisdictionId = 123;
@@ -34,7 +33,6 @@ public sealed class UserTests
             Username = expectedUsername,
             NormalizedUsername = expectedNormalizedUsername,
             Email = expectedEmail,
-            RequiredOfficePercentage = expectedRequiredOfficePercentage,
             PasswordHash = expectedPasswordHash,
             TimeZoneId = expectedTimeZoneId,
             HolidayJurisdictionId = expectedHolidayJurisdictionId,
@@ -51,7 +49,6 @@ public sealed class UserTests
         Assert.Equal(expectedUsername, sut.Username);
         Assert.Equal(expectedNormalizedUsername, sut.NormalizedUsername);
         Assert.Equal(expectedEmail, sut.Email);
-        Assert.Equal(expectedRequiredOfficePercentage, sut.RequiredOfficePercentage);
         Assert.Equal(expectedPasswordHash, sut.PasswordHash);
         Assert.Equal(expectedTimeZoneId, sut.TimeZoneId);
         Assert.Equal(expectedHolidayJurisdictionId, sut.HolidayJurisdictionId);
@@ -63,23 +60,4 @@ public sealed class UserTests
         Assert.Same(expectedApiTokens, sut.ApiTokens);
     }
 
-    [Fact]
-    public void Should_HaveDefaultValueForRequiredOfficePercentage()
-    {
-        // arrange
-        const int expectedRequiredOfficePercentage = 50;
-        var sut = new User
-        {
-            Username = null!,
-            NormalizedUsername = null!,
-            PasswordHash = null!,
-            TimeZoneId = null!
-        };
-
-        // act
-        var result = sut.RequiredOfficePercentage;
-
-        // assert
-        Assert.Equal(expectedRequiredOfficePercentage, result);
-    }
 }

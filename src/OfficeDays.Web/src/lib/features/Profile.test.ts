@@ -5,19 +5,18 @@ import type { User } from '$lib/types';
 import { resetCsrf } from '$lib/api';
 const user: User = { id: '1', username: 'Andrei', email: 'old@example.com', timeZoneId: 'UTC', countryCode: 'RO', countryName: 'Romania', isAdmin: false, teamDay: null, requiredOfficePercentage: 50 };
 
-it('clears optional email and saves the percentage, disabling duplicate submissions', async () => {
+it('clears optional email without changing attendance requirements', async () => {
   resetCsrf(); const onsave = vi.fn();
-  const fetcher = vi.fn().mockImplementation(async (path: string) => new Response(JSON.stringify(path.endsWith('csrf') ? { token: 'csrf' } : { ...user, email: null, requiredOfficePercentage: 60 })));
+  const fetcher = vi.fn().mockImplementation(async (path: string) => new Response(JSON.stringify(path.endsWith('csrf') ? { token: 'csrf' } : { ...user, email: null, requiredOfficePercentage: 50 })));
   vi.stubGlobal('fetch', fetcher);
   
   render(Profile, { currentUser: user, onsave });
   
   await fireEvent.input(screen.getByLabelText('Email address'), { target: { value: '' } });
-  await fireEvent.input(screen.getByLabelText('Required office days (%)'), { target: { value: '60' } });
   await fireEvent.submit(screen.getByRole('button', { name: 'Save profile' }).closest('form')!);
-  await waitFor(() => expect(onsave).toHaveBeenCalledWith({ ...user, email: null, requiredOfficePercentage: 60 }));
+  await waitFor(() => expect(onsave).toHaveBeenCalledWith({ ...user, email: null, requiredOfficePercentage: 50 }));
   
-  expect(JSON.parse(fetcher.mock.calls.find(([path]) => path === '/api/users/me')![1].body)).toEqual({ email: null, requiredOfficePercentage: 60, teamDay: null });
+  expect(JSON.parse(fetcher.mock.calls.find(([path]) => path === '/api/users/me')![1].body)).toEqual({ email: null, teamDay: null });
   expect(screen.getByRole('status')).toHaveTextContent('Profile saved.');
 });
 it('keeps entered values and exposes a failed save for retry', async () => {

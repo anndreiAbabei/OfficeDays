@@ -11,13 +11,13 @@ public sealed class GetPlanningHandler : IRequestHandler<GetPlanningRequest>
     private readonly AppDbContext _db;
     private readonly ICurrentUser _currentUser;
     private readonly IUserDateService _dates;
-    private readonly PlanningCalendarReader _calendar;
+    private readonly IPlanningCalendarReader _calendar;
     private readonly ILogger<GetPlanningHandler> _logger;
     
     public GetPlanningHandler(AppDbContext db, 
                               ICurrentUser currentUser,
                               IUserDateService dates,
-                              PlanningCalendarReader calendar,
+                              IPlanningCalendarReader calendar,
                               ILogger<GetPlanningHandler> logger)
     {
         _db = db;

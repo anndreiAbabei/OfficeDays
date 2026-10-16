@@ -159,12 +159,12 @@
   <ul class="legend" aria-label="Calendar legend">
     <li><span class="swatch attended">✓</span> Attended</li>
     <li><span class="swatch planned">•</span> Planned</li>
-    <li><span class="swatch missed">!</span> Planned · day not recorded</li>
-    <li><span class="swatch holiday">−</span> Vacation / Holiday</li>
     {#if teamColumn}
       <li><span class="swatch team-day"></span> Team day</li>
     {/if}
     <li><span class="swatch today"></span> Today</li>
+    <li><span class="swatch missed">!</span> Planned · day not recorded</li>
+    <li><span class="swatch holiday">−</span> Vacation / Holiday</li>
   </ul>
 </section>
 

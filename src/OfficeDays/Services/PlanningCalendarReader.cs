@@ -4,7 +4,12 @@ using OfficeDays.Domain;
 
 namespace OfficeDays.Services;
 
-public sealed class PlanningCalendarReader
+public interface IPlanningCalendarReader
+{
+    Task<IReadOnlyList<PlanningDay>> Read(User user, CalculationPeriod period, CancellationToken ct);
+}
+
+public sealed class PlanningCalendarReader : IPlanningCalendarReader
 {
     private readonly AppDbContext _db;
     private readonly IUserDateService _dates;

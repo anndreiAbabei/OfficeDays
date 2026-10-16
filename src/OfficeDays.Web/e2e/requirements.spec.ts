@@ -1,0 +1,30 @@
+import { test, expect } from '@playwright/test';
+
+test('requirements can be scheduled, edited and deleted without changing the baseline', async ({ page }, testInfo) => {
+  const username = `req-${testInfo.project.name}-${Date.now()}`;
+  await page.request.post('/api/users', { data: { username, password: 'BrowserTestsOnly!123', timeZoneId: 'UTC', countryCode: 'RO' } });
+  await page.goto('/login');
+  await page.getByLabel('Username', { exact: true }).fill(username);
+  await page.getByLabel('Password', { exact: true }).fill('BrowserTestsOnly!123');
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await page.getByRole('link', { name: 'Profile', exact: true }).click();
+  await expect(page.getByText('Initial requirement · 50%')).toBeVisible();
+  await page.getByRole('button', { name: 'Add requirement', exact: true }).click();
+  await page.getByLabel('Effective from').fill('2099-01');
+  await page.getByLabel('Required office days (%)').fill('60');
+  await page.getByRole('button', { name: 'Save requirement', exact: true }).click();
+  await expect(page.getByText('January 2099 · 60%')).toBeVisible();
+  await page.getByRole('button', { name: 'Edit January 2099', exact: true }).click();
+  await page.getByLabel('Effective from').fill('2099-02');
+  await page.getByLabel('Required office days (%)').fill('70');
+  await page.getByRole('button', { name: 'Save requirement', exact: true }).click();
+  await expect(page.getByText('February 2099 · 70%')).toBeVisible();
+  await page.reload();
+  await expect(page.getByText('February 2099 · 70%')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath('requirement-history.png'), fullPage: true });
+  await page.getByRole('button', { name: 'Delete February 2099', exact: true }).click();
+  await page.getByRole('button', { name: 'Confirm delete', exact: true }).click();
+  await expect(page.getByText('No upcoming changes.')).toBeVisible();
+  await expect(page.getByText('Initial requirement · 50%')).toBeVisible();
+});

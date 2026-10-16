@@ -43,21 +43,19 @@ Accept: application/json
 GET {{baseUrl}}/api/auth/me
 Accept: application/json
 
-### Update the signed-in user's email and office requirement (run login and CSRF requests first)
+### Update the signed-in user's email (run login and CSRF requests first)
 PUT {{baseUrl}}/api/users/me
 Content-Type: application/json
 X-CSRF-TOKEN: {{csrfToken}}
 
 {
-  "email": "andrei@example.com",
-  "requiredOfficePercentage": 75
+  "email": "andrei@example.com"
 }
 
 > {%
-    client.test("Email and office requirement are updated", function () {
+    client.test("Email is updated", function () {
         client.assert(response.status === 200, "Expected HTTP 200");
         client.assert(response.body.email === "andrei@example.com", "Expected updated email");
-        client.assert(response.body.requiredOfficePercentage === 75, "Expected 75% office requirement");
         client.global.set("savedOfficePercentage", response.body.requiredOfficePercentage);
     });
 %}
@@ -79,6 +77,52 @@ X-CSRF-TOKEN: {{csrfToken}}
         client.assert(response.body.requiredOfficePercentage === client.global.get("savedOfficePercentage"), "Expected office requirement to be preserved");
     });
 %}
+
+### List attendance requirements and retain baseline ID
+GET {{baseUrl}}/api/users/me/requirements
+Accept: application/json
+
+> {%
+    client.global.set("baselineRequirementId", response.body.items.find(x => x.isBaseline).id);
+%}
+
+### Schedule a requirement (one entry per effective month)
+POST {{baseUrl}}/api/users/me/requirements
+Content-Type: application/json
+X-CSRF-TOKEN: {{csrfToken}}
+
+{
+  "startingFrom": "2027-01-01",
+  "requiredOfficePercentage": 60
+}
+
+> {%
+    client.global.set("requirementId", response.body.id);
+%}
+
+### Correct the scheduled percentage or month
+PUT {{baseUrl}}/api/users/me/requirements/{{requirementId}}
+Content-Type: application/json
+X-CSRF-TOKEN: {{csrfToken}}
+
+{
+  "startingFrom": "2027-01-01",
+  "requiredOfficePercentage": 70
+}
+
+### Correct the initial requirement without moving its starting date
+PUT {{baseUrl}}/api/users/me/requirements/{{baselineRequirementId}}
+Content-Type: application/json
+X-CSRF-TOKEN: {{csrfToken}}
+
+{
+  "startingFrom": "0001-01-01",
+  "requiredOfficePercentage": 50
+}
+
+### Delete a scheduled change (the preceding requirement extends until the next change)
+DELETE {{baseUrl}}/api/users/me/requirements/{{requirementId}}
+X-CSRF-TOKEN: {{csrfToken}}
 
 ### Log out
 POST {{baseUrl}}/api/auth/logout

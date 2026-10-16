@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
@@ -123,11 +122,11 @@ public sealed class UsersIntegrationTests
 
         await CreateUser(client, "existingemail");
         await Login(client, "existingemail", "Normal-user-password!");
-        var updated = await PutJson(client, "/api/users/me", new { requiredOfficePercentage = 25 }, await Csrf(client));
+        var updated = await PutJson(client, "/api/users/me", new { }, await Csrf(client));
         Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
         var profile = await client.GetFromJsonAsync<JsonElement>("/api/auth/me");
         Assert.Equal(JsonValueKind.Null, profile.GetProperty("email").ValueKind);
-        Assert.Equal(25, profile.GetProperty("requiredOfficePercentage").GetInt32());
+        Assert.Equal(50, profile.GetProperty("requiredOfficePercentage").GetInt32());
     }
 
     [Fact]
@@ -179,7 +178,9 @@ public sealed class UsersIntegrationTests
         Assert.Equal((int)Math.Ceiling(status.GetProperty("eligibleWorkingDays").GetInt32() * percentage / 100m),
             status.GetProperty("requiredOfficeDays").GetInt32());
 
-        var updated = await PutJson(client, "/api/users/me", new { email = "percentage@example.com", requiredOfficePercentage = 25 }, csrf);
+        var history = await client.GetFromJsonAsync<JsonElement>("/api/users/me/requirements");
+        var id = history.GetProperty("items")[0].GetProperty("id").GetGuid();
+        var updated = await PutJson(client, $"/api/users/me/requirements/{id}", new { startingFrom = "0001-01-01", requiredOfficePercentage = 25 }, csrf);
         Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
         Assert.Equal(25, (await Read(updated)).GetProperty("requiredOfficePercentage").GetInt32());
         // Older clients that only update email must preserve the percentage.
@@ -190,7 +191,7 @@ public sealed class UsersIntegrationTests
             status.GetProperty("requiredOfficeDays").GetInt32());
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        Assert.Equal(50, (await db.Users.SingleAsync(x => x.Username == "otherpercentage")).RequiredOfficePercentage);
+        Assert.Equal(50, (await db.UserRequiredOfficePercentages.SingleAsync(x => x.UserId == db.Users.Single(u => u.Username == "otherpercentage").Id)).RequiredOfficePercentage);
     }
 
     [Theory]

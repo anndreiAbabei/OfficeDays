@@ -61,7 +61,16 @@ public sealed class CreateUserHandler : IRequestHandler<CreateUserRequest>
             Id = Guid.NewGuid(),
             Username = username,
             Email = _userService.NormalizeEmail(request.Email),
-            RequiredOfficePercentage = request.RequiredOfficePercentage.GetValueOrDefault(50),
+            RequiredOfficePercentages = 
+            [
+                new UserRequiredOfficePercentage
+                {
+                    Id = Guid.NewGuid(), 
+                    StartingFrom = UserRequiredOfficePercentage.BaselineDate,
+                    RequiredOfficePercentage = request.RequiredOfficePercentage.GetValueOrDefault(50),
+                    CreatedAt = _timeProvider.GetUtcNow()
+                }
+            ],
             NormalizedUsername = normalized,
             PasswordHash = string.Empty,
             TimeZoneId = request.TimeZoneId,

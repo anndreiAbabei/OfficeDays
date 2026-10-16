@@ -10,7 +10,22 @@ maximum WFH days       = eligible working days - required office days
 remaining office days  = max(0, required office days - eligible office attendance)
 ```
 
-Users can set a whole percentage from 0–100 during registration or in Profile. Existing accounts default to 50%. Changing the percentage recalculates all viewed months using the current setting. The API accepts `requiredOfficePercentage` on registration and profile updates, and returns it with user details. Omitting it during registration defaults to 50; omitting it during a profile update preserves the saved value.
+Users choose a whole percentage from 0–100 during registration (default 50%). Profile has a separate attendance requirements history: an editable, undeletable initial requirement covers all dates before the first change, including attendance before registration. Additional requirements take effect on the first of a chosen month. Current and past entries are shown newest first; upcoming entries are shown earliest first. Changing or deleting a historical entry recalculates affected dashboard months and future report exports.
+
+The `UserRequiredOfficePercentages` table is the source of truth; the legacy user column is removed. Migration preserves each existing percentage as a baseline with `StartingFrom = 0001-01-01`. This reserved date represents all earlier history, not account creation. `CreatedAt` uses UTC `DateTimeOffset`, consistent with other entities. Each user/month pair is unique, and the database checks percentage bounds and first-of-month dates. Downgrading restores baseline percentages to the legacy column and discards the schedule.
+
+Registration and user response contracts retain `requiredOfficePercentage`. User/login/profile responses resolve it for the user's current local date; monthly status resolves it for the requested month. Profile writes to `/api/users/me` now manage email/team day only and reject non-null legacy `requiredOfficePercentage` writes with guidance to use the new endpoints.
+
+Authenticated requirement endpoints (cookie mutations also require CSRF):
+
+```text
+GET    /api/users/me/requirements       { today, items: [{ id, startingFrom, requiredOfficePercentage, createdAt, isBaseline }] }
+POST   /api/users/me/requirements       { "startingFrom": "2027-01-01", "requiredOfficePercentage": 60 }
+PUT    /api/users/me/requirements/{id}  { "startingFrom": "2027-01-01", "requiredOfficePercentage": 70 }
+DELETE /api/users/me/requirements/{id}
+```
+
+Only the signed-in user's entries are accessible. Duplicate effective months return 409; invalid dates/percentages, baseline deletion, and moving or creating a baseline return 400. Editing the baseline percentage retains its reserved date. Deleting another entry extends the preceding percentage until the next scheduled change. Entries are a mutable schedule, not an immutable audit log.
 
 Users can select a weekly **Team day** in Profile (Monday–Friday), or choose **None** to clear it. The dashboard outlines that weekday’s entire column in yellow and includes a Team day legend. This is a visual reminder across all viewed months, including holidays and vacations; it does not create plans or change attendance requirements. Registration defaults to no team day.
 
@@ -250,7 +265,7 @@ The UI has separate, code-split routes:
 
 - `/`: month/year navigation, compliance widgets, attendance history and vacation add/remove
 - `/login` and `/register`: existing cookie sign-in and self-registration
-- `/profile`: optional email and required office percentage
+- `/profile`: optional email, team day, and attendance requirement history
 - `/tokens`: API token creation, one-time reveal, copying and revocation
 - `/admin`: admin-only jurisdiction management and bank holiday editing
 

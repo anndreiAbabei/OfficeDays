@@ -24,11 +24,5 @@ public sealed class UpdateUserRequestBodyValidator : AbstractValidator<UpdateUse
         RuleFor(body => body.Email)
             .EmailAddress()
             .When(body => !string.IsNullOrWhiteSpace(body.Email));
-
-        When(body => body.RequiredOfficePercentage.HasValue, () =>
-        {
-            RuleFor(body => body.RequiredOfficePercentage)
-                .InclusiveBetween(0, 100);
-        });
     }
 }
