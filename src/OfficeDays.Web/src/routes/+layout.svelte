@@ -16,7 +16,9 @@
   onMount(() => {
     // Preserve links from the original UI.
     void (async () => {
-      if (location.hash === '#register' || location.hash === '#login') await goto(`/${location.hash.slice(1)}`, { replaceState: true });
+      if (location.hash === '#register' || location.hash === '#login')
+        await goto(`/${location.hash.slice(1)}`, { replaceState: true });
+      
       await loadSession();
     })();
     void request<AppVersion>('/api/version')

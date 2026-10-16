@@ -14,14 +14,16 @@
   
   $effect(() => { if ($user) void goto('/', { replaceState: true }); });
   
-  async function submit(event: SubmitEvent) {
+  async function submit(event: SubmitEvent): Promise<void> {
     event.preventDefault(); 
     busy = true; 
     error = '';
     
     try { 
       signedIn(await mutate<User>('/api/auth/login', 'POST', { username, password })); 
+      
       password = ''; 
+      
       await goto('/'); 
     }
     catch (failure) { 
@@ -32,7 +34,9 @@
     }
   }
 </script>
+
 <svelte:head><title>Sign in · Office Days</title></svelte:head>
+
 <AuthCard>
   
   <h1>Office Days Tracker</h1>
@@ -40,11 +44,23 @@
   <p class="muted">Sign in to see your hybrid-working status.</p>
   
   <form class="stack" onsubmit={submit}>
-    <label>Username<input autocomplete="username" required bind:value={username} /></label>
-    <label>Password<input type="password" autocomplete="current-password" required bind:value={password} /></label>
-    <button disabled={busy} type="submit">{busy ? 'Signing in…' : 'Sign in'}</button>
+    <label>
+      Username
+      <input autocomplete="username" required bind:value={username} />
+    </label>
+    <label>
+      Password
+      <input type="password" autocomplete="current-password" required bind:value={password} />
+    </label>
+    <button disabled={busy} type="submit">
+      {busy ? 'Signing in…' : 'Sign in'}
+    </button>
   </form>
   
   <Feedback {error} message={page.url.searchParams.has('registered') ? 'Account created. Sign in to continue.' : ''} />
-  <p>New here? <a href="/register">Create an account</a></p>
+  
+  <p>
+    New here? 
+    <a href="/register">Create an account</a>
+  </p>
 </AuthCard>
