@@ -91,6 +91,7 @@ public static class ServiceRegistration
         svcBuilder.Services.AddSingleton<IRequestExecutor, RequestExecutor>();
         svcBuilder.Services.AddSingleton<IUserService, UserService>();
         svcBuilder.Services.AddSingleton<IAttendanceCalculator, AttendanceCalculator>();
+        svcBuilder.Services.AddSingleton<IReportCalculator, ReportCalculator>();
         svcBuilder.Services.AddSingleton<IApiTokenService, ApiTokenService>();
         svcBuilder.Services.AddHttpContextAccessor();
         svcBuilder.Services.AddSingleton<Features.Ui.UiContent>();

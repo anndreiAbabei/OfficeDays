@@ -15,3 +15,5 @@ These files target JetBrains Rider's built-in HTTP Client.
 The Romania dates follow Article 139 of the Romanian Labour Code and the Orthodox calendar for each year. Because both Children's Day and Orthodox Whit Monday fall on 1 June 2026, that date has one combined entry to satisfy the API's unique-date constraint.
 
 The 2027 calendar contains 17 distinct holiday dates, including Orthodox Easter on 2–3 May and Pentecost on 20–21 June. Dates were checked against [Romania’s 2027 holiday calendar](https://www.timeanddate.com/holidays/romania/2027).
+
+`reports.http` generates the signed-in user’s report for a full year or month range. Each response is a fresh calculation; the Reports page exports its displayed response to CSV locally, without requesting another report.

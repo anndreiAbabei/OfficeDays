@@ -61,8 +61,8 @@ it('requires confirmation to delete and explains its effect', async () => {
   await screen.findByText('Initial requirement · 50%');
   await fireEvent.click(screen.getByRole('button', { name: 'Delete January 2026' }));
   expect(fetcher.mock.calls.some(([, options]) => options?.method === 'DELETE')).toBe(false);
-  expect(screen.getByRole('group', { name: 'Confirm requirement deletion' })).toHaveTextContent('preceding percentage');
-  await fireEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
+  expect(screen.getByRole('group', { name: 'Confirm requirement removal' })).toHaveTextContent('preceding percentage');
+  await fireEvent.click(screen.getByRole('button', { name: 'Confirm remove' }));
   await waitFor(() => expect(screen.queryByText('January 2026 · 60%')).not.toBeInTheDocument());
 });
 
