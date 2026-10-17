@@ -3,7 +3,7 @@ using OfficeDays.Features.Attendance.GetAttendance;
 using OfficeDays.Services;
 using OfficeDays.UnitTests.Testing;
 
-namespace OfficeDays.UnitTests.Features.Attendance;
+namespace OfficeDays.UnitTests.Features.Attendance.GetAttendance;
 
 public sealed class GetAttendanceHandlerLoggingTesting
 {

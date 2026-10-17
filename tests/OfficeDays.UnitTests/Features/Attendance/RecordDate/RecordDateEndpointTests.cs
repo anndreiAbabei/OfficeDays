@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Routing;
 using NSubstitute;
-using OfficeDays.Features.Attendance.GetAttendance;
-using OfficeDays.Features.Attendance.GetAttendance.Contracts;
+using OfficeDays.Features.Attendance.RecordDate;
+using OfficeDays.Features.Attendance.RecordDate.Contracts;
 using OfficeDays.Infrastructure;
 using OfficeDays.UnitTests.Testing;
 
-namespace OfficeDays.UnitTests.Features.Attendance;
+namespace OfficeDays.UnitTests.Features.Attendance.RecordDate;
 
-public sealed class GetAttendanceEndpointTests
+public sealed class RecordDateEndpointTests
 {
     [Fact]
     public void Should_CreateEndpoint()
@@ -16,12 +16,12 @@ public sealed class GetAttendanceEndpointTests
         var executor = new RequestExecutor();
         var epb = Substitute.For<IEndpointRouteBuilder>();
         epb.DataSources.Returns([]);
-        var sut = new GetAttendanceEndpoint(executor);
+        var sut = new RecordDateEndpoint(executor);
 
         // act
         sut.MapEndpoint(epb);
 
         // assert
-        Assert.Endpoint<GetAttendanceRequest>(epb, executor, "/", HttpMethod.Get);
+        Assert.Endpoint<RecordDateRequest>(epb, executor, "{date}", HttpMethod.Put);
     }
 }

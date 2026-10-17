@@ -1,9 +1,21 @@
 using Microsoft.EntityFrameworkCore;
 using OfficeDays.Domain;
+using OfficeDays.Infrastructure;
 
 namespace OfficeDays.Data;
 
-public sealed class AppDbContext : DbContext
+public interface IAppDbContext : IDbContext
+{
+    DbSet<OfficePlan> OfficePlans { get; }
+    DbSet<User> Users { get; }
+    DbSet<UserRequiredOfficePercentage> UserRequiredOfficePercentages { get; }
+    DbSet<Attendance> Attendances { get; }
+    DbSet<Vacation> Vacations { get; }
+    DbSet<ApiToken> ApiTokens { get; }
+    DbSet<BankHoliday> BankHolidays { get; }
+    DbSet<HolidayJurisdiction> HolidayJurisdictions { get; }
+}
+public sealed class AppDbContext : DbContext, IAppDbContext
 {
     public DbSet<OfficePlan> OfficePlans => Set<OfficePlan>();
     public DbSet<User> Users => Set<User>();

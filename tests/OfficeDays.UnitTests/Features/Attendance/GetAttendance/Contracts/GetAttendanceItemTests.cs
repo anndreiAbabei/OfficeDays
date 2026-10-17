@@ -1,6 +1,6 @@
 using OfficeDays.Features.Attendance.GetAttendance.Contracts;
 
-namespace OfficeDays.UnitTests.Features.Attendance.Contracts;
+namespace OfficeDays.UnitTests.Features.Attendance.GetAttendance.Contracts;
 
 public sealed class GetAttendanceItemTests
 {

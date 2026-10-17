@@ -1,7 +1,7 @@
 using OfficeDays.Features.Attendance.GetAttendance;
 using OfficeDays.Features.Attendance.GetAttendance.Contracts;
 
-namespace OfficeDays.UnitTests.Features.Attendance;
+namespace OfficeDays.UnitTests.Features.Attendance.GetAttendance;
 
 public sealed class GetAttendanceRequestValidatorTests
 {

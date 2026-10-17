@@ -16,19 +16,21 @@ public sealed class FakeLogger<T> : ILogger<T>
     public bool IsEnabled(LogLevel logLevel) => true;
     public IDisposable BeginScope<TState>(TState state) where TState : notnull => new Disposable();
     
+    [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local", Justification = "Used for assertion")]
+    [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Global", Justification = "Used for assertion")]
     public void Assert(LogLevel logLevel, string message, Exception? exception = null)
     {
-        Xunit.Assert.Contains(Logs, li => li.Level == logLevel && 
-                                          li.Message == message && 
+        Xunit.Assert.Contains(Logs, li => li.Level == logLevel &&
+                                          li.Message == message &&
                                           (exception == null || li.Exception == exception));
+    }
+
+    [ExcludeFromCodeCoverage]
+    private sealed class Disposable : IDisposable
+    {
+        public void Dispose() {}
     }
 }
 
 [ExcludeFromCodeCoverage]
 public sealed record LogItem(LogLevel Level, string Message, Exception? Exception);
-
-[ExcludeFromCodeCoverage]
-file sealed class Disposable : IDisposable
-{
-    public void Dispose() {}
-}

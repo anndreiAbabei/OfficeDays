@@ -11,7 +11,7 @@ public sealed class RecordDateRequestValidator : AbstractValidator<RecordDateReq
 {
     public RecordDateRequestValidator(TimeProvider timeProvider,
                                       ICurrentUser currentUser,
-                                      AppDbContext dbContext,
+                                      IAppDbContext dbContext,
                                       IUserDateService userDateService)
     {
         RuleFor(r => r.Date)
