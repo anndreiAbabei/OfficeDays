@@ -159,4 +159,48 @@ public sealed class TokensIntegrationTests
         Assert.Equal(new string('x', 100), Assert.Single(listed!).GetProperty("name").GetString());
     }
 
+    [Fact]
+    public async Task Permanent_delete_requires_revocation_and_removes_record_without_restoring_access()
+    {
+        using var factory = new OfficeDaysFactory();
+        using var owner = factory.CreateClient();
+        await CreateUser(owner, "deleteowner");
+        await Login(owner, "deleteowner", "Normal-user-password!");
+        var csrf = await Csrf(owner);
+        var created = await Read(await PostJson(owner, "/api/tokens", new { name = "Phone" }, csrf));
+        var id = created.GetProperty("id").GetGuid();
+        var path = $"/api/tokens/{id}";
+        Assert.Equal(HttpStatusCode.Conflict, (await Delete(owner, path + "/permanent", csrf)).StatusCode);
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var active = await db.ApiTokens.SingleAsync(x => x.Id == id);
+            Assert.Null(active.RevokedAt);
+        }
+        Assert.Equal(HttpStatusCode.NoContent, (await Delete(owner, path, csrf)).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await owner.DeleteAsync(path + "/permanent")).StatusCode);
+
+        using var other = factory.CreateClient();
+        Assert.Equal(HttpStatusCode.Unauthorized, (await other.DeleteAsync(path + "/permanent")).StatusCode);
+        await CreateUser(other, "deleteother");
+        await Login(other, "deleteother", "Normal-user-password!");
+        Assert.Equal(HttpStatusCode.NotFound, (await Delete(other, path + "/permanent", await Csrf(other))).StatusCode);
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            Assert.True(await db.ApiTokens.AnyAsync(x => x.Id == id));
+        }
+        Assert.Equal(HttpStatusCode.NoContent, (await Delete(owner, path + "/permanent", csrf)).StatusCode);
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            Assert.False(await db.ApiTokens.AnyAsync(x => x.Id == id));
+        }
+        Assert.Empty((await owner.GetFromJsonAsync<JsonElement[]>("/api/tokens"))!);
+        Assert.Equal(HttpStatusCode.NotFound, (await Delete(owner, path + "/permanent", csrf)).StatusCode);
+        using var shortcut = factory.CreateClient();
+        shortcut.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", created.GetProperty("token").GetString());
+        Assert.Equal(HttpStatusCode.Unauthorized, (await shortcut.PostAsync("/api/attendance", null)).StatusCode);
+    }
+
 }
