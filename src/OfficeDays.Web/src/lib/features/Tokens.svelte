@@ -7,6 +7,8 @@
   import Feedback from '$lib/components/Feedback.svelte';
   
   let tokens = $state<ApiToken[]>([]); 
+  let editingId = $state<string | null>(null);
+  let editedName = $state('');
   let name = $state(''); 
   let rawToken = $state(''); 
   let copied = $state(false);
@@ -49,6 +51,31 @@
     }
   }
   
+  function edit(token: ApiToken): void {
+    editingId = token.id;
+    editedName = token.name;
+    error = '';
+    message = '';
+  }
+
+  async function rename(event: SubmitEvent, token: ApiToken): Promise<void> {
+    event.preventDefault();
+    busy = true;
+    error = '';
+    message = '';
+    try {
+      const name = editedName.trim();
+      await mutate(`/api/tokens/${token.id}`, 'PATCH', { name });
+      tokens = tokens.map(item => item.id === token.id ? { ...item, name } : item);
+      editingId = null;
+      message = 'Token renamed.';
+    } catch (failure) {
+      error = errorMessage(failure);
+    } finally {
+      busy = false;
+    }
+  }
+
   async function revoke(token: ApiToken) : Promise<void> {
     if (!confirm(`Revoke “${token.name}”?`)) 
       return;
@@ -118,9 +145,15 @@
       {#each tokens as token (token.id)}
       <li>
         <div class="item-main">
-          <strong>
-            {token.name}
-          </strong>
+          {#if editingId === token.id}
+            <form class="rename-form" onsubmit={(event) => rename(event, token)}>
+              <input aria-label="New token name" required maxlength="100" bind:value={editedName} disabled={busy} />
+              <button type="submit" disabled={busy || !editedName.trim()}>Save</button>
+              <button type="button" class="secondary" disabled={busy} onclick={() => editingId = null}>Cancel</button>
+            </form>
+          {:else}
+            <strong>{token.name}</strong>
+          {/if}
           <small>
             Created {displayTime(token.createdAt)} · Last used {displayTime(token.lastUsedAt)}
           </small>
@@ -128,17 +161,46 @@
             {token.status}
           </span>
         </div>
-        {#if token.status !== 'Revoked'}
-          <button class="danger small" disabled={busy} onclick={() => revoke(token)}>
-            Revoke
-          </button>
-        {/if}
+        <div class="actions">
+          {#if editingId !== token.id}
+            <button class="secondary small" disabled={busy} onclick={() => edit(token)} aria-label={`Rename ${token.name}`}>
+              Rename
+            </button>
+          {/if}
+          {#if token.status !== 'Revoked'}
+            <button class="danger small" disabled={busy} onclick={() => revoke(token)}>
+              Revoke
+            </button>
+          {/if}
+        </div>
       </li>
     {:else}<li class="empty">No API tokens yet.</li>{/each}{/if}
   </ItemList>
 </section>
 
 <style>
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    flex-shrink: 0;
+  }
+
+  .rename-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .55rem;
+  }
+
+  .rename-form input {
+    flex: 1 1 10rem;
+    min-width: 0;
+  }
+
+  .item-main {
+    flex: 1;
+  }
+
   .copy-row { 
     display: flex;
     align-items: center; 
