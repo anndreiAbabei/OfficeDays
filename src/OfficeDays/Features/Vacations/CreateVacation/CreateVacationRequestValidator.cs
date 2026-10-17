@@ -13,11 +13,9 @@ public sealed class CreateVacationRequestValidator : AbstractValidator<CreateVac
     }
 }
 
-public sealed class CreateVacationRequestBodyValidator : AbstractValidator<CreateVacationRequestBody>
+public sealed class CreateVacationRequestBodyValidator : VacationDatesValidator<CreateVacationRequestBody>
 {
-    public CreateVacationRequestBodyValidator()
+    public CreateVacationRequestBodyValidator() : base(input => input.From, input => input.To)
     {
-        RuleFor(input => input.To)
-            .GreaterThanOrEqualTo(input => input.From);
     }
 }
