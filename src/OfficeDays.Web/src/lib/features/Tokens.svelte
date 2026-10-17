@@ -6,7 +6,9 @@
   import type { ApiToken } from '$lib/types';
   import Feedback from '$lib/components/Feedback.svelte';
   
-  let tokens = $state<ApiToken[]>([]); 
+  let tokens = $state<ApiToken[]>([]);
+  let showRevoked = $state(false);
+  const visibleTokens = $derived(tokens.filter(token => showRevoked || token.status !== 'Revoked'));
   let editingId = $state<string | null>(null);
   let editedName = $state('');
   let name = $state(''); 
@@ -98,6 +100,25 @@
     }
   }
   
+  async function deletePermanently(token: ApiToken): Promise<void> {
+    if (!confirm(`Permanently delete “${token.name}”? This removes it from your history and cannot be undone.`))
+      return;
+
+    busy = true;
+    error = '';
+    message = '';
+    try {
+      await mutate(`/api/tokens/${token.id}/permanent`, 'DELETE');
+      tokens = tokens.filter(item => item.id !== token.id);
+      if (editingId === token.id) editingId = null;
+      message = 'Token permanently deleted.';
+    } catch (failure) {
+      error = errorMessage(failure);
+    } finally {
+      busy = false;
+    }
+  }
+
   async function copy(): Promise<void> {
     try { 
       await navigator.clipboard.writeText(rawToken); 
@@ -138,11 +159,16 @@
     </button>
   {/if}
   
+  <label class="revoked-filter">
+    <input type="checkbox" bind:checked={showRevoked} disabled={busy} />
+    Show revoked tokens
+  </label>
+
   <ItemList {loading}>
     {#if loading && !tokens.length}
       <li class="empty">Loading tokens…</li>
     {:else}
-      {#each tokens as token (token.id)}
+      {#each visibleTokens as token (token.id)}
       <li>
         <div class="item-main">
           {#if editingId === token.id}
@@ -171,14 +197,36 @@
             <button class="danger small" disabled={busy} onclick={() => revoke(token)}>
               Revoke
             </button>
+          {:else}
+            <button class="danger small" disabled={busy} onclick={() => deletePermanently(token)}>
+              Delete
+            </button>
           {/if}
         </div>
       </li>
-    {:else}<li class="empty">No API tokens yet.</li>{/each}{/if}
+    {:else}<li class="empty">{showRevoked ? 'No API tokens yet.' : 'No active API tokens.'}</li>{/each}{/if}
   </ItemList>
 </section>
 
 <style>
+  .revoked-filter {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-top: 1rem;
+    min-height: 44px;
+    cursor: pointer;
+  }
+
+  .revoked-filter input {
+    width: 1rem;
+    height: 1rem;
+    min-height: 0;
+    margin: 0;
+    accent-color: var(--green);
+  }
+
+
   .actions {
     display: flex;
     align-items: center;
