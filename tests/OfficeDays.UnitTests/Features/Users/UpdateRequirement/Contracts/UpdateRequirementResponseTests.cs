@@ -1,0 +1,27 @@
+using OfficeDays.Features.Users.UpdateRequirement.Contracts;
+
+namespace OfficeDays.UnitTests.Features.Users.UpdateRequirement.Contracts;
+
+public sealed class UpdateRequirementResponseTests
+{
+    [Fact]
+    public void Should_SetProperties()
+    {
+        // arrange
+        var expectedId = Guid.NewGuid();
+        var expectedStartingFrom = new DateOnly(2026, 10, 2);
+        var expectedRequiredOfficePercentage = 23;
+        var expectedCreatedAt = new DateTimeOffset(2026, 10, 4, 9, 30, 0, TimeSpan.Zero);
+        var expectedIsBaseline = true;
+
+        // act
+        var sut = new UpdateRequirementResponse(expectedId, expectedStartingFrom, expectedRequiredOfficePercentage, expectedCreatedAt, expectedIsBaseline);
+
+        // assert
+        Assert.Equal(expectedId, sut.Id);
+        Assert.Equal(expectedStartingFrom, sut.StartingFrom);
+        Assert.Equal(expectedRequiredOfficePercentage, sut.RequiredOfficePercentage);
+        Assert.Equal(expectedCreatedAt, sut.CreatedAt);
+        Assert.Equal(expectedIsBaseline, sut.IsBaseline);
+    }
+}

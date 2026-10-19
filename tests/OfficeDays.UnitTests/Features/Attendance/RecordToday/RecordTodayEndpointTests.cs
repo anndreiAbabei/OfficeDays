@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Routing;
 using NSubstitute;
-using OfficeDays.Features.Attendance.RecordDate.Contracts;
 using OfficeDays.Features.Attendance.RecordToday;
 using OfficeDays.Features.Attendance.RecordToday.Contracts;
 using OfficeDays.Infrastructure;

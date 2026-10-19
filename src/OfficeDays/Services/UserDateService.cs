@@ -25,8 +25,7 @@ public sealed class UserDateService : IUserDateService
         return DateOnly.FromDateTime(local.DateTime);
     }
 
-    public bool IsValidTimeZone(string id) =>
-        IsValidTimeZone(id, TimeZoneInfo.FindSystemTimeZoneById);
+    public bool IsValidTimeZone(string id) => IsValidTimeZone(id, TimeZoneInfo.FindSystemTimeZoneById);
 
     private static bool IsValidTimeZone(string id, Func<string, TimeZoneInfo> findTimeZone)
     {
