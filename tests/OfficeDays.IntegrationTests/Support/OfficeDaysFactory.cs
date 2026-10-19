@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 
 namespace OfficeDays.IntegrationTests.Support;
 
@@ -19,6 +21,9 @@ public sealed class OfficeDaysFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+        // Keep console output quiet while preserving logs captured by logging tests.
+        builder.ConfigureLogging(logging =>
+            logging.AddFilter<ConsoleLoggerProvider>(level => level >= LogLevel.Error));
         builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
             new Dictionary<string, string?>
             {
