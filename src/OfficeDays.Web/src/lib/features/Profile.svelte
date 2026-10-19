@@ -8,14 +8,21 @@
   let email = $state(untrack(() => currentUser.email || ''));
   const teamDays: TeamDay[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
   let teamDay = $state<TeamDay | null>(untrack(() => currentUser.teamDay));
-  let busy = $state(false); let error = $state(''); let message = $state('');
+  let busy = $state(false); 
+  let error = $state(''); 
+  let message = $state('');
   
-  let exporting = $state(false); let exportError = $state(''); let exportMessage = $state('');
+  let exporting = $state(false); 
+  let exportError = $state(''); 
+  let exportMessage = $state('');
 
   async function exportData(): Promise<void> {
-    exporting = true; exportError = ''; exportMessage = '';
+    exporting = true; 
+    exportError = ''; 
+    exportMessage = '';
     try {
       await downloadPersonalData();
+      
       exportMessage = 'Download started. Keep this file private: it contains your personal data.';
     } catch (failure) {
       exportError = `Could not download your data. ${errorMessage(failure)} Please try again.`;
@@ -25,10 +32,19 @@
   }
 
   async function save(event: SubmitEvent): Promise<void> {
-    event.preventDefault(); busy = true; error = ''; message = '';
+    event.preventDefault(); 
+    busy = true; 
+    error = ''; 
+    message = '';
+    
     try {
       const updated = await mutate<User>('/api/users/me', 'PUT', { email: email.trim() || null, teamDay });
-      email = updated.email || ''; teamDay = updated.teamDay; onsave(updated); message = 'Profile saved.';
+      
+      email = updated.email || ''; 
+      teamDay = updated.teamDay; 
+      onsave(updated); 
+      
+      message = 'Profile saved.';
     } catch (failure) { 
       error = errorMessage(failure); 
     }
@@ -62,7 +78,7 @@
   <Feedback {error} {message} />
 </section>
 
-<section class="card">
+<section class="card export-user">
   <h2>Download your data</h2>
   <p>Save all your profile settings, attendance requirements, attendance, plans, vacations, and holiday calendar as a JSON file.</p>
   <p class="muted">Includes the app version and calendar snapshot for future migration. Passwords and API tokens are excluded. Import is not available yet.</p>
@@ -79,5 +95,9 @@
   }
   @media (min-width: 651px) {
     .profile-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  
+  .export-user > button {
+    margin-top: 2rem;
   }
 </style>
