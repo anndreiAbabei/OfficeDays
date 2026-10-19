@@ -1,535 +1,221 @@
 # Office Days Tracker
 
-Office Days Tracker is a small, self-hosted application for recording office attendance and checking progress against a personal office attendance requirement, **50% of eligible working days by default**.
+A self-hosted app for keeping track of office days, planning upcoming visits, and seeing how close you are to your monthly attendance target.
 
-For each calendar month, the application subtracts weekends, centrally configured bank holidays, and the user's vacation dates. It then calculates:
+## Table of contents
 
-```text
-required office days   = ceil(eligible working days × required office percentage / 100)
-maximum WFH days       = eligible working days - required office days
-remaining office days  = max(0, required office days - eligible office attendance)
-```
+- [Why it exists](#why-it-exists)
+- [What you can do](#what-you-can-do)
+- [Requirements](#requirements)
+- [Run with Docker Compose](#run-with-docker-compose)
+- [Run locally without Docker](#run-locally-without-docker)
+- [First-time setup](#first-time-setup)
+- [Everyday use](#everyday-use)
+- [iOS Shortcut setup](#ios-shortcut-setup)
+- [Backups and hosting](#backups-and-hosting)
+- [License](#license)
 
-Users choose a whole percentage from 0 to 100 during registration (default 50%). Profile has a separate attendance requirements history: an editable, undeletable initial requirement covers all dates before the first change, including attendance before registration. Additional requirements take effect on the first of a chosen month. Current and past entries are shown newest first; upcoming entries are shown earliest first. Changing or deleting a historical entry recalculates affected dashboard months and future report exports.
+## Why it exists
 
-The `UserRequiredOfficePercentages` table is the source of truth; the legacy user column is removed. Migration preserves each existing percentage as a baseline with `StartingFrom = 0001-01-01`. This reserved date represents all earlier history, not account creation. `CreatedAt` uses UTC `DateTimeOffset`, consistent with other entities. Each user/month pair is unique, and the database checks percentage bounds and first-of-month dates. Downgrading restores baseline percentages to the legacy column and discards the schedule.
+Office Days started with a simple idea: I wanted to record an office day from the **iOS Shortcuts app**. Arrive at the office, let a shortcut log the visit, and have somewhere to check how many days are still needed that month.
 
-Registration and user response contracts retain `requiredOfficePercentage`. User/login/profile responses resolve it for the user's current local date; monthly status resolves it for the requested month. Profile writes to `/api/users/me` manage email/team day only; legacy `requiredOfficePercentage` fields are ignored. Requirement changes use the separate endpoints below.
+That idea grew into a web app with a calendar, vacation tracking, attendance targets, and reports. Shortcuts remains part of the experience: you can record attendance with one request, either by running a shortcut yourself or through an arrival automation.
 
-Authenticated requirement endpoints (cookie mutations also require CSRF):
+## What you can do
 
-```text
-GET    /api/users/me/requirements       { today, items: [{ id, startingFrom, requiredOfficePercentage, createdAt, isBaseline }] }
-POST   /api/users/me/requirements       { "startingFrom": "2027-01-01", "requiredOfficePercentage": 60 }
-PUT    /api/users/me/requirements/{id}  { "startingFrom": "2027-01-01", "requiredOfficePercentage": 70 }
-DELETE /api/users/me/requirements/{id}
-```
+- **Track attendance:** record today, add a missed office day, or remove an incorrect entry.
+- **See monthly progress:** check your required office days, remaining days, and maximum work-from-home days.
+- **Plan ahead:** mark upcoming office days on the calendar. Plans stay separate from recorded attendance.
+- **Account for time off:** exclude weekends, bank holidays, and vacations from your target.
+- **Set your own target:** choose an office attendance percentage, then manage past or future changes from Profile.
+- **Highlight your team day:** choose a weekday as a visual reminder in the calendar.
+- **Review and export reports:** view monthly attendance across a year or a range of months and download a CSV.
+- **Automate with iOS Shortcuts:** use a personal API token to log attendance from your iPhone.
+- **Share an installation:** each account has its own attendance, plans, vacation dates, timezone, and holiday calendar.
 
-Only the signed-in user's entries are accessible. Duplicate effective months return 409; invalid dates/percentages, baseline deletion, and moving or creating a baseline return 400. Editing the baseline percentage retains its reserved date. Deleting another entry extends the preceding percentage until the next scheduled change. Entries are a mutable schedule, not an immutable audit log.
+### How the target works
 
-Users can select a weekly **Team day** in Profile (Monday–Friday), or choose **None** to clear it. The dashboard outlines that weekday’s entire column in yellow and includes a Team day legend. This is a visual reminder across all viewed months, including holidays and vacations; it does not create plans or change attendance requirements. Registration defaults to no team day.
+The default target is **50% of eligible working days**. Eligible days are weekdays, excluding your holiday calendar's bank holidays and your vacation dates. The required number of office days is rounded up.
 
-Profile updates accept `teamDay` as `"monday"`, `"tuesday"`, `"wednesday"`, `"thursday"`, `"friday"`, or `null`. Omitting the field preserves the saved value; explicit `null` clears it. Current-user, login, and profile-update responses include `teamDay`. Preferences are stored as a typed JSON object in the Users table; the migration initialises existing accounts with no selection.
+For example, with **21 eligible working days** and a **50% target**, you need **11 office days**, leaving up to **10 work-from-home days**. Only recorded attendance on eligible days counts toward that target; planning a visit does not mark it as attended.
 
-
-With 21 eligible days at 50%, this means at most 10 WFH days and therefore at least 11 office days.
-
-## Architecture
-
-The repository intentionally has a small structure:
-
-```text
-src/OfficeDays                    ASP.NET Core API, static UI hosting, domain logic, and EF Core
-src/OfficeDays.Web                SvelteKit / Svelte / TypeScript frontend
-src/OfficeDays.Web/src/routes     dashboard, login, register, profile, tokens, admin
-src/OfficeDays.Web/src/lib        shared API/session utilities and feature components
-src/OfficeDays.Web/e2e            browser flows against an isolated real .NET API
-src/OfficeDays/Features           vertical feature slices with local contracts, validation, and endpoint mappings
-src/OfficeDays/Configuration      application services and feature registration
-tests/OfficeDays.UnitTests        isolated calculation and feature-registration tests
-tests/OfficeDays.IntegrationTests real HTTP pipeline tests with an isolated SQLite database
-```
-
-The application uses .NET 10, ASP.NET Core minimal APIs, EF Core, and SQLite. The UI is a statically built SvelteKit single-page application. Frontend and API are separate projects in one repository, shipped in one Docker container with only the .NET runtime. Node.js is used only for development/building. Cookie authentication, antiforgery protection, business rules, and persistence remain in the API. `AttendanceCalculator` is independent of HTTP and persistence, and accepts a general date range so future period types do not require rewriting the rule.
-
-Each API operation lives in `Features/<Area>/<Operation>` with its endpoint, request/response contracts, handler, FluentValidation validator, mapping, and source-generated logging methods as needed. Request wrappers bind route/query properties and an explicit `[FromBody]` payload. `RequestExecutor` validates and invokes the scoped handler; handlers return `IResult` and access EF Core directly. It logs request names and invalid field names, never request payloads.
-
-Endpoint groups own route prefixes and authorisation. `ICurrentUser` provides the authenticated user ID. Root groups keep health and UI routes outside `/api`; health endpoints use ASP.NET Core health checks, and UI endpoints serve a shared startup snapshot of assets. `RecordToday` and `RecordDate` deliberately keep their recording logic independent.
-
-Feature discovery registers public concrete classes in the application assembly. Each request must have exactly one handler, and each endpoint must implement one feature endpoint marker interface and be mapped exactly once by an endpoint group. Startup validates these conventions and the final handler registrations before initialising the database. Dependency validation also runs in every environment; singleton endpoints and endpoint groups must not capture scoped services. Resolve request-scoped dependencies through endpoint delegates instead.
-
-`Configuration` owns service and feature registration. `Program.cs` composes those registrations, middleware, endpoint mapping, and database initialisation.
-
-Stored dates such as attendance, vacation, and holidays use `DateOnly`. Audit timestamps use UTC. Calculated values are never persisted.
+You can choose any whole percentage from 0 to 100. Later changes take effect from the first day of a chosen month. Editing an earlier requirement recalculates the affected months.
 
 ## Requirements
 
-- .NET 10 SDK for local development
-- Node.js 24 LTS and npm for frontend development/building (not needed on the production host)
-- Docker with Compose for container deployment
-- An IANA timezone name for each user, such as `Europe/Bucharest`
-- A holiday jurisdiction for each user, such as `RO`, `GB-ENG`, or `GB-NIR`
+Choose whichever setup suits you:
 
-## Run locally
+| Run with | What you need |
+| --- | --- |
+| Docker Compose | Docker with Compose support. No separate .NET or Node.js installation needed. |
+| Local installation | .NET 10 SDK, Node.js 24, and npm. |
 
-Build the UI first (the generated files are ignored by Git):
-
-```bash
-cd src/OfficeDays.Web
-npm ci
-npm run build
-cd ../..
-```
-
-`dotnet build`, `dotnet run`, and `dotnet publish` copy this build into the API's `wwwroot`. Rebuild the UI and restart .NET after frontend changes when testing the production-style setup. Do not edit generated `wwwroot` files.
-
-For live frontend development, keep the API running on `http://localhost:5200` and run `npm run dev` from `src/OfficeDays.Web`. Open the Vite URL; its `/api` proxy preserves same-origin cookies and CSRF behaviour. Set `API_ORIGIN` when the API uses another address. Node 24 can be selected with `nvm use` in the frontend directory.
-
-The first start requires bootstrap administrator environment variables. They are intentionally absent from `appsettings.json`. Passwords must contain at least 12 characters.
-
-```bash
-BootstrapAdmin__Password='use-a-long-unique-password' \
-BootstrapAdmin__TimeZoneId='Europe/Bucharest' \
-BootstrapAdmin__CountryCode='RO' \
-BootstrapAdmin__CountryName='Romania' \
-Security__RequireHttpsForBearerTokens=false \
-dotnet run --project src/OfficeDays
-```
-
-Open the URL printed by ASP.NET Core and sign in as `Admin`. The HTTPS bearer-token check is disabled above only for local development. EF Core migrations run automatically on startup and create `officedays.db` in the working directory.
-
-If the database already contains any user, bootstrap configuration is ignored. It never resets or modifies the existing `Admin` account. On an empty database, the configured jurisdiction is created if necessary. If any required bootstrap setting is missing, startup fails with a clear error.
-
-Cookie session lifetime is configured in `src/OfficeDays/appsettings.json` using a standard .NET `TimeSpan` value:
-
-```json
-{
-  "Authentication": {
-    "CookieExpireTimeSpan": "12:00:00"
-  }
-}
-```
-
-This setting must be a positive duration. The authentication cookie is persistent across browser restarts and uses sliding expiration.
+Both options use a local SQLite database, so there is no separate database server to install. Start with a copy of this repository and run the commands below from its root directory. The local installation examples use a macOS/Linux shell.
 
 ## Run with Docker Compose
 
-Docker Compose uses two host bind mounts:
-
-```text
-./data                                      SQLite database and data-protection keys
-./src/OfficeDays/appsettings.Production.json non-secret production settings (read-only)
-```
-
-Create the writable data directory and copy the environment template:
+### 1. Prepare the settings
 
 ```bash
 mkdir -p data
 cp .env.example .env
 ```
 
-Edit `.env` before the first start:
-
-- Replace `OFFICEDAYS_ADMIN_PASSWORD` with a strong password of at least 12 characters.
-- Leave `OFFICEDAYS_DATA_PATH=./data` for a local checkout, or set it to a stable absolute host path when a deployment manager such as Komodo controls the checkout.
-- On Linux, set `OFFICEDAYS_UID` and `OFFICEDAYS_GID` to the output of `id -u` and `id -g`. This lets the non-root container process write to `./data`.
-- Keep `OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER=true` when using an HTTPS reverse proxy.
-
-Build and start the application:
-
-```bash
-docker compose up --build -d
-docker compose logs -f office-days
-```
-
-The service listens on port `5802`. The Docker build installs locked frontend dependencies, checks types, runs UI unit/component tests, and builds the static UI before publishing .NET. Compose still runs one service/container; no Node.js server is deployed. Database migrations and initial Admin creation happen automatically. The bind-mounted directory will contain:
-
-```text
-data/officedays.db   SQLite database
-data/keys/           ASP.NET Core data-protection keys used by login cookies
-```
-
-Rebuilding or replacing the container does not delete these files. Back up the entire `data` directory; retaining both the database and key ring prevents existing browser sessions from becoming invalid after restoration.
-
-After the Admin account has been created successfully, `OFFICEDAYS_ADMIN_PASSWORD` may be removed from `.env`. Bootstrap values are ignored whenever the database already contains a user.
-
-To stop or update the application:
-
-```bash
-docker compose down
-
-git pull
-docker compose up --build -d
-```
-
-`src/OfficeDays/appsettings.Production.json` sits beside the other ASP.NET Core settings files and is mounted read-only. It is suitable for cookie lifetime, logging, and security switches, but passwords and other secrets should remain in `.env`. Environment variables override values from the JSON file.
-
-### Deploy with Komodo
-
-Create Office Days as a **Stack** rather than a standalone Deployment so Komodo can use the repository's `compose.yaml` and build the Dockerfile:
-
-1. Push this repository to a Git server that the Komodo host can access.
-2. On the Docker host, create a persistent directory such as `/opt/appdata/office-days`, owned by the UID/GID that the container will use.
-3. In Komodo, open **Stacks**, select **New Stack**, give it a name such as `office-days`, and select the target server.
-4. Choose the Git repository source, select the repository and branch, and set the Compose file path to `compose.yaml`.
-5. In Komodo's **Settings → Variables**, create a variable named `OFFICE_DAYS_BOOTSTRAP_PASSWORD`, enable its **Secret** option, and give it the initial Admin password.
-6. Add the following values to the Stack's **Environment** field. The double-bracket expression asks Komodo to substitute the secret without committing it to Git:
+Example `.env` file (replace the password before starting):
 
 ```dotenv
-OFFICEDAYS_ADMIN_PASSWORD=[[OFFICE_DAYS_BOOTSTRAP_PASSWORD]]
+OFFICEDAYS_ADMIN_PASSWORD=replace-with-a-long-unique-password
 OFFICEDAYS_ADMIN_TIMEZONE=Europe/Bucharest
 OFFICEDAYS_ADMIN_COUNTRY_CODE=RO
 OFFICEDAYS_ADMIN_COUNTRY_NAME=Romania
-OFFICEDAYS_DATA_PATH=/opt/appdata/office-days
+OFFICEDAYS_DATA_PATH=./data
 OFFICEDAYS_UID=1000
 OFFICEDAYS_GID=1000
 OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER=true
 ```
 
-7. Save the Stack and deploy it. Port `5802` on the Docker host will serve the application.
+Adjust these settings for your installation:
 
-The absolute data path is important in Komodo: it keeps the SQLite database and login-cookie keys outside Komodo's Git checkout. After the first successful startup creates `Admin`, the bootstrap password can be removed from the Stack environment. Put an HTTPS reverse proxy in front of port `5802` before using bearer tokens outside a trusted network.
+- `OFFICEDAYS_ADMIN_PASSWORD`: a unique password of at least 12 characters for the initial `Admin` account.
+- `OFFICEDAYS_ADMIN_TIMEZONE`: your timezone, such as `Europe/Bucharest`.
+- `OFFICEDAYS_ADMIN_COUNTRY_CODE` and `OFFICEDAYS_ADMIN_COUNTRY_NAME`: your initial holiday calendar, such as `RO` and `Romania`.
+- `OFFICEDAYS_DATA_PATH`: leave as `./data` for a local installation, or choose a persistent folder of your own.
 
-### HTTPS deployment
+On Linux, set `OFFICEDAYS_UID` and `OFFICEDAYS_GID` to the values returned by `id -u` and `id -g`. The data folder must be writable by that user.
 
-Put the application behind an HTTPS reverse proxy before exposing it outside a trusted network. API bearer tokens are credentials and must never be transmitted over public plain HTTP.
+For testing API tokens over local HTTP, set `OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER=false`. Keep it `true` when using HTTPS, and use HTTPS for access over the internet.
 
-By default, the application rejects any bearer-authenticated request for which ASP.NET Core does not see HTTPS. It is normal for TLS to terminate at the reverse proxy and for the proxy-to-application connection to use HTTP. The proxy must preserve the original public scheme so the application sees the request as secure:
-
-```text
-Client --HTTPS--> Nginx --HTTP + X-Forwarded-Proto: https--> Office Days
-```
-
-For Nginx or OpenResty, the proxy location should include:
-
-```nginx
-proxy_set_header Host $host;
-proxy_set_header X-Forwarded-Proto $scheme;
-proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-proxy_set_header X-Real-IP $remote_addr;
-```
-
-ASP.NET Core trusts forwarded headers from loopback proxies by default. When Nginx and Office Days run in different containers, Nginx normally reaches the application from a Docker-network address rather than loopback. The Compose configuration therefore enables forwarded-header processing inside the container with:
-
-```yaml
-ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
-```
-
-Komodo's Stack Environment is supplied to Docker Compose as an environment file. Values placed there are available for Compose interpolation but are not automatically passed into the application container unless `compose.yaml` includes them under the service's `environment` section. After changing container environment configuration, use **Redeploy** rather than only restarting the existing container.
-
-`ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` accepts forwarded headers from any connecting proxy. Use it only when direct access to the application's HTTP port is restricted to trusted systems. If Nginx runs directly on the Docker host, the published port can be restricted to loopback:
-
-```yaml
-ports:
-  - "127.0.0.1:5802:5802"
-```
-
-If Nginx runs in a container, prefer attaching Nginx and Office Days to a shared Docker network and avoiding a publicly reachable application port. A stricter alternative is to configure the exact proxy address or Docker subnet as a trusted ASP.NET Core proxy/network.
-
-If an HTTPS request with a bearer token returns `400 HTTPS required`, verify that Nginx sends `X-Forwarded-Proto` and that forwarded-header processing is enabled inside the Office Days container.
-
-For an explicitly trusted internal-only HTTP network, the check can be disabled in `.env` with:
-
-```text
-OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER=false
-```
-
-Do not disable this for an internet-facing deployment. The browser session and antiforgery cookies are `HttpOnly`/`SameSite=Strict`; they automatically receive the `Secure` flag when the request is HTTPS.
-
-## Create a normal user
-
-Email is optional at registration: omit `email` or pass `null`. User responses (registration, login, and `/api/auth/me`) include the nullable `email` field. The Profile section lets signed-in users save or clear their email.
-
-`PUT /api/users/me` updates the authenticated user's email and returns the updated user. Send `{"email":"person@example.com"}` to set it, or `{"email":null}` to clear it. Empty/whitespace values also clear it; surrounding whitespace is trimmed. Supplied addresses must be valid and at most 254 characters. Cookie requests require the usual `X-CSRF-TOKEN`; bearer authentication is also supported. Email verification and password recovery are not implemented yet.
-
-From the sign-in page, choose **Create an account** (or open `/#register`). Enter a username, a password of at least 12 characters, timezone, and holiday calendar. Email is optional. After registration, sign in with the new account.
-
-`POST /api/users` is the self-registration endpoint. It is intentionally anonymous and always creates a normal user. Its DTO has no `isAdmin` field; extra JSON such as `"isAdmin": true` cannot grant administration.
+### 2. Start the app
 
 ```bash
-curl -X POST https://office.example.com/api/users \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "username": "andrew",
-    "password": "a-long-unique-password",
-    "timeZoneId": "Europe/Bucharest",
-    "countryCode": "RO"
-  }'
+docker compose up --build -d
 ```
 
-Usernames are unique without regard to case. The country code must identify an existing holiday jurisdiction. The per-user timezone determines the calendar date recorded by `POST /api/attendance`, regardless of the container's timezone. The user's holiday jurisdiction determines which bank holidays are excluded from status calculations.
+Open **http://localhost:5802** and sign in as **Admin** with the password you set. The database and initial administrator account are created on the first start.
 
-## Web UI
-
-The UI has separate, code-split routes:
-
-- `/`: month/year navigation, compliance widgets, attendance history and vacation add/remove
-- `/login` and `/register`: existing cookie sign-in and self-registration
-- `/profile`: optional email, team day, and attendance requirement history
-- `/reports`: personal monthly attendance reports and CSV export
-- `/tokens`: API token creation, one-time reveal, copying and revocation
-- `/admin`: admin-only jurisdiction management and bank holiday editing
-
-Old `/#login`, `/#register`, and `/dashboard` links remain supported. Direct links and browser refreshes are served by .NET's SPA fallback. Unknown API/asset URLs remain 404s.
-
-Component-specific CSS lives in each `.svelte` file’s scoped `<style>` block, alongside its TypeScript and markup. Shared `AuthCard` and `ItemList` components own their reusable styling. `src/OfficeDays.Web/src/app.css` contains only global element defaults and shared utilities; `src/lib/styles/theme.css` defines the light/dark theme tokens.
-
-The dashboard fetches summary, attendance and vacations independently. Summary rendering does not wait for the two lists, and dashboard visits do not request tokens or admin data. It preserves the existing green palette, light/dark theme and cards. Phones use stacked content; desktops use sidebar navigation and side-by-side attendance/vacation sections.
-
-Bank holiday edits remain local until **Save year**; navigation warns before discarding unsaved changes. Failed holiday reads cannot be saved as an empty replacement.
-
-Manual attendance uses idempotent `PUT /api/attendance/{yyyy-MM-dd}` and does not allow future dates. Shortcut attendance uses `POST /api/attendance` with no body by default. It also accepts an optional JSON body `{ "isManual": false }`; omitted `isManual` defaults to false. Send `{ "isManual": true }` to record today manually. PUT always creates manual entries. Both endpoints preserve the original source when the date already exists.
-
-Attendance responses include `isManual`. In the Office days list, automatic entries have green checkmarks and manual entries have yellow checkmarks, with source tooltips and accessible labels. The UI uses PUT, so all entries it creates are manual. The `AddAttendanceIsManual` migration marks all existing attendance as manual without changing their dates or timestamps.
-
-## API tokens
-
-Open **API tokens** in navigation, enter a friendly name and choose **Create token**. Copy the resulting token immediately: it is displayed once and cannot be recovered. The database stores only a SHA-256 hash of a cryptographically random 256-bit token.
-
-The token list shows creation, last-use, and revocation information. **Revoke** retains the audit record while immediately preventing further authentication. Users can only list, create, or revoke their own tokens.
-
-Relevant endpoints are:
-
-```text
-GET    /api/tokens
-POST   /api/tokens              { "name": "Andrew's iPhone" }
-DELETE /api/tokens/{id}         revokes; does not physically delete
-```
-
-Browser mutations use ASP.NET Core antiforgery protection. Bearer clients do not need an antiforgery token.
-
-## Holiday jurisdictions
-
-Holiday jurisdictions represent either a country-wide calendar (`RO`, `US`) or a regional calendar (`GB-ENG`, `GB-NIR`). Codes are normalised to uppercase. The common `UK` prefix is accepted and normalised to the ISO `GB` prefix.
-
-Jurisdiction reads are public so registration clients can discover valid country codes. Creating, renaming, and deleting jurisdictions requires an administrator:
-
-```text
-GET    /api/holiday-jurisdictions
-POST   /api/holiday-jurisdictions          { "code": "GB-NIR", "name": "Northern Ireland" }
-PUT    /api/holiday-jurisdictions/{code}   { "name": "Northern Ireland" }
-DELETE /api/holiday-jurisdictions/{code}
-```
-
-Codes are immutable and unique. A jurisdiction referenced by a user or bank holiday returns `409 Conflict` when deletion is attempted.
-
-## Bank holidays
-
-Sign in as `Admin`, choose a jurisdiction and year, edit the bank holiday list, and save. Holiday reads are public; only administrators can replace them.
-
-The API has full replacement semantics:
-
-```http
-GET /api/bank-holidays/RO/2026
-PUT /api/bank-holidays/RO/2026
-```
-
-Example request using an Admin-owned API token:
+To view startup messages:
 
 ```bash
-curl -X PUT https://office.example.com/api/bank-holidays/RO/2026 \
-  -H 'Authorization: Bearer ADMIN_API_TOKEN' \
-  -H 'Content-Type: application/json' \
-  -d '[
-    { "date": "2026-01-01", "name": "New Year’s Day" },
-    { "date": "2026-12-25", "name": "Christmas" }
-  ]'
+docker compose logs -f office-days
 ```
 
-After the request, those are exactly the holidays stored for Romania in 2026. Omitted dates are removed, dates must belong to the URL year, and duplicate dates are rejected. Different jurisdictions may configure the same date independently.
+### 3. Stop or update
 
-## Vacation
-
-Vacation ranges can be maintained on the dashboard or through:
-
-```text
-GET    /api/vacations
-POST   /api/vacations           { "from": "2026-09-21", "to": "2026-09-25" }
-DELETE /api/vacations/{id}
-```
-
-Users can access only their own ranges. Overlapping ranges, weekends, and bank-holiday overlap are deduplicated by the calculation, so eligible days are never subtracted twice.
-
-## iOS Shortcut setup
-
-1. Create a token named after the device and copy it.
-2. In Shortcuts, create a personal automation triggered by **Arrive** and select the office location.
-3. Add **Get Contents of URL**.
-4. Set the URL to `https://office.example.com/api/attendance`.
-5. Set the method to `POST`.
-6. Add the header `Authorization` with value `Bearer YOUR_TOKEN`.
-7. Do not add a request body, date, username, or user ID.
-
-Equivalent request:
+Stop the app:
 
 ```bash
-curl -X POST https://office.example.com/api/attendance \
-  -H 'Authorization: Bearer odt_your_token_here'
+docker compose down
 ```
 
-The token identifies the user. The server converts the current instant to that user's configured timezone and records the resulting local calendar date. `(UserId, Date)` has a unique database index, so repeated automation triggers still produce one record.
+To update a Git checkout to the latest version and rebuild:
 
-## Status and attendance API
-
-```text
-POST   /api/attendance                     record today in the user's timezone
-PUT    /api/attendance/{yyyy-MM-dd}        manually record today or a past day
-GET    /api/attendance?year=2026&month=9
-DELETE /api/attendance/{yyyy-MM-dd}
-GET    /api/status                         current month in the user's timezone
-GET    /api/status?year=2026&month=9       selected month
+```bash
+git pull
+docker compose up --build -d
 ```
 
-Status includes eligible working days, maximum WFH days, required office days, counted eligible office days, remaining days, and progress percentage.
+Your data lives in the configured data folder and survives container rebuilds. Back it up before updating; see [Backups and hosting](#backups-and-hosting).
 
-## Authentication and security model
+## Run locally without Docker
 
-- Web access uses ASP.NET Core encrypted cookie authentication, not a hand-built session mechanism.
-- Passwords are hashed and verified by ASP.NET Core's `PasswordHasher<TUser>`.
-- `IsAdmin` is a single boolean and claim; there is no generic role system.
-- Long-lived API tokens are random opaque secrets, not JWTs. Only their hashes are stored.
-- Revocation is checked on every bearer authentication and `LastUsedAt` is updated after successful use.
-- User-owned queries always scope records to the authenticated user ID.
-- Status calculations select bank holidays through the user's required holiday-jurisdiction foreign key.
-- Cookie-authenticated modifying operations require ASP.NET Core antiforgery tokens.
-- Production exception handling returns Problem Details without stack traces.
-- Application events use structured ASP.NET Core logging. Passwords and raw API tokens are never logged.
-
-## Request correlation
-
-Every response from the application includes `X-Correlation-ID`, including API errors, health checks, and UI assets. Send a single nonblank `X-Correlation-ID` request header to reuse your own ID; otherwise the application generates a new GUID. Blank or multiple header values generate a fresh ID rather than an ambiguous correlation value. Header names are case-insensitive.
-
-Request processing runs inside an `ILogger` scope with the structured property `CorrelationId`. JSON console logging includes scopes, so handler, database, and exception logs emitted inside that scope carry the same ID. A completion log records the HTTP method, path, status, and elapsed time without logging request bodies or query strings. Startup logs and hosting logs outside the request middleware scope do not have a request correlation ID. Distributed tracing IDs remain independent.
-
-```sh
-curl -i -H 'X-Correlation-ID: support-case-123' http://localhost:8080/api/version
-```
-
-## Tests
-
-Build and test the frontend before running the .NET suites (UI hosting tests use the actual generated assets):
+### 1. Install and build the web interface
 
 ```bash
 cd src/OfficeDays.Web
 npm ci
-npm run check
-npm test
 npm run build
 cd ../..
-dotnet test OfficeDays.slnx
 ```
 
-The UI unit/component suite covers timezone/month boundaries, session-expiry handling, CSRF token refresh, API errors, summary loading/progress, profile saves, attendance/vacation mutations, and independent dashboard loading. Browser tests exercise real registration, login, attendance/vacations, profile persistence, token revocation, admin editors and route protection in desktop Chromium, Android-sized Chromium and iPhone-sized WebKit:
+### 2. Start the app
+
+Replace the example password and adjust the timezone and holiday calendar as needed:
 
 ```bash
-cd src/OfficeDays.Web
-npx playwright install chromium webkit
-npm run test:e2e
+BootstrapAdmin__Password='replace-with-a-long-unique-password' \
+BootstrapAdmin__TimeZoneId='Europe/Bucharest' \
+BootstrapAdmin__CountryCode='RO' \
+BootstrapAdmin__CountryName='Romania' \
+Security__RequireHttpsForBearerTokens=false \
+dotnet run --project src/OfficeDays --launch-profile http
 ```
 
-Browser tests start their own .NET server on port 5187 with a unique temporary SQLite database and test-only bootstrap credentials. They do not use your normal application database. They capture desktop/mobile screenshots and assert there is no horizontal overflow. WebKit emulation is not a substitute for checking on a physical iPhone before deployment. A Chromium-only cold-cache test applies 150 ms latency, 200 KB/s download and 4× CPU slowdown, records time to summary data, and enforces a 100 KiB compressed initial JavaScript budget. The JSON report and screenshots are in the ignored `test-results` directory.
+Open **http://localhost:5200** and sign in as **Admin**. The HTTP token setting above is for local testing.
 
-The unit suite covers odd/even rule behaviour, weekdays and weekends, holidays, all vacation overlap cases, remaining-day clamping, ineligible attendance, leap years, and period boundaries.
+The app creates its SQLite database automatically. Bootstrap settings only create the administrator when the database has no users; changing the bootstrap password later does **not** reset an existing account's password.
 
-The integration suite uses `WebApplicationFactory`, the real middleware/endpoints, and a fresh migrated SQLite file per test. It covers registration/login, admin jurisdiction management, country-scoped holiday replacement, token creation/use/revocation and ownership isolation, idempotent bearer attendance and removal, vacation ownership/lifecycle, and persisted status calculations.
+If you change the web interface, rebuild it and restart the app. For live frontend development, keep the app running and run `npm run dev` from `src/OfficeDays.Web`, then open the address it prints.
 
-Feature tests mirror the application areas under `Features`. Cross-cutting startup, migration, and correlation-ID tests live under `Infrastructure`, security logging tests under `Security`, and shared fixtures and HTTP helpers under `Support`. Registration tests cover missing or duplicate handlers, invalid endpoint grouping, incomplete or duplicate endpoint mapping, and invalid dependency lifetimes. User tests cover omitted, null, empty, and whitespace-only optional email values as well as invalid nonempty addresses.
+## First-time setup
 
-Migration tests explicitly verify that startup applies every migration to a fresh database, that the migrated schema supports the current model, and that running initialisation again preserves bootstrap data. They also upgrade an older database and verify that existing data and migration defaults are preserved. Run just these tests with:
+1. **Set up bank holidays.** Sign in as Admin and open **Admin**. Add any country or regional calendars you need, then enter the bank holidays for the relevant year. Holiday dates are maintained by the administrator, so check them each year.
+2. **Create your everyday account.** From the sign-in page, choose **Create an account**. Pick a username, a password of at least 12 characters, your timezone, holiday calendar, and attendance percentage. Email is optional.
+3. **Add your vacation dates.** Use the dashboard so your monthly target reflects time off.
+4. **Make it yours.** In **Profile**, choose a team day and adjust your attendance requirements if needed.
 
-```bash
-dotnet test tests/OfficeDays.IntegrationTests --filter FullyQualifiedName~MigrationIntegrationTests
-```
+Your timezone determines what “today” means when a shortcut records attendance. Choose the timezone you want to use for tracking your office days.
 
-Rider-compatible manual API requests are available under `http/`. Select the `local` or `docker` HTTP Client environment and provide secrets through the ignored `http/http-client.private.env.json` file or the documented operating-system variables.
+Email verification and password recovery are not currently available.
 
-## Attendance reports
+## Everyday use
 
-Reports appears after Profile in the navigation. Select a year and an inclusive month range (default January–December), then generate or refresh the report. The page shows summary cards, recorded-versus-required office days, and a monthly table. Reports only include months on or after account registration, using the user's timezone; the entire registration month is included. Earlier ranges return an empty report rather than invented zero-attendance rows.
+The **dashboard** is the place to check your monthly target, record visits, manage vacations, and plan upcoming office days. Navigate between months to review earlier attendance or plan ahead. You can plan eligible dates from today onward; past plans cannot be changed.
 
-```text
-GET /api/reports
-GET /api/reports?year=2026&startMonth=6&endMonth=12
-```
+The calendar distinguishes recorded attendance, upcoming plans, missed plans, and time off. A team day highlight is just a reminder—it does not automatically plan or record a visit.
 
-The authenticated endpoint defaults to the user's current local year, January–December. Years are 1–9998, months are 1–12, and the ending month must not precede the starting month. Every query is scoped to the current user; there is no user-selection parameter. Responses include the requested range, username, timezone, registration month, local today, generation timestamp, summary, and monthly rows. Responses use `Cache-Control: no-store`.
+Open **Reports** to select a year and month range, generate a report, and export it as CSV. Reports start with the month you registered. The current month is shown as in progress, and future months are shown as not started. Refresh a report after changing attendance, vacations, or requirements to include those changes in the export.
 
-- Completed months show `targetMet` or `belowTarget`. Months with no recorded attendance count as zero.
-- The current month shows `inProgress` and its full-month requirement. It is excluded from completed-month target counts.
-- Future months show `notStarted`, eligible days, and their scheduled requirement. Recorded attendance and attendance percentages are null, and these months are excluded from summary totals.
-- Eligible days and required office days use the same calculator as the dashboard, including holidays, overlapping vacations, ceiling rounding, and historical percentages. Office days count only eligible recorded attendance, not plans.
-- Monthly attendance percentage is recorded office days divided by full-month eligible days. The summary percentage uses total office days divided by total eligible days across started months (including the current month's full eligible-day count); it is not an average of monthly percentages. No eligible days produces a null percentage, shown as “—”. A completed month with no eligible days has a zero target and is considered met.
+## iOS Shortcut setup
 
-Generation reads the user, requirements, holidays, vacation, and attendance within one database transaction, then calculates the report in memory. It does not persist a report or add a database table. The initial requirement still supports pre-registration dashboard calculations, but reports stop at the registration month.
+You will need an account, a personal API token, and an app address your iPhone can reach. For a hosted installation, use an HTTPS address such as `https://office.example.com`.
 
-CSV export happens in the browser from the exact report response currently displayed, without a second API request. It includes username, generation time, timezone, month, eligible days, required percentage/days, recorded days, attendance percentage, and result. Later edits only appear after Refresh report. Export is disabled during loading, for empty reports, or while unapplied filters differ from the displayed report. CSV fields are quoted, quotes/newlines are escaped, and formula-like usernames are neutralised for spreadsheet applications.
+**`localhost` on your iPhone refers to the phone itself.** When testing an app running on your computer, use the computer's local network address and make sure the phone can reach it. An arrival automation at the office also needs access to your server from there—for example, through your hosted address or VPN.
 
-## Planning office days
+### 1. Create a token
 
-The dashboard calendar follows the selected month. Tap an eligible date today or in the future to toggle an office plan; changes save immediately. Past plans cannot be changed. Weekends, vacations, and the user's jurisdiction holidays cannot receive plans. Failed saves revert the calendar and display an error.
+Sign in with your everyday account and open **API tokens**. Create a token with a name such as `My iPhone` and copy it immediately: the full token is only shown once.
 
-Green marks recorded attendance, yellow marks upcoming plans, red marks past plans with no attendance recorded, and blue marks vacation or bank holidays. Attendance takes precedence over time off, which takes precedence over planning. Today has a separate outline and label. Holiday names appear in tooltips and in the day details when selected. Colours are also explained by a legend and symbols.
+Treat it like a password. Do not share a shortcut containing your token. If it is lost or exposed, revoke it in the app and create a new one.
 
-The **Upcoming planned** card counts eligible plans from the user's local today through the end of the selected month, excluding recorded attendance. Plans remain stored after attendance or overlapping vacation is added. Planning does not change actual attendance totals or the remaining office requirement.
+### 2. Create and test the shortcut
 
-Authenticated API operations:
+In the iOS **Shortcuts** app, create a shortcut named **Record office day** and add **Get Contents of URL** with these settings:
 
-- `GET /api/planning?year=2026&month=10` returns `today`, `upcomingPlannedDays`, and `days`. Each day includes `date`, `isPlanned`, `isEligible`, `isAttended`, `isToday`, `canToggle`, `status`, `holidays`, and `isVacation`.
-- `PUT /api/planning/{yyyy-MM-dd}` adds a plan for an eligible date today or later.
-- `DELETE /api/planning/{yyyy-MM-dd}` removes a plan today or later, including a plan subsequently overlapped by time off. Past-date writes return a validation error.
+| Setting | Value |
+| --- | --- |
+| URL | `https://office.example.com/api/attendance` — replace the domain with your app's address |
+| Method | `POST` |
+| Header name | `Authorization` |
+| Header value | `Bearer YOUR_TOKEN` — replace `YOUR_TOKEN` with the token you copied |
+| Request body | Leave empty; no fields are needed |
 
-PUT and DELETE take no body and return 204, including repeated requests with the same eligible state. Cookie writes require the existing CSRF header. Requests operate only on the authenticated user's plans. The monthly status response also includes `upcomingPlannedDays`.
+Run the shortcut and allow access to your app's address if prompted. Open the dashboard and check that today's attendance appears. This test records a real office day; remove it from the dashboard if you are only trying the setup.
 
-The `AddOfficePlans` migration creates the separate table with a unique user/date index and runs automatically on startup. Existing attendance is not converted into plans.
+You do not need to send a date, username, or user ID. The token identifies your account, and the app records today in your configured timezone. Running it more than once on the same day will not create duplicate attendance.
 
-## Database migrations
+### 3. Run it when you arrive at the office
 
-Migrations are committed under `src/OfficeDays/Data/Migrations` and applied at startup. To create a migration after changing the model:
+Create a personal automation with **Arrive** as the trigger and choose your office location. Add **Run Shortcut** and select **Record office day**. Configure it to run without asking if you want automatic logging; the available controls depend on your iOS version. Apple's [personal automation guide](https://support.apple.com/guide/shortcuts/apd602971e63/ios) explains those settings.
 
-```bash
-dotnet ef migrations add NameOfChange \
-  --project src/OfficeDays \
-  --startup-project src/OfficeDays \
-  --output-dir Data/Migrations
-```
+You can also keep the shortcut manual and run it whenever you arrive. Check the dashboard after your first automated visit to confirm that the phone could reach the server.
 
-The `AddHolidayJurisdictions` migration assigns existing users and existing bank holidays to the seeded `RO` jurisdiction. This preserves the data from installations created before jurisdiction support was introduced.
+### If it does not work
 
-## Application version and health
+- **Cannot connect:** check the address and whether your phone can reach the server on its current network or VPN.
+- **Unauthorized:** check that the header contains `Bearer`, a space, and the complete token, and that the token has not been revoked.
+- **HTTPS required:** use an HTTPS address. For trusted local HTTP testing only, disable the bearer-token HTTPS requirement in your setup settings and restart the local app or recreate the container with `docker compose up -d`.
+- **Wrong day recorded:** check the account's configured timezone.
 
-`GET /api/version` returns the running application's embedded version, for example
-`{"version":"1.0.0+build.20260916.143025"}`. The footer fetches this endpoint on page
-load, including before login. The response disables caching.
+## Backups and hosting
 
-The release version is maintained in `src/OfficeDays/OfficeDays.csproj` (`Version`).
-Docker publish automatically appends a UTC build timestamp. Komodo needs no extra
-configuration: pulling master and building via Compose embeds the stamp in the image.
-This identifies a build, not a push counter: a cached image retains its version,
-a fresh rebuild gets a new stamp, and a rollback shows the older image's version.
-Local .NET builds display `1.0.0+local`. Change `Version` manually only when choosing
-a new release number. Refresh the page after deployment to see the running version.
+For Docker installations, the data folder contains the database and the keys used to keep browser logins valid. To make a simple, consistent backup, stop the app with `docker compose down`, copy the **entire data folder** somewhere safe, then start it again with `docker compose up -d`. Keep the backup private.
 
-Public monitoring endpoints:
+For access outside your local network, put the app behind an HTTPS reverse proxy and keep `OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER=true`. The proxy must pass the original scheme using `X-Forwarded-Proto`. The supplied Compose setup accepts forwarded headers, so restrict direct access to port `5802` to trusted systems or your proxy.
 
-- `GET /health/live`: HTTP 200 when the HTTP application is running, without querying SQLite.
-- `GET /health/ready`: queries the application's Users table; HTTP 200 when healthy,
-  HTTP 503 on database failure. JSON includes overall status and database status,
-  without exception details. Responses are not cached.
+Other settings, such as browser session lifetime, can be adjusted in [appsettings.Production.json](src/OfficeDays/appsettings.Production.json) for Docker. Keep passwords in `.env`. Once the initial Admin account exists, you can remove its bootstrap password from `.env`; it is ignored on subsequent starts while users exist.
 
-Startup database initialisation must finish before the server accepts requests.
-Readiness verifies a read query, not write access or every table in the schema.
-SQLite `.db-wal`, `.db-shm`, and `.db-journal` files are runtime database sidecars;
-they are excluded from Git and Docker build contexts. Do not delete them while the
-application is running, since the WAL can contain uncheck-pointed data.
+For custom integrations beyond Shortcuts, see the [HTTP request examples](http/README.md).
 
-## UI asset caching
+## License
 
-SvelteKit generates fingerprinted JavaScript/CSS URLs under `/_app/immutable/`. .NET snapshots the complete build at startup and serves those files with a one-year immutable cache policy. HTML and non-fingerprinted metadata use `Cache-Control: no-store`; deleted or unknown chunks return 404, never the app shell. Only public `/_app` assets are compressed with Brotli/gzip; authenticated API responses are excluded.
-
-The static frontend needs JavaScript before it fetches personalised summary data. This deployment deliberately has no SvelteKit server rendering. Keep the dashboard's initial dependencies small and measure a fresh authenticated mobile visit through to actual summary values. Browser tests confirm that delayed lists do not delay the summary; local timing is not a guarantee of homelab or mobile-network performance.
-
-Keep Komodo's **Build Images → Pre Build Images** enabled so deployments rebuild
-the application from the selected Git branch. Save and deploy after merging changes.
-Reverse proxies should respect the application's HTML cache headers; if a proxy
-already cached old HTML or overrides `no-store`, purge that HTML cache once and
-remove the override. Old cached unversioned CSS/JS are bypassed by the new HTML.
+[MIT](LICENSE)

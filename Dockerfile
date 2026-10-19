@@ -8,7 +8,7 @@ RUN npm run check && npm run test && npm run build
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /source
 
-COPY OfficeDays.sln ./
+COPY OfficeDays.slnx ./
 COPY src/OfficeDays/OfficeDays.csproj src/OfficeDays/
 COPY tests/OfficeDays.UnitTests/OfficeDays.UnitTests.csproj tests/OfficeDays.UnitTests/
 COPY tests/OfficeDays.IntegrationTests/OfficeDays.IntegrationTests.csproj tests/OfficeDays.IntegrationTests/
