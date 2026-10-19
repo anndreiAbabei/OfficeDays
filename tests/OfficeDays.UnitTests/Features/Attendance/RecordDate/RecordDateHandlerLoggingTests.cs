@@ -1,4 +1,3 @@
-using System.Globalization;
 using Microsoft.Extensions.Logging;
 using OfficeDays.Features.Attendance.RecordDate;
 using OfficeDays.UnitTests.Testing;
@@ -19,7 +18,7 @@ public sealed class RecordDateHandlerLoggingTests
         logger.LogDuplicatedEntryRequest(expectedUserId, expectedDate);
 
         // assert
-        logger.Assert(LogLevel.Debug, $"Ignored duplicate office attendance for user {expectedUserId} on {expectedDate.ToString(CultureInfo.InvariantCulture)}");
+        logger.Assert(LogLevel.Debug, $"Ignored duplicate office attendance for user {expectedUserId} on {expectedDate}");
     }
     
     [Fact]
@@ -34,7 +33,7 @@ public sealed class RecordDateHandlerLoggingTests
         logger.LogEntryCreated(expectedUserId, expectedDate);
 
         // assert
-        logger.Assert(LogLevel.Debug, $"Recorded office attendance for user {expectedUserId} on {expectedDate.ToString(CultureInfo.InvariantCulture)}");
+        logger.Assert(LogLevel.Information, $"Recorded office attendance for user {expectedUserId} on {expectedDate}");
     }
     
     [Fact]
@@ -49,6 +48,6 @@ public sealed class RecordDateHandlerLoggingTests
         logger.LogResolvedConcurrentUpdate(expectedUserId, expectedDate);
 
         // assert
-        logger.Assert(LogLevel.Debug, $"Resolved concurrent duplicate attendance for user {expectedUserId} on {expectedDate.ToString(CultureInfo.InvariantCulture)}");
+        logger.Assert(LogLevel.Debug, $"Resolved concurrent duplicate attendance for user {expectedUserId} on {expectedDate}");
     }
 }

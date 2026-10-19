@@ -59,6 +59,6 @@ public sealed class GetReportTests
         logger.LogUserNotFound(id);
         logger.Assert(LogLevel.Warning, $"User {id} was not found");
         logger.LogReportGenerated(id, 2026, 1, 12, 7);
-        logger.Assert(LogLevel.Information, $"Generated attendance report for user {id}, year 2026, months 1 to 12, with 7 rows");
+        logger.Assert(LogLevel.Information, $"Generated attendance report for user {id}, year {2026}, months {1} to {12}, with {7} rows");
     }
 }

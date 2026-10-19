@@ -1,6 +1,6 @@
-using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
+using System.Globalization;
+using System.Text;
 using Microsoft.Extensions.Logging;
 
 namespace OfficeDays.UnitTests.Testing;
@@ -22,40 +22,71 @@ public sealed class FakeLogger<T> : ILogger<T>
     public bool IsEnabled(LogLevel logLevel) => true;
     public IDisposable BeginScope<TState>(TState state) where TState : notnull => new Disposable();
     
-    // [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local", Justification = "Used for assertion")]
-    // [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Global", Justification = "Used for assertion")]
-    // public void Assert(LogLevel logLevel, string message, Exception? exception = null)
-    // {
-    //     Xunit.Assert.Contains(Logs, li => li.Level == logLevel &&
-    //                                       li.Message == message &&
-    //                                       (exception == null || li.Exception == exception));
-    // }
-    
     [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local", Justification = "Used for assertion")]
     [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Global", Justification = "Used for assertion")]
     public void Assert(LogLevel logLevel, FormattableString message, Exception? exception = null)
     {
-        var args = message.GetArguments();
+        ArgumentNullException.ThrowIfNull(message);
+
         foreach (var logItem in Logs)
         {
-            if (logItem.Level != logLevel)
-                continue;
-            
-            if(exception != logItem.Exception)
+            if (logItem.Level != logLevel || logItem.Exception != exception)
                 continue;
 
-            var i = 0;
-            
-            foreach (var value in logItem.Values)
+            if (!logItem.Values.TryGetValue("{OriginalFormat}", out var originalFormat) ||
+                originalFormat is not string template)
+                continue;
+
+            var format = new StringBuilder();
+            var arguments = new List<object?>();
+            var validTemplate = true;
+            for (var i = 0; i < template.Length; i++)
             {
-                if (value.Value.Equals(args[i]))
-                    return;
-                
-                i++;
+                var character = template[i];
+                // Keep escaped braces intact in the composite format.
+                if ((character == '{' || character == '}') &&
+                    i + 1 < template.Length && template[i + 1] == character)
+                {
+                    format.Append(character).Append(character);
+                    i++;
+                    continue;
+                }
+
+                if (character != '{')
+                {
+                    format.Append(character);
+                    continue;
+                }
+
+                var end = template.IndexOf('}', i + 1);
+                if (end < 0)
+                {
+                    validTemplate = false;
+                    break;
+                }
+
+                var placeholder = template[(i + 1)..end];
+                var suffix = placeholder.IndexOfAny([',', ':']);
+                var name = suffix < 0 ? placeholder : placeholder[..suffix];
+                if (!logItem.Values.TryGetValue(name, out var value))
+                {
+                    validTemplate = false;
+                    break;
+                }
+
+                format.Append('{').Append(arguments.Count.ToString(CultureInfo.InvariantCulture));
+                if (suffix >= 0)
+                    format.Append(placeholder[suffix..]);
+                format.Append('}');
+                arguments.Add(value);
+                i = end;
             }
+
+            if (validTemplate && format.ToString() == message.Format && arguments.SequenceEqual(message.GetArguments()))
+                return;
         }
-        
-        Xunit.Assert.Fail($"{message.ToString()} was not found in the logs collection");
+
+        Xunit.Assert.Fail($"Expected {logLevel} log with format '{message.Format}' and matching arguments and exception was not found.");
     }
 
     private static Dictionary<string, object> CreateValues<TState>(TState state)
