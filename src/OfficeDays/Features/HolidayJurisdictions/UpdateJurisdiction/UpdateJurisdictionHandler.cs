@@ -31,7 +31,7 @@ public sealed class UpdateJurisdictionHandler : IRequestHandler<UpdateJurisdicti
             return Results.NotFound();
         }
 
-        jurisdiction.Name = request.Name!.Trim();
+        jurisdiction.Name = request.Name.Trim();
         
         await _dbContext.SaveChangesAsync(cancellationToken);
         

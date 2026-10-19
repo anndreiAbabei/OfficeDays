@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -13,6 +14,7 @@ using static OfficeDays.IntegrationTests.Support.ApiTestHelpers;
 
 namespace OfficeDays.IntegrationTests.Features.Users;
 
+[SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local", Justification = "It's a test")]
 public sealed class RequirementsIntegrationTests
 {
     private const string Path = "/api/users/me/requirements";

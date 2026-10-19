@@ -15,7 +15,7 @@ public sealed class CreateUserRequestValidator : AbstractValidator<CreateUserReq
 
 public sealed class CreateUserRequestBodyValidator : AbstractValidator<CreateUserRequestBody>
 {
-    public CreateUserRequestBodyValidator(IUserDateService dates, IUserService userService)
+    public CreateUserRequestBodyValidator(IUserDateService dates)
     {
         RuleFor(input => input.Username)
             .NotEmpty()

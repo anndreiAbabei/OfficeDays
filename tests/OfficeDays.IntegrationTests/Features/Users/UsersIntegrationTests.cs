@@ -77,7 +77,7 @@ public sealed class UsersIntegrationTests
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             Assert.Equal("otheruser@example.com", (await db.Users.SingleAsync(x => x.Username == "otheruser")).Email);
         }
-        foreach (var empty in new string?[] { null, "", "   " })
+        foreach (var empty in new[] { null, "", "   " })
         {
             (await PutJson(client, "/api/users/me", new { email = "reset@example.com" }, csrf)).EnsureSuccessStatusCode();
             var cleared = await PutJson(client, "/api/users/me", new { email = empty }, csrf);

@@ -54,8 +54,8 @@ public sealed class PlanningIntegrationTests
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var user = await db.Users.SingleAsync(x => x.Username == "eligibility");
         var future = new DateOnly(2099, 9, 16);
-        db.OfficePlans.Add(new OfficePlan { Id = Guid.NewGuid(), UserId = user.Id, Date = new(2099, 9, 14), CreatedAt = DateTimeOffset.UtcNow });
-        db.BankHolidays.Add(new BankHoliday { Id = Guid.NewGuid(), HolidayJurisdictionId = user.HolidayJurisdictionId, Date = new(2099, 9, 17), Name = "Test holiday" });
+        db.OfficePlans.Add(new OfficePlan { Id = Guid.NewGuid(), UserId = user.Id, Date = new DateOnly(2099, 9, 14), CreatedAt = DateTimeOffset.UtcNow });
+        db.BankHolidays.Add(new BankHoliday { Id = Guid.NewGuid(), HolidayJurisdictionId = user.HolidayJurisdictionId, Date = new DateOnly(2099, 9, 17), Name = "Test holiday" });
         await db.SaveChangesAsync();
         Assert.Equal(HttpStatusCode.BadRequest, (await client.PutAsync("/api/planning/2099-09-14", null)).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await client.DeleteAsync("/api/planning/2099-09-14")).StatusCode);

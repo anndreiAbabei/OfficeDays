@@ -21,9 +21,7 @@ public sealed class OfficeDaysFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-        // Keep console output quiet while preserving logs captured by logging tests.
-        builder.ConfigureLogging(logging =>
-            logging.AddFilter<ConsoleLoggerProvider>(level => level >= LogLevel.Critical));
+        builder.ConfigureLogging(logging => logging.AddFilter<ConsoleLoggerProvider>(level => level >= LogLevel.Critical));
         builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
             new Dictionary<string, string?>
             {
@@ -44,7 +42,9 @@ public sealed class OfficeDaysFactory : WebApplicationFactory<Program>
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        if (disposing && File.Exists(_databasePath)) File.Delete(_databasePath);
+        
+        if (disposing && File.Exists(_databasePath)) 
+            File.Delete(_databasePath);
     }
 }
 

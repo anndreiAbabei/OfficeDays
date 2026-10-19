@@ -5,8 +5,10 @@ public readonly record struct CalculationPeriod(DateOnly Start, DateOnly End, st
     public static CalculationPeriod ForMonth(int year, int month)
     {
         var start = new DateOnly(year, month, 1);
+        var end = new DateOnly(year, month, DateTime.DaysInMonth(year, month));
+        var lbl = $"{year:D4}-{month:D2}";
 
-        return new CalculationPeriod(start, new DateOnly(year, month, DateTime.DaysInMonth(year, month)), $"{year:D4}-{month:D2}");
+        return new CalculationPeriod(start, end, lbl);
     }
 }
 

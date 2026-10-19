@@ -26,8 +26,8 @@ public static class PlanningCalculator
             var isAttended = attended.Contains(date);
             var status = isAttended ? "attended" : vacation || names.Length > 0 ? "holiday"
                 : isPlanned ? date < today ? "missed" : "planned" : "none";
-            days.Add(new(date, isPlanned, eligible, isAttended, date == today,
-                date >= today && eligible, status, names, vacation));
+            days.Add(new PlanningDay(date, isPlanned, eligible, isAttended, date == today,
+                                     date >= today && eligible, status, names, vacation));
         }
         return days;
     }

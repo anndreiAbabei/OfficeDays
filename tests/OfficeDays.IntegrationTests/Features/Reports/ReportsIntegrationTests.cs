@@ -38,13 +38,13 @@ public sealed class ReportsIntegrationTests
             var monday = Enumerable.Range(1, 7).Select(day => new DateOnly(2099, 6, day)).First(day => day.DayOfWeek == DayOfWeek.Monday);
             db.BankHolidays.Add(new BankHoliday { Id = Guid.NewGuid(), HolidayJurisdictionId = jurisdiction, Date = monday, Name = "Test holiday" });
             db.Vacations.Add(new Vacation { Id = Guid.NewGuid(), UserId = userId, From = monday, To = monday.AddDays(1) });
-            db.Vacations.Add(new Vacation { Id = Guid.NewGuid(), UserId = otherId, From = new(2099, 6, 1), To = new(2099, 6, 30) });
+            db.Vacations.Add(new Vacation { Id = Guid.NewGuid(), UserId = otherId, From = new DateOnly(2099, 6, 1), To = new DateOnly(2099, 6, 30) });
             db.Attendances.AddRange(new OfficeDays.Domain.Attendance { Id = Guid.NewGuid(), UserId = userId, Date = monday },
                 new OfficeDays.Domain.Attendance { Id = Guid.NewGuid(), UserId = userId, Date = monday.AddDays(2) },
                 new OfficeDays.Domain.Attendance { Id = Guid.NewGuid(), UserId = otherId, Date = monday.AddDays(3) });
             db.UserRequiredOfficePercentages.AddRange(
-                new UserRequiredOfficePercentage { Id = Guid.NewGuid(), UserId = userId, StartingFrom = new(2099, 7, 1), RequiredOfficePercentage = 100 },
-                new UserRequiredOfficePercentage { Id = Guid.NewGuid(), UserId = userId, StartingFrom = new(2099, 12, 1), RequiredOfficePercentage = 60 });
+                new UserRequiredOfficePercentage { Id = Guid.NewGuid(), UserId = userId, StartingFrom = new DateOnly(2099, 7, 1), RequiredOfficePercentage = 100 },
+                new UserRequiredOfficePercentage { Id = Guid.NewGuid(), UserId = userId, StartingFrom = new DateOnly(2099, 12, 1), RequiredOfficePercentage = 60 });
             await db.SaveChangesAsync();
         }
         await Login(client, "reportuser", "Normal-user-password!");

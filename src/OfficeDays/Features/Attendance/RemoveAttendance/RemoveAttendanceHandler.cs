@@ -12,7 +12,7 @@ public sealed class RemoveAttendanceHandler : IRequestHandler<RemoveAttendanceRe
     private readonly ICurrentUser _currentUser;
     private readonly ILogger<RemoveAttendanceHandler> _logger;
 
-    private static readonly Func<AppDbContext, Guid, DateOnly, CancellationToken, Task<Domain.Attendance?>> GetAttendanceQuery =
+    private static readonly Func<AppDbContext, Guid, DateOnly, CancellationToken, Task<Domain.Attendance?>> _getAttendanceQuery =
         EF.CompileAsyncQuery((AppDbContext ctx, Guid userId, DateOnly date, CancellationToken ct) => ctx.Attendances.SingleOrDefault(x => x.UserId == userId && x.Date == date));
 
     public RemoveAttendanceHandler(AppDbContext dbContext,
@@ -28,7 +28,7 @@ public sealed class RemoveAttendanceHandler : IRequestHandler<RemoveAttendanceRe
     {
         var userId = _currentUser.Id;
         var attendanceDate = request.Date;
-        var row = await GetAttendanceQuery(_dbContext, userId, attendanceDate, cancellationToken);
+        var row = await _getAttendanceQuery(_dbContext, userId, attendanceDate, cancellationToken);
 
         if (row is null)
             return Results.NotFound();

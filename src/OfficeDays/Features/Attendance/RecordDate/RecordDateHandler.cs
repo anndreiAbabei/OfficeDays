@@ -14,7 +14,7 @@ public sealed class RecordDateHandler : IRequestHandler<RecordDateRequest>
     private readonly TimeProvider _clock;
     private readonly ILogger<RecordDateHandler> _logger;
 
-    private static readonly Func<AppDbContext, Guid, DateOnly, CancellationToken, Task<Domain.Attendance?>> GetAttendanceQuery =
+    private static readonly Func<AppDbContext, Guid, DateOnly, CancellationToken, Task<Domain.Attendance?>> _getAttendanceQuery =
         EF.CompileAsyncQuery((AppDbContext ctx, Guid userId, DateOnly date, CancellationToken ct) => ctx.Attendances.SingleOrDefault(x => x.UserId == userId && x.Date == date));
 
     public RecordDateHandler(AppDbContext dbContext,
@@ -37,7 +37,7 @@ public sealed class RecordDateHandler : IRequestHandler<RecordDateRequest>
             return Results.NotFound();
 
         var date = request.Date;
-        var existing = await GetAttendanceQuery(_dbContext, userId, date, cancellationToken);
+        var existing = await _getAttendanceQuery(_dbContext, userId, date, cancellationToken);
 
         if (existing is not null)
         {
@@ -66,7 +66,7 @@ public sealed class RecordDateHandler : IRequestHandler<RecordDateRequest>
             when (exception.IsUniqueViolation())
         {
             _dbContext.Entry(row).State = EntityState.Detached;
-            existing = await GetAttendanceQuery(_dbContext, userId, date, cancellationToken);
+            existing = await _getAttendanceQuery(_dbContext, userId, date, cancellationToken);
 
             _logger.LogResolvedConcurrentUpdate(userId, date);
 

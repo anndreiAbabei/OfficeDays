@@ -75,8 +75,8 @@ public static class ServiceRegistration
 
     private static void AddDatabase(WebApplicationBuilder dbBuilder)
     {
-        dbBuilder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(dbBuilder.Configuration.GetConnectionString("Default") ??
-                                                                                   "Data Source=officedays.db"));
+        dbBuilder.Services.AddDbContext<IAppDbContext, AppDbContext>(options => options.UseSqlite(dbBuilder.Configuration.GetConnectionString("Default") ??
+                                                                                                   "Data Source=officedays.db"));
         dbBuilder.Services.AddSingleton<DatabaseInitializer>();
     }
 

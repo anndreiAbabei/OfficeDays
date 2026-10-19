@@ -5,9 +5,9 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/docs/">
+    <File Path="Directory.Build.props" />
     <File Path="README.md" />
     <File Path="rebuild.sh" />
-    <File Path="todo.md" />
   </Folder>
   <Folder Name="/docs/http/">
     <File Path="http\attendance.http" />

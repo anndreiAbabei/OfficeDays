@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.HttpOverrides;
 using OfficeDays.Configuration;
 using OfficeDays.Data;
@@ -34,9 +35,12 @@ await app.Services.GetRequiredService<DatabaseInitializer>()
                   .InitializeAsync(app.Lifetime.ApplicationStopping);
 
 await app.RunAsync();
+
+// ReSharper disable once RedundantJumpStatement -- it's and end marker
 return;
 
 namespace OfficeDays
 {
+    [SuppressMessage("ReSharper", "PartialTypeWithSinglePart", Justification = "Used for integration testing")]
     public partial class Program;
 }

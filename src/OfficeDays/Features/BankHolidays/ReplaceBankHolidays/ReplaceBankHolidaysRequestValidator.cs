@@ -24,10 +24,11 @@ public sealed class ReplaceBankHolidaysRequestValidator : AbstractValidator<Repl
                              .SetValidator(bankHolidayItemValidator))
             .Custom((input, context) =>
             {
-                if (input.Any(item => item.Date.Year != context.InstanceToValidate.Year))
+                var items = input as IList<BankHolidayItem> ?? [.. input];
+                if (items.Any(item => item.Date.Year != context.InstanceToValidate.Year))
                     context.AddFailure("date", "Every holiday date must belong to the year in the URL.");
 
-                if (input.GroupBy(item => item.Date).Any(group => group.Count() > 1))
+                if (items.GroupBy(item => item.Date).Any(group => group.Count() > 1))
                     context.AddFailure("date", "Holiday dates must be unique within the replacement payload.");
             });
     }

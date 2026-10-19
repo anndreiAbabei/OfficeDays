@@ -8,7 +8,7 @@ namespace OfficeDays.IntegrationTests.Support;
 
 internal static class ApiTestHelpers
 {
-    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions _json = new JsonSerializerOptions(JsonSerializerDefaults.Web);
 
     public static async Task CreateUser(HttpClient client, string username, string countryCode = "RO")
     {
@@ -46,5 +46,5 @@ internal static class ApiTestHelpers
         return client.SendAsync(request);
     }
     public static async Task<JsonElement> Read(HttpResponseMessage response) =>
-        JsonSerializer.Deserialize<JsonElement>(await response.Content.ReadAsStringAsync(), Json);
+        JsonSerializer.Deserialize<JsonElement>(await response.Content.ReadAsStringAsync(), _json);
 }
