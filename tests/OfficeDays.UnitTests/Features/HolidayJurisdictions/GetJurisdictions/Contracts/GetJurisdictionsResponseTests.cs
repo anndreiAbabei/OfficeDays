@@ -40,7 +40,7 @@ public sealed class GetJurisdictionsResponseTests
         try
         {
             while (enumerator.MoveNext())
-                result.Add((GetJurisdictionsItem)enumerator.Current);
+                result.Add((GetJurisdictionsItem)enumerator.Current!);
         }
         finally
         {

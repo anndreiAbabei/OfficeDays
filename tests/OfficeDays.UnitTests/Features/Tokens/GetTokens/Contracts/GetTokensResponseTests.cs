@@ -48,7 +48,7 @@ public sealed class GetTokensResponseTests
         try
         {
             while (enumerator.MoveNext())
-                result.Add((GetTokensItem)enumerator.Current);
+                result.Add((GetTokensItem)enumerator.Current!);
         }
         finally
         {

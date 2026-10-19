@@ -85,9 +85,9 @@ public sealed class CorrelationIdIntegrationTests
     public async Task Concurrent_requests_have_isolated_log_scopes()
     {
         var logs = new CapturingLoggerProvider();
-        using var original = new OfficeDaysFactory();
-        using var factory = original.WithWebHostBuilder(builder =>
-            builder.ConfigureLogging(logging => logging.AddProvider(logs)));
+        await using var original = new OfficeDaysFactory();
+        await using var factory = original.WithWebHostBuilder(builder =>
+                                                                  builder.ConfigureLogging(logging => logging.AddProvider(logs)));
         using var client = factory.CreateClient();
         var ids = Enumerable.Range(0, 8).Select(index => $"parallel-{index}").ToArray();
 
@@ -95,6 +95,7 @@ public sealed class CorrelationIdIntegrationTests
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, "/api/version");
             request.Headers.Add(CorrelationIdMiddleware.HeaderName, id);
+            // ReSharper disable once AccessToDisposedClosure -- safe
             using var response = await client.SendAsync(request);
             Assert.Equal(id, Assert.Single(response.Headers.GetValues(CorrelationIdMiddleware.HeaderName)));
         }));
@@ -118,14 +119,14 @@ public sealed class CorrelationIdIntegrationTests
     private sealed class CapturingLoggerProvider : ILoggerProvider, ISupportExternalScope
     {
         private IExternalScopeProvider _scopes = new LoggerExternalScopeProvider();
-        public ConcurrentQueue<LogEntry> Entries { get; } = new();
+        public ConcurrentQueue<LogEntry> Entries { get; } = new ConcurrentQueue<LogEntry>();
         public ILogger CreateLogger(string categoryName) => new CapturingLogger(this, categoryName);
         public void SetScopeProvider(IExternalScopeProvider scopeProvider) => _scopes = scopeProvider;
         public void Dispose() { }
 
         private sealed class CapturingLogger(CapturingLoggerProvider provider, string category) : ILogger
         {
-            public IDisposable? BeginScope<TState>(TState state) where TState : notnull => provider._scopes.Push(state);
+            public IDisposable BeginScope<TState>(TState state) where TState : notnull => provider._scopes.Push(state);
             public bool IsEnabled(LogLevel logLevel) => true;
 
             public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,

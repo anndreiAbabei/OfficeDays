@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,7 @@ namespace OfficeDays.UnitTests.Features.Operations;
 public sealed class DatabaseHealthCheckTests
 {
     [Fact]
+    [SuppressMessage("ReSharper", "AccessToDisposedClosure", Justification = "Safe")]
     public async Task Should_ReturnHealthy_WhenDatabaseQuerySucceeds()
     {
         // arrange
@@ -33,6 +35,7 @@ public sealed class DatabaseHealthCheckTests
     }
 
     [Fact]
+    [SuppressMessage("ReSharper", "AccessToDisposedClosure", Justification = "Safe")]
     public async Task Should_PropagateDatabaseFailure()
     {
         // arrange
@@ -51,6 +54,7 @@ public sealed class DatabaseHealthCheckTests
     }
 
     [Fact]
+    [SuppressMessage("ReSharper", "AccessToDisposedClosure", Justification = "Safe")]
     public async Task Should_HonorCancellation()
     {
         // arrange

@@ -12,6 +12,7 @@ public sealed class UiContent
 
     public UiContent(IWebHostEnvironment environment)
     {
+        // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract -- in unit testing might not work
         var root = environment.WebRootPath ?? Path.Combine(environment.ContentRootPath, "wwwroot");
         var indexPath = Path.Combine(root, "index.html");
         if (!File.Exists(indexPath))

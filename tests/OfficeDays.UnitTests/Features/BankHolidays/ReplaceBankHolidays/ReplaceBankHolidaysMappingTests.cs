@@ -1,9 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
 using OfficeDays.Domain;
 using OfficeDays.Features.BankHolidays.ReplaceBankHolidays.Contracts;
 using OfficeDays.Features.BankHolidays.ReplaceBankHolidays;
 
 namespace OfficeDays.UnitTests.Features.BankHolidays.ReplaceBankHolidays;
 
+[SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local")]
 public sealed class ReplaceBankHolidaysMappingTests
 {
     [Fact]

@@ -61,8 +61,8 @@ public sealed class GetReportMappingTests
         // arrange
         AttendanceReportMonth[] months =
         [
-            new(5, 21, 50, 11, 12, 57.14m, ReportMonthState.TargetMet),
-            new(6, 20, 60, 12, null, null, ReportMonthState.NotStarted)
+            new AttendanceReportMonth(5, 21, 50, 11, 12, 57.14m, ReportMonthState.TargetMet),
+            new AttendanceReportMonth(6, 20, 60, 12, null, null, ReportMonthState.NotStarted)
         ];
         var sut = new AttendanceReport(2026, 5, 6, "alice", "Europe/Bucharest", new DateOnly(2025, 1, 1), new DateOnly(2026, 5, 31), new DateTimeOffset(2026, 5, 31, 9, 0, 0, TimeSpan.Zero), months, 12, 57.14m, 1, 1);
 

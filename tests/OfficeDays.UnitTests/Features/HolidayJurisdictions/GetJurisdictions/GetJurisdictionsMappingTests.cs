@@ -1,8 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using OfficeDays.Domain;
 using OfficeDays.Features.HolidayJurisdictions.GetJurisdictions;
 
 namespace OfficeDays.UnitTests.Features.HolidayJurisdictions.GetJurisdictions;
 
+[SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local")]
 public sealed class GetJurisdictionsMappingTests
 {
     [Fact]

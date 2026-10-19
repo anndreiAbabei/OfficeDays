@@ -13,7 +13,7 @@ public sealed class GetAttendanceHandler : IRequestHandler<GetAttendanceRequest>
     private readonly ICurrentUser _currentUser;
     private readonly ILogger<GetAttendanceHandler> _logger;
 
-    private static readonly Func<AppDbContext, Guid, DateOnly, DateOnly, IAsyncEnumerable<Domain.Attendance>> GetAttendanceQuery =
+    private static readonly Func<AppDbContext, Guid, DateOnly, DateOnly, IAsyncEnumerable<Domain.Attendance>> _getAttendanceQuery =
         EF.CompileAsyncQuery<AppDbContext, Guid, DateOnly, DateOnly, Domain.Attendance>(
             (ctx, userId, start, end) => ctx.Attendances
                                             .AsNoTracking()
@@ -39,7 +39,7 @@ public sealed class GetAttendanceHandler : IRequestHandler<GetAttendanceRequest>
         if (year.HasValue && month.HasValue)
             period = CalculationPeriod.ForMonth(year.Value, month.Value);
 
-        var query = GetAttendanceQuery(_dbContext, 
+        var query = _getAttendanceQuery(_dbContext, 
                                        userId, 
                                        period?.Start ?? DateOnly.MinValue, 
                                        period?.End ?? DateOnly.MaxValue);

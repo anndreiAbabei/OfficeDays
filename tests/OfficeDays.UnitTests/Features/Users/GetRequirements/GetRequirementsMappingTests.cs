@@ -47,8 +47,8 @@ public sealed class GetRequirementsMappingTests
         dates.Today(sut).Returns(expectedToday);
         UserRequiredOfficePercentage[] requirements =
         [
-            new() { Id = Guid.NewGuid(), StartingFrom = expectedToday, RequiredOfficePercentage = 65 },
-            new() { Id = Guid.NewGuid(), StartingFrom = DateOnly.MinValue, RequiredOfficePercentage = 50 }
+            new UserRequiredOfficePercentage { Id = Guid.NewGuid(), StartingFrom = expectedToday, RequiredOfficePercentage = 65 },
+            new UserRequiredOfficePercentage { Id = Guid.NewGuid(), StartingFrom = DateOnly.MinValue, RequiredOfficePercentage = 50 }
         ];
 
         // act

@@ -1,8 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Xunit.Sdk;
 
 namespace OfficeDays.UnitTests.Testing;
 
+[SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "Is for testing")]
+[SuppressMessage("ReSharper", "StringLiteralAsInterpolationArgument", Justification = "That's the subject of the test")]
 public sealed class FakeLoggerTests
 {
     [Fact]
@@ -13,11 +16,11 @@ public sealed class FakeLoggerTests
         logger.LogInformation("User {UserId} logged in the system {Count} times", userId, 3);
 
         logger.Assert(LogLevel.Information, $"User {userId} logged in the system {3} times");
-        Xunit.Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Information, $"User {userId} logged in the system {4} times"));
-        Xunit.Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Information, $"User {userId} logged out of the system {3} times"));
-        Xunit.Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Information, $"User {userId} logged in the system {"3"} times"));
-        Xunit.Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Information, $"User {userId} logged in the system 3 times"));
-        Xunit.Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Warning, $"User {userId} logged in the system {3} times"));
+        Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Information, $"User {userId} logged in the system {4} times"));
+        Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Information, $"User {userId} logged out of the system {3} times"));
+        Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Information, $"User {userId} logged in the system {"3"} times"));
+        Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Information, $"User {userId} logged in the system 3 times"));
+        Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Warning, $"User {userId} logged in the system {3} times"));
     }
 
     [Fact]
@@ -29,8 +32,8 @@ public sealed class FakeLoggerTests
         logger.LogError(exception, "Failed for {User}", user);
 
         logger.Assert(LogLevel.Error, $"Failed for {user}", exception);
-        Xunit.Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Error, $"Failed for {user}"));
-        Xunit.Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Error, $"Failed for {user}", new InvalidOperationException("Failed")));
+        Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Error, $"Failed for {user}"));
+        Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Error, $"Failed for {user}", new InvalidOperationException("Failed")));
     }
 
     [Fact]
@@ -40,7 +43,7 @@ public sealed class FakeLoggerTests
         logger.LogInformation("Value {{{Value,8:N2}}}", 12.5m);
 
         logger.Assert(LogLevel.Information, $"Value {{{12.5m,8:N2}}}");
-        Xunit.Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Information, $"Value {{{12.5m:N2}}}"));
+        Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Information, $"Value {{{12.5m:N2}}}"));
     }
 
     [Fact]
@@ -51,7 +54,7 @@ public sealed class FakeLoggerTests
         logger.LogInformation("Finished");
 
         logger.Assert(LogLevel.Information, $"Finished");
-        Xunit.Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Information, $"Missing"));
+        Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Information, $"Missing"));
     }
 
     [Fact]
@@ -60,6 +63,6 @@ public sealed class FakeLoggerTests
         var logger = new FakeLogger<FakeLoggerTests>();
         logger.LogInformation("User 123 logged in");
 
-        Xunit.Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Information, $"User {123} logged in"));
+        Assert.ThrowsAny<XunitException>(() => logger.Assert(LogLevel.Information, $"User {123} logged in"));
     }
 }

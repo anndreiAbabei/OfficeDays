@@ -1,0 +1,47 @@
+<Project>
+    <!-- ========================================================= -->
+    <!-- Global defaults (applies to ALL projects)                 -->
+    <!-- ========================================================= -->
+
+    <PropertyGroup>
+        <!-- Framework & language -->
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>14</LangVersion>
+
+        <!-- Build behavior -->
+        <Deterministic>true</Deterministic>
+        <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+
+        <!-- Warnings -->
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <WarningsAsErrors />
+        <NoWarn>$(NoWarn);CS1591</NoWarn>
+    </PropertyGroup>
+
+    <!-- ========================================================= -->
+    <!-- Global constants                                          -->
+    <!-- ========================================================= -->
+
+    <PropertyGroup>
+        <DefineConstants>$(DefineConstants);</DefineConstants>
+    </PropertyGroup>
+
+    <!-- ========================================================= -->
+    <!-- Central package versions                                  -->
+    <!-- ========================================================= -->
+
+    <ItemGroup>
+    </ItemGroup>
+
+    <!-- ========================================================= -->
+    <!-- Configuration-specific tweaks                             -->
+    <!-- ========================================================= -->
+
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <Optimize>true</Optimize>
+        <DebugType>none</DebugType>
+    </PropertyGroup>
+
+</Project>

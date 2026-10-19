@@ -39,7 +39,7 @@ public sealed class CreateTokenRequestValidatorTests
     {
         // arrange
         var sut = new CreateTokenRequestValidator(new CreateTokenRequestBodyValidator());
-        var request = new CreateTokenRequest { Body = new CreateTokenRequestBody("Desktop") with { Name = null! } };
+        var request = new CreateTokenRequest { Body = new CreateTokenRequestBody(Name: null!) };
 
         // act
         var result = sut.Validate(request);

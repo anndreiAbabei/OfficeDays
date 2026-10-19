@@ -50,8 +50,8 @@ public sealed class CalculationPeriodTests
         var date = DateTime.Now;
         var expectedStart = new DateOnly(date.Year, date.Month, 1);
         var expectedEnd = new DateOnly(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
-        var expectedLabel =  $"{date.Year:D4}-{date.Month:D2}"; ;
-        
+        var expectedLabel =  $"{date.Year:D4}-{date.Month:D2}";
+
         // act
         var period = CalculationPeriod.ForMonth(date.Year, date.Month);
 

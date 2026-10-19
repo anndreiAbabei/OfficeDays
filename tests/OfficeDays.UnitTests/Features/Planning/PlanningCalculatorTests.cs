@@ -5,7 +5,7 @@ namespace OfficeDays.UnitTests.Features.Planning;
 
 public sealed class PlanningCalculatorTests
 {
-    private static DateOnly D(int day) => new(2026, 10, day);
+    private static DateOnly D(int day) => new DateOnly(2026, 10, day);
 
     [Fact]
     public void Calendar_resolves_overlaps_and_counts_only_remaining_eligible_plans()
@@ -65,7 +65,7 @@ public sealed class PlanningCalculatorTests
         var user = new User { Username = "test", NormalizedUsername = "TEST", PasswordHash = "hash", TimeZoneId = "Europe/Bucharest" };
         var today = dates.Today(user);
         Assert.Equal(D(13), today);
-        Assert.Equal("missed", PlanningCalculator.Calculate(new(D(12), D(12), ""), today, [D(12)], [], [], [])[0].Status);
+        Assert.Equal("missed", PlanningCalculator.Calculate(new CalculationPeriod(D(12), D(12), ""), today, [D(12)], [], [], [])[0].Status);
     }
 
     private sealed class Clock(DateTimeOffset now) : TimeProvider

@@ -13,7 +13,8 @@ public sealed class CreateUserRequestValidatorTests
         // arrange
         var dates = Substitute.For<IUserDateService>();
         dates.IsValidTimeZone("Europe/Bucharest").Returns(true);
-        var sut = new CreateUserRequestValidator(new CreateUserRequestBodyValidator(dates, Substitute.For<IUserService>()));
+        var validator = new CreateUserRequestBodyValidator(dates);
+        var sut = new CreateUserRequestValidator(validator);
         var request = new CreateUserRequest { Body = new CreateUserRequestBody { Username = "user", Password = "long-password", TimeZoneId = "Europe/Bucharest", CountryCode = "RO", Email = "user@example.com", RequiredOfficePercentage = 50 } };
 
         // act
@@ -29,7 +30,8 @@ public sealed class CreateUserRequestValidatorTests
         // arrange
         var dates = Substitute.For<IUserDateService>();
         dates.IsValidTimeZone("Europe/Bucharest").Returns(true);
-        var sut = new CreateUserRequestValidator(new CreateUserRequestBodyValidator(dates, Substitute.For<IUserService>()));
+        var validator = new CreateUserRequestBodyValidator(dates);
+        var sut = new CreateUserRequestValidator(validator);
         var request = new CreateUserRequest { Body = null! };
 
         // act
@@ -46,7 +48,8 @@ public sealed class CreateUserRequestValidatorTests
         // arrange
         var dates = Substitute.For<IUserDateService>();
         dates.IsValidTimeZone("Europe/Bucharest").Returns(true);
-        var sut = new CreateUserRequestValidator(new CreateUserRequestBodyValidator(dates, Substitute.For<IUserService>()));
+        var validator = new CreateUserRequestBodyValidator(dates);
+        var sut = new CreateUserRequestValidator(validator);
         var request = new CreateUserRequest { Body = new CreateUserRequestBody { Username = "user", Password = "long-password", TimeZoneId = "Europe/Bucharest", CountryCode = "RO", Email = "user@example.com", RequiredOfficePercentage = 50 } with { Username = null! } };
 
         // act

@@ -52,7 +52,7 @@ public sealed class GetVacationsResponseTests
         try
         {
             while (enumerator.MoveNext())
-                result.Add((GetVacationsItem)enumerator.Current);
+                result.Add((GetVacationsItem)enumerator.Current!);
         }
         finally
         {

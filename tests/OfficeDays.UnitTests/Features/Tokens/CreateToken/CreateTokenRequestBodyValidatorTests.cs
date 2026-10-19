@@ -23,7 +23,7 @@ public sealed class CreateTokenRequestBodyValidatorTests
     public void Should_ReturnValidationFailure_WhenNameIsNull()
     {
         // arrange
-        var request = new CreateTokenRequestBody("Desktop") with { Name = null! };
+        var request = new CreateTokenRequestBody(Name: null!);
         var sut = new CreateTokenRequestBodyValidator();
 
         // act
@@ -38,7 +38,7 @@ public sealed class CreateTokenRequestBodyValidatorTests
     public void Should_ReturnValidationFailure_WhenNameIsEmpty()
     {
         // arrange
-        var request = new CreateTokenRequestBody("Desktop") with { Name = "" };
+        var request = new CreateTokenRequestBody(Name: "");
         var sut = new CreateTokenRequestBodyValidator();
 
         // act
@@ -53,7 +53,7 @@ public sealed class CreateTokenRequestBodyValidatorTests
     public void Should_ReturnValidationFailure_WhenNameIsWhitespace()
     {
         // arrange
-        var request = new CreateTokenRequestBody("Desktop") with { Name = " " };
+        var request = new CreateTokenRequestBody(Name: " ");
         var sut = new CreateTokenRequestBodyValidator();
 
         // act
@@ -68,7 +68,7 @@ public sealed class CreateTokenRequestBodyValidatorTests
     public void Should_ReturnValidationFailure_WhenNameIsTooLong()
     {
         // arrange
-        var request = new CreateTokenRequestBody("Desktop") with { Name = new string('x', 101) };
+        var request = new CreateTokenRequestBody(Name: new string('x', 101));
         var sut = new CreateTokenRequestBodyValidator();
 
         // act
@@ -83,7 +83,7 @@ public sealed class CreateTokenRequestBodyValidatorTests
     public void Should_ReturnValidationSuccess_WhenNameIsMaximumLength()
     {
         // arrange
-        var request = new CreateTokenRequestBody("Desktop") with { Name = new string('x', 100) };
+        var request = new CreateTokenRequestBody(Name: new string('x', 100));
         var sut = new CreateTokenRequestBodyValidator();
 
         // act

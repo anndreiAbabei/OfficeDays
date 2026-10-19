@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -12,6 +13,7 @@ using OfficeDays.Security;
 
 namespace OfficeDays.IntegrationTests.Security;
 
+[SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local")]
 public sealed class SecurityLoggingIntegrationTests
 {
     [Fact]
@@ -83,7 +85,7 @@ public sealed class SecurityLoggingIntegrationTests
 
     private sealed class CapturingLoggerProvider : ILoggerProvider
     {
-        public ConcurrentQueue<LogEntry> Entries { get; } = new();
+        public ConcurrentQueue<LogEntry> Entries { get; } = new ConcurrentQueue<LogEntry>();
         public ILogger CreateLogger(string categoryName) => new CapturingLogger(Entries);
         public void Dispose() { }
 

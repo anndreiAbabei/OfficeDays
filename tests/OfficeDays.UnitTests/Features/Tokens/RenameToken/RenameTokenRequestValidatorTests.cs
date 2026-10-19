@@ -39,7 +39,7 @@ public sealed class RenameTokenRequestValidatorTests
     {
         // arrange
         var sut = new RenameTokenRequestValidator(new RenameTokenRequestBodyValidator());
-        var request = new RenameTokenRequest { Body = new RenameTokenRequestBody("Desktop") with { Name = null! } };
+        var request = new RenameTokenRequest { Body = new RenameTokenRequestBody(Name: null!) };
 
         // act
         var result = sut.Validate(request);

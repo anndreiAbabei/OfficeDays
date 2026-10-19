@@ -226,7 +226,7 @@ public sealed class ReplaceBankHolidaysRequestValidatorTests
     public void Should_ValidateBody_WhenBodyHasDuplicateDates()
     {
         // arrange
-        var request = new ReplaceBankHolidaysRequest { CountryCode = "RO", Year = 2026, Body = [new BankHolidayItem(DateOnly.FromDateTime(DateTime.Now), "New Year")] } with { Body = [new(DateOnly.FromDateTime(DateTime.Now), "First"), new(DateOnly.FromDateTime(DateTime.Now), "Second")] };
+        var request = new ReplaceBankHolidaysRequest { CountryCode = "RO", Year = 2026, Body = [new BankHolidayItem(DateOnly.FromDateTime(DateTime.Now), "New Year")] } with { Body = [new BankHolidayItem(DateOnly.FromDateTime(DateTime.Now), "First"), new BankHolidayItem(DateOnly.FromDateTime(DateTime.Now), "Second")] };
         var sut = new ReplaceBankHolidaysRequestValidator(new BankHolidayItemValidator());
 
         // act
@@ -241,7 +241,7 @@ public sealed class ReplaceBankHolidaysRequestValidatorTests
     public void Should_ValidateBody_WhenBodyHasDifferentYear()
     {
         // arrange
-        var request = new ReplaceBankHolidaysRequest { CountryCode = "RO", Year = 2026, Body = [new BankHolidayItem(DateOnly.FromDateTime(DateTime.Now), "New Year")] } with { Body = [new(new DateOnly(2025, 1, 1), "Holiday")] };
+        var request = new ReplaceBankHolidaysRequest { CountryCode = "RO", Year = 2026, Body = [new BankHolidayItem(DateOnly.FromDateTime(DateTime.Now), "New Year")] } with { Body = [new BankHolidayItem(new DateOnly(2025, 1, 1), "Holiday")] };
         var sut = new ReplaceBankHolidaysRequestValidator(new BankHolidayItemValidator());
 
         // act
@@ -256,7 +256,7 @@ public sealed class ReplaceBankHolidaysRequestValidatorTests
     public void Should_ValidateBody_WhenBodyHasInvalidName()
     {
         // arrange
-        var request = new ReplaceBankHolidaysRequest { CountryCode = "RO", Year = 2026, Body = [new BankHolidayItem(DateOnly.FromDateTime(DateTime.Now), "New Year")] } with { Body = [new(DateOnly.FromDateTime(DateTime.Now), "")] };
+        var request = new ReplaceBankHolidaysRequest { CountryCode = "RO", Year = 2026, Body = [new BankHolidayItem(DateOnly.FromDateTime(DateTime.Now), "New Year")] } with { Body = [new BankHolidayItem(DateOnly.FromDateTime(DateTime.Now), "")] };
         var sut = new ReplaceBankHolidaysRequestValidator(new BankHolidayItemValidator());
 
         // act
@@ -271,7 +271,7 @@ public sealed class ReplaceBankHolidaysRequestValidatorTests
     public void Should_ValidateBody_WhenBodyHasDistinctDates()
     {
         // arrange
-        var request = new ReplaceBankHolidaysRequest { CountryCode = "RO", Year = 2026, Body = [new BankHolidayItem(DateOnly.FromDateTime(DateTime.Now), "New Year")] } with { Body = [new(DateOnly.FromDateTime(DateTime.Now), "First"), new(new DateOnly(2026, 1, 2), "Second")] };
+        var request = new ReplaceBankHolidaysRequest { CountryCode = "RO", Year = 2026, Body = [new BankHolidayItem(DateOnly.FromDateTime(DateTime.Now), "New Year")] } with { Body = [new BankHolidayItem(DateOnly.FromDateTime(DateTime.Now), "First"), new BankHolidayItem(new DateOnly(2026, 1, 2), "Second")] };
         var sut = new ReplaceBankHolidaysRequestValidator(new BankHolidayItemValidator());
 
         // act

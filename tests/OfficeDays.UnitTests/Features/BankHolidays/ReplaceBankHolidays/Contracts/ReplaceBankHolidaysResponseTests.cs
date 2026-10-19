@@ -40,7 +40,7 @@ public sealed class ReplaceBankHolidaysResponseTests
         try
         {
             while (enumerator.MoveNext())
-                result.Add((ReplaceBankHolidaysItem)enumerator.Current);
+                result.Add((ReplaceBankHolidaysItem)enumerator.Current!);
         }
         finally
         {

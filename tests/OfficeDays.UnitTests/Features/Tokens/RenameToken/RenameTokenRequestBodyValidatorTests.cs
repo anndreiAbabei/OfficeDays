@@ -23,7 +23,7 @@ public sealed class RenameTokenRequestBodyValidatorTests
     public void Should_ReturnValidationFailure_WhenNameIsNull()
     {
         // arrange
-        var request = new RenameTokenRequestBody("Desktop") with { Name = null! };
+        var request = new RenameTokenRequestBody(Name: null!);
         var sut = new RenameTokenRequestBodyValidator();
 
         // act
@@ -38,7 +38,7 @@ public sealed class RenameTokenRequestBodyValidatorTests
     public void Should_ReturnValidationFailure_WhenNameIsEmpty()
     {
         // arrange
-        var request = new RenameTokenRequestBody("Desktop") with { Name = "" };
+        var request = new RenameTokenRequestBody(Name: "");
         var sut = new RenameTokenRequestBodyValidator();
 
         // act
@@ -53,7 +53,7 @@ public sealed class RenameTokenRequestBodyValidatorTests
     public void Should_ReturnValidationFailure_WhenNameIsWhitespace()
     {
         // arrange
-        var request = new RenameTokenRequestBody("Desktop") with { Name = " " };
+        var request = new RenameTokenRequestBody(Name: " ");
         var sut = new RenameTokenRequestBodyValidator();
 
         // act
@@ -68,7 +68,7 @@ public sealed class RenameTokenRequestBodyValidatorTests
     public void Should_ReturnValidationFailure_WhenNameIsTooLong()
     {
         // arrange
-        var request = new RenameTokenRequestBody("Desktop") with { Name = new string('x', 101) };
+        var request = new RenameTokenRequestBody(Name: new string('x', 101));
         var sut = new RenameTokenRequestBodyValidator();
 
         // act
@@ -83,7 +83,7 @@ public sealed class RenameTokenRequestBodyValidatorTests
     public void Should_ReturnValidationSuccess_WhenNameIsMaximumLength()
     {
         // arrange
-        var request = new RenameTokenRequestBody("Desktop") with { Name = new string('x', 100) };
+        var request = new RenameTokenRequestBody(Name: new string('x', 100));
         var sut = new RenameTokenRequestBodyValidator();
 
         // act

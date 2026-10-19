@@ -79,7 +79,7 @@ public sealed class CreateUserHandler : IRequestHandler<CreateUserRequest>
             IsAdmin = false,
             CreatedAt = _timeProvider.GetUtcNow()
         };
-        user.PasswordHash = _hasher.HashPassword(user, request.Password!);
+        user.PasswordHash = _hasher.HashPassword(user, request.Password);
         
         await _dbContext.Users.AddAsync(user, cancellationToken);
         

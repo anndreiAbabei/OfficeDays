@@ -39,7 +39,7 @@ public sealed class UpdateJurisdictionRequestValidatorTests
     {
         // arrange
         var sut = new UpdateJurisdictionRequestValidator(new UpdateJurisdictionRequestBodyValidator());
-        var request = new UpdateJurisdictionRequest { Code = "RO", Body = new UpdateJurisdictionRequestBody("Romania") with { Name = null! } };
+        var request = new UpdateJurisdictionRequest { Code = "RO", Body = new UpdateJurisdictionRequestBody(Name: null!) };
 
         // act
         var result = sut.Validate(request);

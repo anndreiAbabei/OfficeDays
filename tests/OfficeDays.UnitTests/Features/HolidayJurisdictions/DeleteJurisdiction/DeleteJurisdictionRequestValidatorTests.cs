@@ -23,7 +23,10 @@ public sealed class DeleteJurisdictionRequestValidatorTests
     public void Should_ReturnValidationFailure_WhenCodeIsNull()
     {
         // arrange
-        var request = new DeleteJurisdictionRequest { Code = "RO" } with { Code = null! };
+        var request = new DeleteJurisdictionRequest
+        {
+            Code = null!
+        };
         var sut = new DeleteJurisdictionRequestValidator();
 
         // act
@@ -38,7 +41,10 @@ public sealed class DeleteJurisdictionRequestValidatorTests
     public void Should_ReturnValidationFailure_WhenCodeIsEmpty()
     {
         // arrange
-        var request = new DeleteJurisdictionRequest { Code = "RO" } with { Code = "" };
+        var request = new DeleteJurisdictionRequest
+        {
+            Code = ""
+        };
         var sut = new DeleteJurisdictionRequestValidator();
 
         // act
@@ -53,7 +59,10 @@ public sealed class DeleteJurisdictionRequestValidatorTests
     public void Should_ReturnValidationFailure_WhenCodeIsTooShort()
     {
         // arrange
-        var request = new DeleteJurisdictionRequest { Code = "RO" } with { Code = "R" };
+        var request = new DeleteJurisdictionRequest
+        {
+            Code = "R"
+        };
         var sut = new DeleteJurisdictionRequestValidator();
 
         // act
@@ -68,7 +77,10 @@ public sealed class DeleteJurisdictionRequestValidatorTests
     public void Should_ReturnValidationFailure_WhenCodeIsToolong()
     {
         // arrange
-        var request = new DeleteJurisdictionRequest { Code = "RO" } with { Code = "TOOLONG" };
+        var request = new DeleteJurisdictionRequest
+        {
+            Code = "TOOLONG"
+        };
         var sut = new DeleteJurisdictionRequestValidator();
 
         // act
@@ -83,7 +95,10 @@ public sealed class DeleteJurisdictionRequestValidatorTests
     public void Should_ReturnValidationFailure_WhenCodeIsTooLong()
     {
         // arrange
-        var request = new DeleteJurisdictionRequest { Code = "RO" } with { Code = "RO-TOOLONG" };
+        var request = new DeleteJurisdictionRequest
+        {
+            Code = "RO-TOOLONG"
+        };
         var sut = new DeleteJurisdictionRequestValidator();
 
         // act
@@ -98,7 +113,10 @@ public sealed class DeleteJurisdictionRequestValidatorTests
     public void Should_ReturnValidationSuccess_WhenCodeIsLowercaseSubdivision()
     {
         // arrange
-        var request = new DeleteJurisdictionRequest { Code = "RO" } with { Code = "gb-nir" };
+        var request = new DeleteJurisdictionRequest
+        {
+            Code = "gb-nir"
+        };
         var sut = new DeleteJurisdictionRequestValidator();
 
         // act
@@ -112,7 +130,10 @@ public sealed class DeleteJurisdictionRequestValidatorTests
     public void Should_ReturnValidationSuccess_WhenCodeIsPaddedCountryCode()
     {
         // arrange
-        var request = new DeleteJurisdictionRequest { Code = "RO" } with { Code = " US " };
+        var request = new DeleteJurisdictionRequest
+        {
+            Code = " US "
+        };
         var sut = new DeleteJurisdictionRequestValidator();
 
         // act
