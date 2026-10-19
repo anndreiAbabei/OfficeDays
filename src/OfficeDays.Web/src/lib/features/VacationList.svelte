@@ -10,7 +10,10 @@
   let { period, onchange }: { period: Period; onchange: () => void } = $props();
   let from = $state(untrack(() => isoDate(period.year, period.month))); 
   let to = $state(untrack(() => isoDate(period.year, period.month)));
-  let items = $state<Vacation[]>([]); 
+  let items = $state<Vacation[]>([]);
+  let editingId = $state<string | null>(null);
+  let editFrom = $state('');
+  let editTo = $state('');
   let loading = $state(true); 
   let busy = $state(false); 
   let error = $state(''); 
@@ -31,6 +34,34 @@
   
   onMount(() => { void load(); });
   
+  function edit(item: Vacation): void {
+    editingId = item.id;
+    editFrom = item.from;
+    editTo = item.to;
+    error = '';
+    message = '';
+  }
+
+  async function save(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+    if (!editingId) return;
+
+    busy = true;
+    error = '';
+    message = '';
+    try {
+      await mutate(`/api/vacations/${editingId}`, 'PUT', { from: editFrom, to: editTo });
+      editingId = null;
+      message = 'Vacation updated.';
+      onchange();
+      await load();
+    } catch (failure) {
+      error = errorMessage(failure);
+    } finally {
+      busy = false;
+    }
+  }
+
   async function change(id?: string): Promise<void> {
     busy = true; 
     error = '';
@@ -95,13 +126,37 @@
       {#each items as item (item.id)}
         <li>
           <div class="item-main">
-            <strong>
-              {displayDate(item.from)}{item.from === item.to ? '' : ` – ${displayDate(item.to)}`}
-            </strong>
+            {#if editingId === item.id}
+              <form class="range-form edit-form" onsubmit={save}>
+                <label>
+                  Edit from
+                  <input type="date" required bind:value={editFrom} disabled={busy} />
+                </label>
+                <label>
+                  Edit to
+                  <input type="date" required min={editFrom} bind:value={editTo} disabled={busy} />
+                </label>
+                <div class="actions edit-actions">
+                  <button type="submit" disabled={busy}>Save</button>
+                  <button type="button" class="secondary" disabled={busy} onclick={() => editingId = null}>Cancel</button>
+                </div>
+              </form>
+            {:else}
+              <strong>
+                {displayDate(item.from)}{item.from === item.to ? '' : ` – ${displayDate(item.to)}`}
+              </strong>
+            {/if}
           </div>
-          <button class="danger small" disabled={busy} aria-label={`Remove vacation ${displayDate(item.from)}`} onclick={() => change(item.id)}>
-            Remove
-          </button>
+          {#if editingId !== item.id}
+            <div class="actions">
+              <button class="secondary small" disabled={busy} aria-label={`Edit vacation ${displayDate(item.from)}`} onclick={() => edit(item)}>
+                Edit
+              </button>
+              <button class="danger small" disabled={busy} aria-label={`Remove vacation ${displayDate(item.from)}`} onclick={() => change(item.id)}>
+                Remove
+              </button>
+            </div>
+          {/if}
         </li>
       {:else}
         <li class="empty">
@@ -113,6 +168,25 @@
 </section>
 
 <style>
+  .item-main {
+    flex: 1;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+
+  .range-form.edit-form {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .edit-actions {
+    grid-column: 1 / -1;
+  }
+
+
   .range-form { 
     display: grid; 
     grid-template-columns: 1fr 1fr auto; 
@@ -122,6 +196,6 @@
   
   @media (max-width: 650px) {
     .range-form { grid-template-columns: 1fr 1fr; }
-    .range-form button { grid-column: 1 / -1; }
+    .range-form > button { grid-column: 1 / -1; }
   }
 </style>

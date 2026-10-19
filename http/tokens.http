@@ -21,6 +21,19 @@ Content-Type: application/json
     client.log("The raw token is shown only in this response. Copy it now if needed.");
 %}
 
+### Rename the token without replacing its credential
+PATCH {{baseUrl}}/api/tokens/{{createdTokenId}}
+Authorization: Bearer {{apiToken}}
+Content-Type: application/json
+
+{
+  "name": "Renamed test token"
+}
+
 ### Revoke the token created above
 DELETE {{baseUrl}}/api/tokens/{{createdTokenId}}
+Authorization: Bearer {{apiToken}}
+
+### Permanently delete the revoked token from history
+DELETE {{baseUrl}}/api/tokens/{{createdTokenId}}/permanent
 Authorization: Bearer {{apiToken}}

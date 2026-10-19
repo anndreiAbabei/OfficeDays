@@ -34,27 +34,38 @@
   Skip to content
 </a>
 
-<main id="main-content" class="shell" tabindex="-1">
-  {#if $sessionError}
-    <section class="card">
-      <p class="error" role="alert">{$sessionError}</p>
-      <button onclick={loadSession}>
-        Retry connection
-      </button>
-    </section>
-  {:else if $sessionReady || page.url.pathname === '/register' || page.url.pathname === '/login'}
-    {@render children()}
-  {:else}
-    <p class="muted" role="status">Loading Office Days…</p>
-  {/if}
-</main>
-<footer class="app-footer muted">
-  <span>Created by <a href="{gitHubUrl}">{author}</a> · </span>
-  <span>Office Days · {version}</span>
-</footer>
+<div class="app-frame">
+  <main id="main-content" class="shell" tabindex="-1">
+    {#if $sessionError}
+      <section class="card">
+        <p class="error" role="alert">{$sessionError}</p>
+        <button onclick={loadSession}>
+          Retry connection
+        </button>
+      </section>
+    {:else if $sessionReady || page.url.pathname === '/register' || page.url.pathname === '/login'}
+      {@render children()}
+    {:else}
+      <p class="muted" role="status">Loading Office Days…</p>
+    {/if}
+  </main>
+  <footer class="app-footer muted">
+    <span>Created by <a href="{gitHubUrl}">{author}</a> · </span>
+    <span>Office Days · {version}</span>
+  </footer>
+</div>
 
 <style>
+  .app-frame {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+
   .shell { 
+    flex: 1;
     width: min(1280px, calc(100% - 2rem)); 
     margin: 2rem auto 5rem; 
   }
