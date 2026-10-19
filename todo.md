@@ -94,6 +94,8 @@ Requirements:
 
 ## Medium
 
+### [ ] Option to select the attendance requirement to percentage or number of days in the week
+
 ### [ ] Plan all team days this month
 Preview and add plans for remaining eligible team days in a selected month.
 
