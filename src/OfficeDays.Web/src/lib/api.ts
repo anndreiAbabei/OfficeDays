@@ -23,7 +23,7 @@ async function csrfToken(): Promise<string> {
   return csrf;
 }
 
-export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function requestResponse(path: string, options: RequestInit = {}): Promise<Response> {
   const headers = new Headers(options.headers);
   const method = (options.method || 'GET').toUpperCase();
 
@@ -57,6 +57,11 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
                        response.status);
   }
 
+  return response;
+}
+
+export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const response = await requestResponse(path, options);
   return response.status === 204 
             ? undefined as T 
             : response.json();
@@ -67,3 +72,20 @@ export function mutate<T>(path: string, method: string, body?: unknown): Promise
 export const errorMessage = (error: unknown) => error instanceof Error 
     ? error.message 
     : 'Something went wrong. Please try again.';
+
+export async function downloadPersonalData(): Promise<void> {
+  const response = await requestResponse('/api/users/me/export');
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'officedays-data.json';
+  document.body.appendChild(link);
+  try {
+    link.click();
+  } finally {
+    link.remove();
+    // Give the browser time to start consuming the download before releasing it.
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+}

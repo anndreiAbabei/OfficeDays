@@ -208,6 +208,9 @@ You can also keep the shortcut manual and run it whenever you arrive. Check the 
 
 ## Backups and hosting
 
+To download your own account data, open **Profile → Download my data (JSON)**. This includes your full attendance and requirement history, plans, vacations, preferences, and a snapshot of your holiday calendar, with the app and format versions. Passwords and API tokens are excluded. Import is not available yet. See the [export format and future migration contract](docs/personal-data-export.md).
+
+
 For Docker installations, the data folder contains the database and the keys used to keep browser logins valid. To make a simple, consistent backup, stop the app with `docker compose down`, copy the **entire data folder** somewhere safe, then start it again with `docker compose up -d`. Keep the backup private.
 
 For access outside your local network, put the app behind an HTTPS reverse proxy and keep `OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER=true`. The proxy must pass the original scheme using `X-Forwarded-Proto`. The supplied Compose setup accepts forwarded headers, so restrict direct access to port `5802` to trusted systems or your proxy.
