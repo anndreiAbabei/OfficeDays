@@ -3,7 +3,6 @@ using OfficeDays.Data;
 using OfficeDays.Domain;
 using OfficeDays.Features.Attendance.RecordDate;
 using OfficeDays.Features.Attendance.RecordDate.Contracts;
-using OfficeDays.Infrastructure;
 using OfficeDays.Security;
 using OfficeDays.Services;
 
