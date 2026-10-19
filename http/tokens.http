@@ -33,3 +33,7 @@ Content-Type: application/json
 ### Revoke the token created above
 DELETE {{baseUrl}}/api/tokens/{{createdTokenId}}
 Authorization: Bearer {{apiToken}}
+
+### Permanently delete the revoked token from history
+DELETE {{baseUrl}}/api/tokens/{{createdTokenId}}/permanent
+Authorization: Bearer {{apiToken}}
