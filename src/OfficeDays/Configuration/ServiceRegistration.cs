@@ -83,6 +83,7 @@ public static class ServiceRegistration
     private static void AddServices(WebApplicationBuilder svcBuilder)
     {
         svcBuilder.Services.AddSingleton(TimeProvider.System);
+        svcBuilder.Services.AddSingleton<IAppVersionService, AppVersionService>();
         svcBuilder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         svcBuilder.Services.AddScoped<CookieAntiforgeryFilter>();
         svcBuilder.Services.AddScoped<IPlanningCalendarReader, PlanningCalendarReader>();

@@ -1,12 +1,12 @@
 using System.Data;
 using System.Net.Mime;
-using System.Reflection;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using OfficeDays.Data;
 using OfficeDays.Features.Users.ExportData.Contracts;
 using OfficeDays.Infrastructure;
 using OfficeDays.Security;
+using OfficeDays.Services;
 
 namespace OfficeDays.Features.Users.ExportData;
 
@@ -16,20 +16,24 @@ public sealed class ExportDataHandler : IRequestHandler<ExportDataRequest>
     private readonly ICurrentUser _currentUser;
     private readonly TimeProvider _clock;
     private readonly IHttpContextAccessor _contextAccessor;
+    private readonly IAppVersionService _appVersion;
+    private readonly ILogger<ExportDataHandler> _logger;
     
     private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true };
-    private static readonly string AppVersion = typeof(Program).Assembly
-                                                               .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
     
     public ExportDataHandler(AppDbContext db, 
                              ICurrentUser currentUser, 
                              TimeProvider clock,
-                             IHttpContextAccessor contextAccessor)
+                             IHttpContextAccessor contextAccessor,
+                             IAppVersionService appVersion,
+                             ILogger<ExportDataHandler> logger)
     {
         _db = db;
         _currentUser = currentUser;
         _clock = clock;
         _contextAccessor = contextAccessor;
+        _appVersion = appVersion;
+        _logger = logger;
     }
 
     public async ValueTask<IResult> Handle(ExportDataRequest request, CancellationToken cancellationToken)
@@ -53,7 +57,11 @@ public sealed class ExportDataHandler : IRequestHandler<ExportDataRequest>
                                .SingleOrDefaultAsync(cancellationToken);
         
         if (profile is null)
+        {
+            _logger.LogUserNotFound(_currentUser.Id);
+
             return Results.Problem(statusCode: 404, detail: "Your account could not be found. Please sign in again.");
+        }
 
         var teamDay = await _db.Users
                                .Where(x => x.Id == _currentUser.Id)
@@ -109,7 +117,7 @@ public sealed class ExportDataHandler : IRequestHandler<ExportDataRequest>
 
         var zone = TimeZoneInfo.FindSystemTimeZoneById(profile.TimeZoneId);
         var export = new PersonalDataExport("officedays-personal-data", 1, exportedAt, 
-                                            new ExportApplication("OfficeDays", AppVersion), 
+                                            new ExportApplication("OfficeDays", _appVersion.Version),
                                             new ExportReportContext(1, DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(exportedAt, zone).DateTime), 
                                                                        DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(profile.CreatedAt, zone).DateTime)), 
                                             profile, 

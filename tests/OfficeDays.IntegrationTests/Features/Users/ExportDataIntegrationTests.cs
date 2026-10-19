@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OfficeDays.Data;
 using OfficeDays.Domain;
 using OfficeDays.Features.Reports.GetReport;
+using OfficeDays.Features.Operations.GetVersion.Contracts;
 using OfficeDays.Features.Users.ExportData.Contracts;
 using OfficeDays.Services;
 using static OfficeDays.IntegrationTests.Support.ApiTestHelpers;
@@ -15,6 +16,28 @@ namespace OfficeDays.IntegrationTests.Features.Users;
 
 public sealed class ExportDataIntegrationTests
 {
+    [Fact]
+    public async Task Export_and_version_endpoint_use_the_same_version_service()
+    {
+        using var original = new OfficeDaysFactory();
+        using var factory = original.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+            services.AddSingleton<IAppVersionService>(new TestAppVersionService())));
+        using var client = factory.CreateClient();
+        await CreateUser(client, "versionedexport");
+        await Login(client, "versionedexport", "Normal-user-password!");
+
+        var version = (await client.GetFromJsonAsync<GetVersionResponse>("/api/version"))!;
+        var export = (await client.GetFromJsonAsync<PersonalDataExport>("/api/users/me/export"))!;
+
+        Assert.Equal("9.8.7+test-build", version.Version);
+        Assert.Equal(version.Version, export.Application.Version);
+    }
+
+    private sealed class TestAppVersionService : IAppVersionService
+    {
+        public string Version => "9.8.7+test-build";
+    }
+
     [Fact]
     public async Task Export_requires_authentication_and_handles_deleted_accounts()
     {
