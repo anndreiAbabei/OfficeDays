@@ -23,7 +23,7 @@ public sealed class OfficeDaysFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Testing");
         // Keep console output quiet while preserving logs captured by logging tests.
         builder.ConfigureLogging(logging =>
-            logging.AddFilter<ConsoleLoggerProvider>(level => level >= LogLevel.Error));
+            logging.AddFilter<ConsoleLoggerProvider>(level => level >= LogLevel.Critical));
         builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
             new Dictionary<string, string?>
             {
