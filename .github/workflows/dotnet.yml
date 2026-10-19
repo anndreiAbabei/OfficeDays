@@ -20,6 +20,18 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 10.0.x
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 24
+        cache: npm
+        cache-dependency-path: src/OfficeDays.Web/package-lock.json
+    - name: Install frontend dependencies
+      working-directory: src/OfficeDays.Web
+      run: npm ci
+    - name: Build frontend
+      working-directory: src/OfficeDays.Web
+      run: npm run build
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
