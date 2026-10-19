@@ -2,6 +2,7 @@
   import { user } from '$lib/session';
   import AttendanceRequirements from '$lib/features/AttendanceRequirements.svelte';
   import Profile from '$lib/features/Profile.svelte';
+  import PersonalDataDownload from '$lib/features/PersonalDataDownload.svelte';
 </script>
 
 <svelte:head>
@@ -12,4 +13,5 @@
 <div class="stack">
   <Profile currentUser={$user!} onsave={value => user.set(value)} />
   <AttendanceRequirements onsave={value => user.set(value)} />
+  <PersonalDataDownload />
 </div>

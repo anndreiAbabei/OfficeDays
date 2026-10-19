@@ -1,6 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte';
-  import { mutate, errorMessage, downloadPersonalData } from '$lib/api';
+  import { mutate, errorMessage } from '$lib/api';
   import type { TeamDay, User } from '$lib/types';
   import Feedback from '$lib/components/Feedback.svelte';
   
@@ -12,25 +12,6 @@
   let error = $state(''); 
   let message = $state('');
   
-  let exporting = $state(false); 
-  let exportError = $state(''); 
-  let exportMessage = $state('');
-
-  async function exportData(): Promise<void> {
-    exporting = true; 
-    exportError = ''; 
-    exportMessage = '';
-    try {
-      await downloadPersonalData();
-      
-      exportMessage = 'Download started. Keep this file private: it contains your personal data.';
-    } catch (failure) {
-      exportError = `Could not download your data. ${errorMessage(failure)} Please try again.`;
-    } finally {
-      exporting = false;
-    }
-  }
-
   async function save(event: SubmitEvent): Promise<void> {
     event.preventDefault(); 
     busy = true; 
@@ -78,16 +59,6 @@
   <Feedback {error} {message} />
 </section>
 
-<section class="card export-user">
-  <h2>Download your data</h2>
-  <p>Save all your profile settings, attendance requirements, attendance, plans, vacations, and holiday calendar as a JSON file.</p>
-  <p class="muted">Includes the app version and calendar snapshot for future migration. Passwords and API tokens are excluded. Import is not available yet.</p>
-  <button type="button" onclick={exportData} disabled={exporting}>
-    {exporting ? 'Preparing download…' : 'Download my data (JSON)'}
-  </button>
-  <Feedback error={exportError} message={exportMessage} />
-</section>
-
 <style>
   .profile-form { 
     max-width: 44rem; 
@@ -95,9 +66,5 @@
   }
   @media (min-width: 651px) {
     .profile-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  }
-  
-  .export-user > button {
-    margin-top: 2rem;
   }
 </style>
