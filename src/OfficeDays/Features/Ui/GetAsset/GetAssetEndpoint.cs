@@ -2,9 +2,11 @@ namespace OfficeDays.Features.Ui.GetAsset;
 
 public sealed class GetAssetEndpoint(UiContent content) : IUiEndpoint
 {
+    private readonly UiContent _content = content;
+
     public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
-        foreach (var asset in content.Assets)
+        foreach (var asset in _content.Assets)
         {
             endpoints.MapMethods(asset.Path, ["GET", "HEAD"], (HttpContext context) =>
             {

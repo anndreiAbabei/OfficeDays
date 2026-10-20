@@ -7,5 +7,8 @@ public sealed class GetVersionEndpoint(IRequestExecutor executor) : IOperationsE
 {
     private readonly IRequestExecutor _executor = executor;
     
-    public void MapEndpoint(IEndpointRouteBuilder endpoints) => endpoints.MapGet("version", _executor.Execute<GetVersionRequest>);
+    public void MapEndpoint(IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapGet("version", _executor.Execute<GetVersionRequest>);
+    }
 }

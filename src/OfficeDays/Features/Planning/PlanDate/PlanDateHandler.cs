@@ -35,11 +35,17 @@ public sealed class PlanDateHandler : IRequestHandler<PlanDateRequest>
         var user = await _db.Users.FindAsync([_currentUser.Id], cancellationToken);
         
         if (user is null) 
+        {
+            _logger.LogUserNotFound(_currentUser.Id);
             return Results.NotFound();
+        }
         
         var day = (await _calendar.Read(user, new CalculationPeriod(request.Date, request.Date, ""), cancellationToken)).Single();
         if (!day.IsEligible)
+        {
+            _logger.LogDateIneligible(user.Id, request.Date);
             return Results.ValidationProblem(new Dictionary<string, string[]> { ["Date"] = ["Only eligible working days can be planned."] });
+        }
         
         if (day.IsPlanned) 
             return Results.NoContent();
