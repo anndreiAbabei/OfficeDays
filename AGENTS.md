@@ -69,10 +69,12 @@ Features/<Area>/<UseCase>/
 - Use descriptive `<UseCase>Endpoint`, `<UseCase>Handler`, `<UseCase>RequestValidator`, `<UseCase>Mapping`, and `<UseCase>HandlerLogging` names. Preserve existing interface method names such as `Handle`; use an `Async` suffix for new asynchronous methods where no existing contract dictates the name.
 - Match nearby formatting; C# generally uses four-space indentation and braces on separate lines. Avoid unrelated reformatting.
 - Prefer constructor injection, small methods, guard clauses, and explicit dependencies. Do not introduce service location into business logic.
-- Prefer explicit constructors. A primary constructor (the record-like constructor syntax on a class) is acceptable when the class and initialization logic are simple. In either style, assign injected services to `private readonly` fields named `_camelCase` and use those fields in instance methods. Do not directly capture primary-constructor service parameters in methods or use them as implicit backing fields.
+- Prefer explicit constructors, especially for services. A primary constructor (the record-like constructor syntax on a class) is acceptable when the class and initialization logic are simple and has at most one parameter. In either style, assign injected services to `private readonly` fields named `_camelCase` and use those fields in instance methods. Do not directly capture primary-constructor service parameters in methods or use them as implicit backing fields.
 - Use async/await for I/O and pass cancellation tokens through validation, EF queries, and saves. Avoid `.Result`, `.Wait()`, `async void`, and `Task.Run` around database operations.
 - Treat warnings as errors, as configured in `Directory.Build.props`. Do not relax this setting.
 - Prefer to be explicit when creating an object (use `private Test _test = new Test();`; do not omit the type `private Test _test = new();`)
+- Inner nested classes must be put at the end of the class, after all the methods
+- The order of the members in the class are like this: constants, fields, properties, events, constructors, public methods, Dispose method, private methods, nested classes
 
 For example, a simple endpoint may use a primary constructor with an explicit readonly field:
 
