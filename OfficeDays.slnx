@@ -5,6 +5,7 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/docs/">
+    <File Path="AGENTS.md" />
     <File Path="Directory.Build.props" />
     <File Path="README.md" />
     <File Path="rebuild.sh" />
