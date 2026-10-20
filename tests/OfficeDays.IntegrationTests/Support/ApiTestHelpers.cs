@@ -12,8 +12,16 @@ internal static class ApiTestHelpers
 
     public static async Task CreateUser(HttpClient client, string username, string countryCode = "RO")
     {
-        var response = await client.PostAsJsonAsync("/api/users", new
-            { username, password = "Normal-user-password!", timeZoneId = "Europe/Bucharest", countryCode, email = $"{username}@example.com" });
+        var user = new
+        {
+            username, 
+            password = "Normal-user-password!", 
+            timeZoneId = "Europe/Bucharest", 
+            countryCode, 
+            email = $"{username}@example.com"
+        };
+        var response = await client.PostAsJsonAsync("/api/users", user);
+        
         response.EnsureSuccessStatusCode();
     }
 
@@ -27,24 +35,27 @@ internal static class ApiTestHelpers
     {
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        
         await db.Users
-                .Where(x => x.NormalizedUsername == username.ToUpperInvariant())
+                .Where(x => x.NormalizedUsername != username)
                 .ExecuteDeleteAsync();
     }
 
-    public static async Task<string> Csrf(HttpClient client) =>
-        (await client.GetFromJsonAsync<JsonElement>("/api/auth/csrf")).GetProperty("token").GetString()!;
+    public static async Task<string> Csrf(HttpClient client) => (await client.GetFromJsonAsync<JsonElement>("/api/auth/csrf")).GetProperty("token").GetString()!;
 
     public static Task<HttpResponseMessage> PostJson(HttpClient client, string path, object body, string csrf) => SendJson(client, HttpMethod.Post, path, body, csrf);
     public static Task<HttpResponseMessage> PutJson(HttpClient client, string path, object body, string csrf) => SendJson(client, HttpMethod.Put, path, body, csrf);
     public static Task<HttpResponseMessage> Delete(HttpClient client, string path, string csrf) => SendJson(client, HttpMethod.Delete, path, null, csrf);
+   
     public static Task<HttpResponseMessage> SendJson(HttpClient client, HttpMethod method, string path, object? body, string csrf)
     {
         var request = new HttpRequestMessage(method, path);
         request.Headers.Add("X-CSRF-TOKEN", csrf);
-        if (body is not null) request.Content = JsonContent.Create(body);
+        
+        if (body is not null) 
+            request.Content = JsonContent.Create(body);
+        
         return client.SendAsync(request);
     }
-    public static async Task<JsonElement> Read(HttpResponseMessage response) =>
-        JsonSerializer.Deserialize<JsonElement>(await response.Content.ReadAsStringAsync(), _json);
+    public static async Task<JsonElement> Read(HttpResponseMessage response) => JsonSerializer.Deserialize<JsonElement>(await response.Content.ReadAsStringAsync(), _json);
 }

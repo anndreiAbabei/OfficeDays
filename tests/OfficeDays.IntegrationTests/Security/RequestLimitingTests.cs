@@ -1,8 +1,7 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using OfficeDays.IntegrationTests.Support;
 using static OfficeDays.IntegrationTests.Support.ApiTestHelpers;
 
 namespace OfficeDays.IntegrationTests.Security;
@@ -13,9 +12,9 @@ public sealed class RequestLimitingTests
     public async Task Should_LimitNormalizedAccount_WhenLoginThresholdIsReached()
     {
         // Arrange
-        using var factory = new OfficeDaysFactory();
-        using var app = factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
-            configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["RateLimiting:LoginAccount:Permits"] = "1" })));
+        await using var factory = new OfficeDaysFactory();
+        await using var app = factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
+                                                                                                          configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["RateLimiting:LoginAccount:Permits"] = "1" })));
         using var client = app.CreateClient();
         const HttpStatusCode expectedStatus = HttpStatusCode.TooManyRequests;
 
@@ -33,9 +32,9 @@ public sealed class RequestLimitingTests
     public async Task Should_IgnoreSpoofedForwardingHeaders_WhenSourceLimitIsReached()
     {
         // Arrange
-        using var factory = new OfficeDaysFactory();
-        using var app = factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
-            configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["RateLimiting:Source:Permits"] = "1" })));
+        await using var factory = new OfficeDaysFactory();
+        await using var app = factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
+                                                                                                          configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["RateLimiting:Source:Permits"] = "1" })));
         using var client = app.CreateClient();
         const HttpStatusCode expectedStatus = HttpStatusCode.TooManyRequests;
         await client.GetAsync("/api/auth/csrf");
@@ -56,7 +55,7 @@ public sealed class RequestLimitingTests
     public async Task Should_RejectOversizedBody_WhenLoginIsPosted()
     {
         // Arrange
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         const HttpStatusCode expectedStatus = HttpStatusCode.RequestEntityTooLarge;
 
@@ -71,9 +70,9 @@ public sealed class RequestLimitingTests
     public async Task Should_KeepUserAllowancesSeparate_WhenCookiesShareASource()
     {
         // Arrange
-        using var factory = new OfficeDaysFactory();
-        using var app = factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
-            configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["RateLimiting:Api:Permits"] = "4" })));
+        await using var factory = new OfficeDaysFactory();
+        await using var app = factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
+                                                                                                          configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["RateLimiting:Api:Permits"] = "4" })));
         using var first = app.CreateClient();
         using var second = app.CreateClient();
         await CreateUser(first, "first");
@@ -92,13 +91,13 @@ public sealed class RequestLimitingTests
     public async Task Should_EnforceTokenAndSharedUserLimits_WhenBearerTokensAreRotated()
     {
         // Arrange
-        using var factory = new OfficeDaysFactory();
-        using var app = factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
-            configuration.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["RateLimiting:Api:Permits"] = "10",
-                ["RateLimiting:Token:Permits"] = "2"
-            })));
+        await using var factory = new OfficeDaysFactory();
+        await using var app = factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
+                                                                                                          configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                                                                                                          {
+                                                                                                              ["RateLimiting:Api:Permits"] = "10",
+                                                                                                              ["RateLimiting:Token:Permits"] = "2"
+                                                                                                          })));
         using var browser = app.CreateClient();
         await CreateUser(browser, "tokens");
         await Login(browser, "tokens", "Normal-user-password!");
@@ -107,8 +106,8 @@ public sealed class RequestLimitingTests
         var secondToken = await Read(await PostJson(browser, "/api/tokens", new { name = "second" }, csrf));
         using var first = app.CreateClient();
         using var second = app.CreateClient();
-        first.DefaultRequestHeaders.Authorization = new("Bearer", firstToken.GetProperty("token").GetString());
-        second.DefaultRequestHeaders.Authorization = new("Bearer", secondToken.GetProperty("token").GetString());
+        first.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", firstToken.GetProperty("token").GetString());
+        second.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", secondToken.GetProperty("token").GetString());
         const HttpStatusCode expectedAllowed = HttpStatusCode.OK;
         const HttpStatusCode expectedLimited = HttpStatusCode.TooManyRequests;
 
@@ -131,9 +130,9 @@ public sealed class RequestLimitingTests
     public async Task Should_EnforceSensitiveSourceLimit_WhenDifferentAccountsAreTargeted(string policy, string path)
     {
         // Arrange
-        using var factory = new OfficeDaysFactory();
-        using var app = factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
-            configuration.AddInMemoryCollection(new Dictionary<string, string?> { [$"RateLimiting:{policy}:Permits"] = "1" })));
+        await using var factory = new OfficeDaysFactory();
+        await using var app = factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
+                                                                                                          configuration.AddInMemoryCollection(new Dictionary<string, string?> { [$"RateLimiting:{policy}:Permits"] = "1" })));
         using var client = app.CreateClient();
         const HttpStatusCode expectedStatus = HttpStatusCode.TooManyRequests;
 
@@ -151,13 +150,13 @@ public sealed class RequestLimitingTests
     public async Task Should_TrustOnlyConfiguredProxy_WhenForwardedSourcesDiffer(string trustedProxy, int expectedStatus)
     {
         // Arrange
-        using var factory = new OfficeDaysFactory();
-        using var app = factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
-            configuration.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["RateLimiting:Source:Permits"] = "1",
-                ["ReverseProxy:KnownProxies:0"] = trustedProxy
-            })));
+        await using var factory = new OfficeDaysFactory();
+        await using var app = factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
+                                                                                                          configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                                                                                                          {
+                                                                                                              ["RateLimiting:Source:Permits"] = "1",
+                                                                                                              ["ReverseProxy:KnownProxies:0"] = trustedProxy
+                                                                                                          })));
         using var client = app.CreateClient();
         await app.Server.SendAsync(context =>
         {
@@ -182,9 +181,9 @@ public sealed class RequestLimitingTests
     public async Task Should_LimitReportsSeparately_WhenApiAllowanceRemains()
     {
         // Arrange
-        using var factory = new OfficeDaysFactory();
-        using var app = factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
-            configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["RateLimiting:Reports:Permits"] = "1" })));
+        await using var factory = new OfficeDaysFactory();
+        await using var app = factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
+                                                                                                          configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["RateLimiting:Reports:Permits"] = "1" })));
         using var client = app.CreateClient();
         await Login(client, "admin", "VeryStrongAdminPassword!");
         const HttpStatusCode expectedAllowed = HttpStatusCode.OK;
@@ -202,7 +201,7 @@ public sealed class RequestLimitingTests
     public async Task Should_BoundStreamedBodies_WhenContentLengthIsAbsent(int bodyLength, int expectedStatus)
     {
         // Arrange
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         using var body = new MemoryStream(new byte[bodyLength]);
 
@@ -222,17 +221,17 @@ public sealed class RequestLimitingTests
     public async Task Should_ShareAccountLimitAcrossTrustedSources_WhenCasingChanges()
     {
         // Arrange
-        using var factory = new OfficeDaysFactory();
-        using var app = factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
-            configuration.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["RateLimiting:LoginAccount:Permits"] = "1",
-                ["ReverseProxy:KnownProxies:0"] = "10.0.0.1"
-            })));
+        await using var factory = new OfficeDaysFactory();
+        await using var app = factory.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
+                                                                                                          configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                                                                                                          {
+                                                                                                              ["RateLimiting:LoginAccount:Permits"] = "1",
+                                                                                                              ["ReverseProxy:KnownProxies:0"] = "10.0.0.1"
+                                                                                                          })));
         using var client = app.CreateClient();
         const int expectedStatus = 429;
-        using var firstBody = new MemoryStream(System.Text.Encoding.UTF8.GetBytes("{\"username\":\"missing\",\"password\":\"wrong\"}"));
-        using var secondBody = new MemoryStream(System.Text.Encoding.UTF8.GetBytes("""{"USERNAME":" MISSING ","password":"wrong"}"""));
+        using var firstBody = new MemoryStream([.. "{\"username\":\"missing\",\"password\":\"wrong\"}"u8 ]);
+        using var secondBody = new MemoryStream([.. "{\"USERNAME\":\" MISSING \",\"password\":\"wrong\"}"u8 ]);
         await app.Server.SendAsync(context =>
         {
             context.Connection.RemoteIpAddress = IPAddress.Parse("10.0.0.1");
@@ -259,5 +258,4 @@ public sealed class RequestLimitingTests
         // Assert
         Assert.Equal(expectedStatus, response.Response.StatusCode);
     }
-
 }

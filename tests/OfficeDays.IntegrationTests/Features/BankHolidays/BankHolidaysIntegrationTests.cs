@@ -10,7 +10,7 @@ public sealed class BankHolidaysIntegrationTests
     [Fact]
     public async Task Admin_can_remove_the_last_holiday_without_affecting_other_years()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await Login(client, "Admin", "VeryStrongAdminPassword!");
         var csrf = await Csrf(client);
@@ -27,7 +27,7 @@ public sealed class BankHolidaysIntegrationTests
     [Fact]
     public async Task Admin_can_replace_holidays_but_normal_user_cannot()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var normal = factory.CreateClient();
         await CreateUser(normal, "normal");
         await Login(normal, "normal", "Normal-user-password!");
@@ -62,7 +62,7 @@ public sealed class BankHolidaysIntegrationTests
     [Fact]
     public async Task Bank_holiday_endpoints_reject_invalid_years_and_replacement_payloads()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await Login(client, "Admin", "VeryStrongAdminPassword!");
         var csrf = await Csrf(client);

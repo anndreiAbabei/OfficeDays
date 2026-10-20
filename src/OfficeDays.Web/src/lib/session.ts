@@ -4,6 +4,7 @@ import type { User } from './types';
 
 export const user = writable<User | null>(null);
 export const sessionReady = writable(false);
+export const sessionMessage = writable('');
 export const sessionError = writable('');
 onUnauthorized(() => user.set(null));
 
@@ -22,7 +23,8 @@ export async function loadSession(): Promise<void> {
   }
 }
 
-export function signedIn(value: User): void { 
+export function signedIn(value: User): void {
+  sessionMessage.set('');
   resetCsrf(); 
   user.set(value); 
   sessionReady.set(true); 

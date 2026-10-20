@@ -19,7 +19,7 @@ public sealed class AttendanceIntegrationTests
     [InlineData("{\"isManual\":true}", true)]
     public async Task Attendance_source_is_persisted_and_duplicates_preserve_it(string? body, bool isManual)
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await CreateUser(client, "sourceuser");
         await Login(client, "sourceuser", "Normal-user-password!");
@@ -46,7 +46,7 @@ public sealed class AttendanceIntegrationTests
     [Fact]
     public async Task Put_attendance_is_always_manual_and_post_preserves_it()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await CreateUser(client, "putsource");
         await Login(client, "putsource", "Normal-user-password!");
@@ -68,7 +68,7 @@ public sealed class AttendanceIntegrationTests
     [InlineData("{")]
     public async Task Invalid_attendance_body_does_not_create_a_record(string body)
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await CreateUser(client, "invalidsource");
         await Login(client, "invalidsource", "Normal-user-password!");
@@ -81,7 +81,7 @@ public sealed class AttendanceIntegrationTests
     [Fact]
     public async Task Bearer_attendance_is_idempotent_and_can_be_removed()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var browser = factory.CreateClient();
         await CreateUser(browser, "attendee"); await Login(browser, "attendee", "Normal-user-password!");
         var csrf = await Csrf(browser);
@@ -99,9 +99,9 @@ public sealed class AttendanceIntegrationTests
     }
 
     [Fact]
-    public async Task Attendance_endpoints_reject_invalid_requests_and_report_missing_records()
+    public async Task Should_RejectInvalidRequestsAndDeletedSessions_WhenRecordingAttendance()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await CreateUser(client, "attendancefailures");
         await Login(client, "attendancefailures", "Normal-user-password!");
@@ -120,10 +120,11 @@ public sealed class AttendanceIntegrationTests
         Assert.Equal(HttpStatusCode.NotFound,
             (await Delete(client, "/api/attendance/2099-09-01", csrf)).StatusCode);
 
+        var expectedUnauthorized = HttpStatusCode.Unauthorized;
         await DeleteUser(factory, "attendancefailures");
-        Assert.Equal(HttpStatusCode.NotFound,
+        Assert.Equal(expectedUnauthorized,
             (await PostJson(client, "/api/attendance", new { }, csrf)).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound,
+        Assert.Equal(expectedUnauthorized,
             (await PutJson(client, "/api/attendance/2099-09-01", new { }, csrf)).StatusCode);
     }
 

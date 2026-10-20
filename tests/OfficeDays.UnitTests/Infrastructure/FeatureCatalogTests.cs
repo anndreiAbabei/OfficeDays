@@ -18,8 +18,7 @@ public sealed class FeatureCatalogTests
     [Fact]
     public void Duplicate_handlers_report_both_implementations()
     {
-        var error = Assert.Throws<InvalidOperationException>(() =>
-            FeatureCatalog.Discover([typeof(TestRequest), typeof(FirstHandler), typeof(SecondHandler)]));
+        var error = Assert.Throws<InvalidOperationException>(() => FeatureCatalog.Discover([typeof(TestRequest), typeof(FirstHandler), typeof(SecondHandler)]));
         Assert.Contains(typeof(FirstHandler).FullName!, error.Message);
         Assert.Contains(typeof(SecondHandler).FullName!, error.Message);
     }

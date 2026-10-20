@@ -14,7 +14,7 @@ public sealed class TokensIntegrationTests
     [Fact]
     public async Task Bearer_tokens_are_rejected_over_http_when_https_is_required()
     {
-        using var factory = new OfficeDaysFactory(requireHttpsForBearerTokens: true);
+        await using var factory = new OfficeDaysFactory(requireHttpsForBearerTokens: true);
         using var browser = factory.CreateClient();
         await CreateUser(browser, "secureuser");
         await Login(browser, "secureuser", "Normal-user-password!");
@@ -33,7 +33,7 @@ public sealed class TokensIntegrationTests
     [Fact]
     public async Task Token_authenticates_updates_last_use_and_revocation_is_immediate()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var browser = factory.CreateClient();
         await CreateUser(browser, "tokenuser");
         await Login(browser, "tokenuser", "Normal-user-password!");
@@ -58,7 +58,7 @@ public sealed class TokensIntegrationTests
     [Fact]
     public async Task Users_cannot_manage_other_users_tokens()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var first = factory.CreateClient();
         await CreateUser(first, "firstuser"); await Login(first, "firstuser", "Normal-user-password!");
         var firstCsrf = await Csrf(first);
@@ -77,7 +77,7 @@ public sealed class TokensIntegrationTests
     [InlineData(true)]
     public async Task Rename_persists_trimmed_name_and_preserves_credential_and_metadata(bool revoked)
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var browser = factory.CreateClient();
         await CreateUser(browser, "renameuser");
         await Login(browser, "renameuser", "Normal-user-password!");
@@ -117,7 +117,7 @@ public sealed class TokensIntegrationTests
     [InlineData("too-long")]
     public async Task Rename_rejects_invalid_names_without_changing_token(string? name)
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var browser = factory.CreateClient();
         await CreateUser(browser, "invalidrename");
         await Login(browser, "invalidrename", "Normal-user-password!");
@@ -134,7 +134,7 @@ public sealed class TokensIntegrationTests
     [Fact]
     public async Task Rename_requires_owner_and_antiforgery_token()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var owner = factory.CreateClient();
         await CreateUser(owner, "renameowner");
         await Login(owner, "renameowner", "Normal-user-password!");
@@ -162,7 +162,7 @@ public sealed class TokensIntegrationTests
     [Fact]
     public async Task Permanent_delete_requires_revocation_and_removes_record_without_restoring_access()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var owner = factory.CreateClient();
         await CreateUser(owner, "deleteowner");
         await Login(owner, "deleteowner", "Normal-user-password!");

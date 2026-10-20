@@ -25,7 +25,7 @@ public sealed class CorrelationIdIntegrationTests
     [InlineData("POST", "/missing-route", 405)]
     public async Task Responses_echo_supplied_id_including_errors(string method, string path, int status)
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         using var request = new HttpRequestMessage(new HttpMethod(method), path);
         request.Headers.Add("x-correlation-id", "support-case-123");
@@ -41,7 +41,7 @@ public sealed class CorrelationIdIntegrationTests
     [Fact]
     public async Task Missing_blank_and_multiple_ids_generate_distinct_ids()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         var ids = new HashSet<string>();
         foreach (var supplied in new[] { Array.Empty<string>(), new[] { " " }, new[] { "first", "second" } })
@@ -60,8 +60,8 @@ public sealed class CorrelationIdIntegrationTests
     public async Task Handled_exceptions_keep_header_and_log_scope()
     {
         var logs = new CapturingLoggerProvider();
-        using var original = new OfficeDaysFactory();
-        using var factory = original.WithWebHostBuilder(builder =>
+        await using var original = new OfficeDaysFactory();
+        await using var factory = original.WithWebHostBuilder(builder =>
         {
             builder.ConfigureLogging(logging => logging.AddProvider(logs));
             builder.ConfigureServices(services =>

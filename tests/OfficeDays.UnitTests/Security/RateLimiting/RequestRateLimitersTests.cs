@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
@@ -10,11 +11,17 @@ namespace OfficeDays.UnitTests.Security.RateLimiting;
 public sealed class RequestRateLimitersTests
 {
     [Fact]
+    [SuppressMessage("ReSharper", "AccessToDisposedClosure", Justification = "Safe!")]
     public async Task Should_AdmitExactlyTheSourceAllowance_WhenRequestsAreConcurrent()
     {
         // Arrange
         const int expectedAllowed = 10;
-        using var limiters = new RequestRateLimiters(Options.Create(new RequestLimits { Source = new(expectedAllowed, 60) }));
+        var limits = new RequestLimits
+        {
+            Source = new RequestLimit(expectedAllowed, 60)
+        };
+        var options = Options.Create(limits);
+        using var limiters = new RequestRateLimiters(options);
 
         // Act
         var results = await Task.WhenAll(Enumerable.Range(0, 100).Select(_ => Task.Run(() =>
@@ -33,7 +40,12 @@ public sealed class RequestRateLimitersTests
         // Arrange
         const string expectedPolicy = "source";
         const int expectedWindowSeconds = 300;
-        using var limiters = new RequestRateLimiters(Options.Create(new RequestLimits { Source = new(1, expectedWindowSeconds) }));
+        var limits = new RequestLimits
+        {
+            Source = new RequestLimit(1, expectedWindowSeconds)
+        };
+        var options = Options.Create(limits);
+        using var limiters = new RequestRateLimiters(options);
         var context = Context();
         using var first = limiters.Source.AttemptAcquire(context);
 
@@ -54,7 +66,7 @@ public sealed class RequestRateLimitersTests
     public void Should_ShareUserAllowance_WhenCookiesAndDifferentTokensAreUsed()
     {
         // Arrange
-        using var limiters = new RequestRateLimiters(Options.Create(new RequestLimits { Api = new(2, 60) }));
+        using var limiters = new RequestRateLimiters(Options.Create(new RequestLimits { Api = new RequestLimit(2, 60) }));
         const string expectedPolicy = "api";
         using var cookie = limiters.Api.AttemptAcquire(Context(user: "one"));
         using var firstToken = limiters.Api.AttemptAcquire(Context(user: "one", token: "first"));
@@ -76,7 +88,7 @@ public sealed class RequestRateLimitersTests
     public void Should_EnforceTokenAllowance_WhenUserAllowanceRemains()
     {
         // Arrange
-        using var limiters = new RequestRateLimiters(Options.Create(new RequestLimits { Token = new(1, 60) }));
+        using var limiters = new RequestRateLimiters(Options.Create(new RequestLimits { Token = new RequestLimit(1, 60) }));
         var context = Context(user: "one", token: "first");
         const string expectedPolicy = "token";
         using var first = limiters.Api.AttemptAcquire(context);
@@ -98,7 +110,7 @@ public sealed class RequestRateLimitersTests
     public void Should_ExemptNonApiPaths_WhenAllowancesAreExhausted(string path)
     {
         // Arrange
-        using var limiters = new RequestRateLimiters(Options.Create(new RequestLimits { Source = new(1, 60), Api = new(1, 60) }));
+        using var limiters = new RequestRateLimiters(Options.Create(new RequestLimits { Source = new RequestLimit(1, 60), Api = new RequestLimit(1, 60) }));
         using var source = limiters.Source.AttemptAcquire(Context());
         using var api = limiters.Api.AttemptAcquire(Context());
         var context = Context();
@@ -121,7 +133,7 @@ public sealed class RequestRateLimitersTests
         // Arrange
         using var limiters = new RequestRateLimiters(Options.Create(new RequestLimits
         {
-            LoginAccount = new(1, 60), RecoveryAccount = new(1, 60)
+            LoginAccount = new RequestLimit(1, 60), RecoveryAccount = new RequestLimit(1, 60)
         }));
         var first = Context();
         var second = Context("192.0.2.2");
@@ -143,15 +155,31 @@ public sealed class RequestRateLimitersTests
 
     private static DefaultHttpContext Context(string source = "192.0.2.1", string? user = null, string? token = null)
     {
-        var context = new DefaultHttpContext();
-        context.Request.Path = "/api/auth/me";
-        context.Connection.RemoteIpAddress = IPAddress.Parse(source);
-        if (user is not null)
+        var context = new DefaultHttpContext
         {
-            var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, user) };
-            if (token is not null) claims.Add(new Claim("api_token_id", token));
-            context.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "test"));
-        }
+            Request =
+            {
+                Path = "/api/auth/me"
+            },
+            Connection =
+            {
+                RemoteIpAddress = IPAddress.Parse(source)
+            }
+        };
+        
+        if (user is null)
+            return context;
+        
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, user)
+        };
+        if (token is not null)
+            claims.Add(new Claim("api_token_id", token));
+
+        var identity = new ClaimsIdentity(claims, "test");
+        context.User = new ClaimsPrincipal(identity);
+        
         return context;
     }
 }

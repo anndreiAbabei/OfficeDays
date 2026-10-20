@@ -168,6 +168,19 @@ public static class ServiceRegistration
                        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                        options.SlidingExpiration = true;
                        options.ExpireTimeSpan = timeSpan;
+                       options.Events.OnValidatePrincipal = async context =>
+                       {
+                           var identifier = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                           var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                           if (!Guid.TryParse(identifier, out var userId) ||
+                               !await db.Users.AsNoTracking()
+                                        .AnyAsync(user => user.Id == userId, context.HttpContext.RequestAborted))
+                           {
+                               context.RejectPrincipal();
+                               
+                               await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                           }
+                       };
                        options.Events.OnRedirectToLogin = context =>
                        {
                            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -182,6 +195,8 @@ public static class ServiceRegistration
                    .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationHandler>(ApiTokenAuthenticationHandler.SchemeName, _ => {});
 
         authBuilder.Services.AddAuthorizationBuilder()
+                   .AddPolicy("BrowserOnly", policy => policy.RequireAuthenticatedUser()
+                       .RequireAssertion(context => context.User.Identity?.AuthenticationType == CookieAuthenticationDefaults.AuthenticationScheme))
                    .AddPolicy("AdminOnly", policy => policy.RequireClaim("is_admin", "true"));
     }
 }

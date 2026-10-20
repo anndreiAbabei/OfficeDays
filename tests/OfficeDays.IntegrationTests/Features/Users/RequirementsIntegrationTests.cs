@@ -37,7 +37,7 @@ public sealed class RequirementsIntegrationTests
     [Fact]
     public async Task Schedule_crud_resolves_past_current_future_and_baseline_without_registration_cutoff()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         var csrf = await SignIn(client);
         var baseline = Assert.Single(await Items(client));
@@ -76,7 +76,7 @@ public sealed class RequirementsIntegrationTests
     [Fact]
     public async Task Duplicate_months_and_baseline_mutations_are_rejected_without_changing_data()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         var csrf = await SignIn(client);
         var baselineId = (await Items(client))[0].GetProperty("id").GetGuid();
@@ -102,7 +102,7 @@ public sealed class RequirementsIntegrationTests
     [InlineData("2099-01-01", 101)]
     public async Task Invalid_input_is_rejected_for_create_and_edit(string date, int percentage)
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         var csrf = await SignIn(client);
         var id = (await Items(client))[0].GetProperty("id").GetGuid();
@@ -114,7 +114,7 @@ public sealed class RequirementsIntegrationTests
     [Fact]
     public async Task All_endpoints_require_authentication_mutations_require_csrf_and_rows_are_private()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync(Path)).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync(Path, Body("2099-01-01", 50))).StatusCode);
@@ -170,7 +170,7 @@ public sealed class RequirementsIntegrationTests
     [Fact]
     public async Task Current_requirement_uses_the_users_local_month_at_a_utc_boundary()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await SignIn(client);
         using var scope = factory.Services.CreateScope();

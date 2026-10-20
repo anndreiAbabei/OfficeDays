@@ -12,7 +12,7 @@ public sealed class OperationsIntegrationTests
     [Fact]
     public async Task Version_is_public_matches_build_and_is_not_cached()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         var response = await client.GetAsync("/api/version");
         response.EnsureSuccessStatusCode();
@@ -25,7 +25,7 @@ public sealed class OperationsIntegrationTests
     [Fact]
     public async Task Readiness_checks_database_while_liveness_survives_database_failure()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         var healthy = await client.GetAsync("/health/ready");
         Assert.Equal(HttpStatusCode.OK, healthy.StatusCode);

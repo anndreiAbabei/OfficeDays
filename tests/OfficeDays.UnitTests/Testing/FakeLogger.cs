@@ -14,6 +14,7 @@ public sealed class FakeLogger<T> : ILogger<T>
     {
         var li = new LogItem(logLevel, formatter(state, exception), exception)
         {
+            EventId = eventId,
             Values = CreateValues(state)
         };
         Logs.Add(li);
@@ -107,5 +108,6 @@ public sealed class FakeLogger<T> : ILogger<T>
 [ExcludeFromCodeCoverage]
 public sealed record LogItem(LogLevel Level, string Message, Exception? Exception)
 {
+    public EventId EventId { get; init; }
     public IReadOnlyDictionary<string, object> Values { get; init; } = new Dictionary<string, object>();
 }

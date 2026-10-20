@@ -3,7 +3,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { mutate, errorMessage } from '$lib/api';
-  import { signedIn, user } from '$lib/session';
+  import { signedIn, user, sessionMessage } from '$lib/session';
   import type { User } from '$lib/types';
   import Feedback from '$lib/components/Feedback.svelte';
   
@@ -57,10 +57,16 @@
     </button>
   </form>
   
-  <Feedback {error} message={page.url.searchParams.has('registered') ? 'Account created. Sign in to continue.' : ''} />
+  <Feedback {error} message={$sessionMessage || (page.url.searchParams.has('registered') ? 'Account created. Sign in to continue.' : '')} />
   
-  <p>
+  <p class="register-link">
     New here? 
     <a href="/register">Create an account</a>
   </p>
 </AuthCard>
+
+<style>
+  .register-link {
+    margin-top: 2rem;
+  }
+</style>

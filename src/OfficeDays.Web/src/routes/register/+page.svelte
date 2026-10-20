@@ -142,5 +142,11 @@
     </button>
   {/if}
   
-  <p>Already have an account? <a href="/login">Sign in</a></p>
+  <p class="login-link">Already have an account? <a href="/login">Sign in</a></p>
 </AuthCard>
+
+<style>
+  .login-link {
+    margin-top: 2rem;
+  }
+</style>

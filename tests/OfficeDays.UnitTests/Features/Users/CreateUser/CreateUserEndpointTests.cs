@@ -15,7 +15,7 @@ public sealed class CreateUserEndpointTests
     public void Should_ProtectSensitiveEndpoint_WhenMapped()
     {
         // arrange
-        var expectedLimit = new SensitiveRequestLimit("registration", null);
+        var expectedLimit = new SensitiveRequestLimit("registration");
         var executor = new RequestExecutor();
         var epb = Substitute.For<IEndpointRouteBuilder>();
         epb.DataSources.Returns([]);

@@ -20,7 +20,7 @@ public sealed class PlanningIntegrationTests
     [Fact]
     public async Task Plans_are_idempotent_scoped_to_user_and_month_and_preserved_by_attendance()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await SignIn(client, "planner");
         for (var i = 0; i < 2; i++)
@@ -47,7 +47,7 @@ public sealed class PlanningIntegrationTests
     [Fact]
     public async Task Past_weekend_vacation_and_jurisdiction_holiday_rules_are_enforced()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await SignIn(client, "eligibility");
         using var scope = factory.Services.CreateScope();
@@ -81,7 +81,7 @@ public sealed class PlanningIntegrationTests
     [Fact]
     public async Task Endpoints_require_authentication_csrf_and_valid_dates()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/planning?year=2099&month=9")).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.PutAsync("/api/planning/2099-09-15", null)).StatusCode);

@@ -1,0 +1,26 @@
+@baseUrl = http://localhost:5200
+
+### Sign in with a disposable test account; retain the returned session cookie.
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "disposable-test-user",
+  "password": "REPLACE_WITH_CURRENT_PASSWORD"
+}
+
+### Fetch a CSRF token using the same cookie jar.
+GET {{baseUrl}}/api/auth/csrf
+
+### Irreversible: delete ONLY the signed-in account. Replace the CSRF placeholder.
+# Cookie authentication is required; bearer tokens receive 403.
+# 204: deleted; 400: invalid password/input/CSRF; 401: no valid session;
+# 409: last administrator (assign another administrator before retrying).
+# A retry after success receives 401 and cannot delete another account.
+DELETE {{baseUrl}}/api/users/me
+Content-Type: application/json
+X-CSRF-TOKEN: REPLACE_WITH_CSRF_TOKEN
+
+{
+  "password": "REPLACE_WITH_CURRENT_PASSWORD"
+}

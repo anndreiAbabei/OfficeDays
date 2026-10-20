@@ -14,7 +14,7 @@ public sealed class UsersIntegrationTests
     [Fact]
     public async Task User_creation_is_normal_and_cookie_login_authenticates()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         var response = await client.PostAsJsonAsync("/api/users", new
         {
@@ -34,7 +34,7 @@ public sealed class UsersIntegrationTests
     [Fact]
     public async Task User_creation_rejects_invalid_input_and_duplicate_usernames()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
 
         var invalid = await client.PostAsJsonAsync("/api/users", new
@@ -56,7 +56,7 @@ public sealed class UsersIntegrationTests
     [InlineData(" person@example.com ")]
     public async Task Email_can_be_created_updated_and_cleared(string email)
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         var created = await client.PostAsJsonAsync("/api/users", new
         {
@@ -93,7 +93,7 @@ public sealed class UsersIntegrationTests
     [InlineData("   ")]
     public async Task User_creation_accepts_empty_email_as_null(string? email)
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         var response = await client.PostAsJsonAsync("/api/users", new
         {
@@ -110,7 +110,7 @@ public sealed class UsersIntegrationTests
     [Fact]
     public async Task User_creation_and_update_accept_omitted_email()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         var created = await client.PostAsJsonAsync("/api/users", new
         {
@@ -132,7 +132,7 @@ public sealed class UsersIntegrationTests
     [Fact]
     public async Task Email_update_requires_authentication_csrf_and_valid_email()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         Assert.Equal(HttpStatusCode.Unauthorized,
             (await client.PutAsJsonAsync("/api/users/me", new { email = "user@example.com" })).StatusCode);
@@ -160,7 +160,7 @@ public sealed class UsersIntegrationTests
     [InlineData(100)]
     public async Task Office_percentage_is_persisted_and_updates_status(int percentage)
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         var created = await client.PostAsJsonAsync("/api/users", new
         {
@@ -200,7 +200,7 @@ public sealed class UsersIntegrationTests
     [InlineData(50.5)]
     public async Task Invalid_office_percentages_are_rejected(decimal percentage)
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/users", new
         {
