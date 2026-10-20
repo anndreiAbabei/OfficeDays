@@ -10,7 +10,7 @@ namespace OfficeDays.UnitTests.Features.Attendance.RecordToday;
 public sealed class RecordTodayEndpointTests
 {
     [Fact]
-    public void Should_CreateEndpoint()
+    public void Should_MapPostEndpoint_WhenMappingRoutes()
     {
         // arrange
         var executor = new RequestExecutor();

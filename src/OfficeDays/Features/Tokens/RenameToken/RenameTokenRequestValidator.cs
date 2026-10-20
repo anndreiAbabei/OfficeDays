@@ -7,7 +7,9 @@ public sealed class RenameTokenRequestValidator : AbstractValidator<RenameTokenR
 {
     public RenameTokenRequestValidator(IValidator<RenameTokenRequestBody> bodyValidator)
     {
-        RuleFor(input => input.Body).NotNull().SetValidator(bodyValidator);
+        RuleFor(input => input.Body)
+            .NotNull()
+            .SetValidator(bodyValidator);
     }
 }
 
@@ -15,6 +17,8 @@ public sealed class RenameTokenRequestBodyValidator : AbstractValidator<RenameTo
 {
     public RenameTokenRequestBodyValidator()
     {
-        RuleFor(body => body.Name).NotEmpty().MaximumLength(100);
+        RuleFor(body => body.Name)
+            .NotEmpty()
+            .MaximumLength(100);
     }
 }

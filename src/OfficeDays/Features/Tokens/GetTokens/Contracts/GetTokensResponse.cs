@@ -12,6 +12,7 @@ public sealed record GetTokensResponse : IEnumerable<GetTokensItem>
     {
         _items = items;
     }
+    
     public IEnumerator<GetTokensItem> GetEnumerator() => _items.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

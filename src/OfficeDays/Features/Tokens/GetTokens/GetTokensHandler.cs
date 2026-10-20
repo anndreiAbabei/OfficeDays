@@ -21,11 +21,14 @@ public sealed class GetTokensHandler : IRequestHandler<GetTokensRequest>
     public async ValueTask<IResult> Handle(GetTokensRequest input, CancellationToken cancellationToken)
     {
         var rows = await _dbContext.ApiTokens
-                                 .AsNoTracking()
-                                 .Where(x => x.UserId == _currentUser.Id)
-                                 .ToListAsync(cancellationToken);
+                                   .AsNoTracking()
+                                   .Where(x => x.UserId == _currentUser.Id)
+                                   .ToListAsync(cancellationToken);
         
         // SQLite cannot order DateTimeOffset values; filter by user in SQL, then sort their tokens.
-        return Results.Ok(rows.OrderByDescending(x => x.CreatedAt).ToViewModel());
+        var result = rows.OrderByDescending(x => x.CreatedAt)
+                         .ToViewModel();
+        
+        return Results.Ok(result);
     }
 }
