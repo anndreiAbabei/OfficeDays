@@ -11,7 +11,7 @@ namespace OfficeDays.IntegrationTests.Features.Users;
 public sealed class RequirementLoggingIntegrationTests
 {
     [Fact]
-    public async Task Rejected_requests_emit_generated_logs_from_the_responsible_handler()
+    public async Task Should_LogRejectedRequirementsAndRejectDeletedSessions_WhenRequestsFail()
     {
         var logs = new CapturingLoggerProvider();
         await using var original = new OfficeDaysFactory();
@@ -35,13 +35,15 @@ public sealed class RequirementLoggingIntegrationTests
         Assert.Equal(HttpStatusCode.NotFound, (await PutJson(client, $"{path}/{missingId}", body, csrf)).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await Delete(client, $"{path}/{missingId}", csrf)).StatusCode);
 
-        // The existing cookie still supplies the ID; the handlers must log the absent user.
+        // Deleted sessions are now rejected before feature handlers run.
+        var expectedUnauthorized = HttpStatusCode.Unauthorized;
         await DeleteUser(original, "requirementlogs");
-        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync(path)).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await PostJson(client, path, body, csrf)).StatusCode);
+        Assert.Equal(expectedUnauthorized, (await client.GetAsync(path)).StatusCode);
+        Assert.Equal(expectedUnauthorized, (await PostJson(client, path, body, csrf)).StatusCode);
 
-        foreach (var eventId in new[] { 4201, 4202, 4301, 4302, 4401, 4501, 4502, 4503 })
+        foreach (var eventId in new[] { 4202, 4301, 4302, 4501, 4502, 4503 })
             Assert.Contains(logs.Entries, entry => entry.EventId == eventId && entry.Level == LogLevel.Warning);
+        Assert.DoesNotContain(logs.Entries, entry => entry.EventId is 4201 or 4401);
         Assert.Contains(logs.Entries, entry => entry.EventId == 4202 && entry.Exception is not null);
         Assert.Contains(logs.Entries, entry => entry.EventId == 4503 && entry.Exception is not null);
     }

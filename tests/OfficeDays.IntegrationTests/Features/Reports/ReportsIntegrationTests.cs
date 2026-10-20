@@ -106,7 +106,7 @@ public sealed class ReportsIntegrationTests
     }
 
     [Fact]
-    public async Task Requires_authentication_validates_filters_and_handles_deleted_users()
+    public async Task Should_RejectInvalidFiltersAndDeletedSessions_WhenRequestingReports()
     {
         await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
@@ -115,12 +115,13 @@ public sealed class ReportsIntegrationTests
         await Login(client, "validationuser", "Normal-user-password!");
         foreach (var query in new[] { "year=0", "year=9999", "year=invalid", "startMonth=0", "endMonth=13", "startMonth=8&endMonth=7" })
             Assert.Equal(HttpStatusCode.BadRequest, (await client.GetAsync($"/api/reports?{query}")).StatusCode);
+        var expectedUnauthorized = HttpStatusCode.Unauthorized;
         await DeleteUser(factory, "validationuser");
-        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/api/reports")).StatusCode);
+        Assert.Equal(expectedUnauthorized, (await client.GetAsync("/api/reports")).StatusCode);
     }
 
     [Fact]
-    public async Task Report_input_queries_share_one_database_transaction()
+    public async Task Should_ShareOneTransaction_WhenReadingReportInputs()
     {
         var capture = new TransactionCapture();
         await using var original = new OfficeDaysFactory();
@@ -131,9 +132,12 @@ public sealed class ReportsIntegrationTests
         await Login(client, "snapshotuser", "Normal-user-password!");
         capture.Enabled = true;
         (await client.GetAsync("/api/reports")).EnsureSuccessStatusCode();
-        Assert.Equal(5, capture.Transactions.Count);
-        Assert.NotNull(capture.Transactions[0]);
-        Assert.All(capture.Transactions, transaction => Assert.Same(capture.Transactions[0], transaction));
+        // Authentication performs one existence query before the five report queries.
+        const int expectedQueryCount = 6;
+        Assert.Equal(expectedQueryCount, capture.Transactions.Count);
+        Assert.Null(capture.Transactions[0]);
+        Assert.NotNull(capture.Transactions[1]);
+        Assert.All(capture.Transactions.Skip(1), transaction => Assert.Same(capture.Transactions[1], transaction));
     }
 
     private sealed class TransactionCapture : DbCommandInterceptor

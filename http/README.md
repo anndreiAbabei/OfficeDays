@@ -22,3 +22,5 @@ The 2027 calendar contains 17 distinct holiday dates, including Orthodox Easter 
 ### Rate limits
 
 Every `/api` request may return `429 application/problem+json` with `Retry-After` (seconds) and `retryAfterSeconds`. Wait at least this duration before retrying, including in iOS Shortcuts; avoid immediate retry loops. All tokens share their user's total allowance and each token also has its own limit. Attendance retries remain duplicate-safe. Oversized request bodies return 413. See the README's request-limit table for defaults and deployment constraints.
+
+Account deletion is documented in [account-deletion.http](account-deletion.http). Use only a disposable account when trying this irreversible operation. It requires a browser cookie, CSRF token, and current password; an API token is insufficient. See the root README for backup retention and restore requirements.

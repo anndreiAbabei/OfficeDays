@@ -99,7 +99,7 @@ public sealed class AttendanceIntegrationTests
     }
 
     [Fact]
-    public async Task Attendance_endpoints_reject_invalid_requests_and_report_missing_records()
+    public async Task Should_RejectInvalidRequestsAndDeletedSessions_WhenRecordingAttendance()
     {
         await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
@@ -120,10 +120,11 @@ public sealed class AttendanceIntegrationTests
         Assert.Equal(HttpStatusCode.NotFound,
             (await Delete(client, "/api/attendance/2099-09-01", csrf)).StatusCode);
 
+        var expectedUnauthorized = HttpStatusCode.Unauthorized;
         await DeleteUser(factory, "attendancefailures");
-        Assert.Equal(HttpStatusCode.NotFound,
+        Assert.Equal(expectedUnauthorized,
             (await PostJson(client, "/api/attendance", new { }, csrf)).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound,
+        Assert.Equal(expectedUnauthorized,
             (await PutJson(client, "/api/attendance/2099-09-01", new { }, csrf)).StatusCode);
     }
 
