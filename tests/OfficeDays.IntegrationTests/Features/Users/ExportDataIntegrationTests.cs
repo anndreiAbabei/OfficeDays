@@ -21,9 +21,9 @@ public sealed class ExportDataIntegrationTests
     {
         // Arrange
         const string expectedVersion = "9.8.7+test-build";
-        using var original = new OfficeDaysFactory();
-        using var factory = original.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
-            services.AddSingleton<IAppVersionService>(new TestAppVersionService())));
+        await using var original = new OfficeDaysFactory();
+        await using var factory = original.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+                                                                                                       services.AddSingleton<IAppVersionService>(new TestAppVersionService())));
         using var client = factory.CreateClient();
         await CreateUser(client, "versionedexport");
         await Login(client, "versionedexport", "Normal-user-password!");
@@ -45,9 +45,9 @@ public sealed class ExportDataIntegrationTests
     public async Task Should_RejectExport_WhenSessionIsAbsentOrAccountDeleted(bool accountDeleted)
     {
         // Arrange
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
-        var expectedStatusCode = HttpStatusCode.Unauthorized;
+        const HttpStatusCode expectedStatusCode = HttpStatusCode.Unauthorized;
         if (accountDeleted)
         {
             await CreateUser(client, "deleted");
@@ -68,7 +68,7 @@ public sealed class ExportDataIntegrationTests
     {
         // Arrange
         var expectedBaselineDate = DateOnly.MinValue;
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await CreateUser(client, "empty");
         await Login(client, "empty", "Normal-user-password!");
@@ -108,7 +108,7 @@ public sealed class ExportDataIntegrationTests
         var expectedVersion = typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
                               ?? throw new InvalidOperationException("The application assembly must declare its version.");
         var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await CreateUser(client, "exporter");
         await CreateUser(client, "other");
