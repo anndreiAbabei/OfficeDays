@@ -210,7 +210,7 @@ You can also keep the shortcut manual and run it whenever you arrive. Check the 
 
 For Docker installations, the data folder contains the database and the keys used to keep browser logins valid. To make a simple, consistent backup, stop the app with `docker compose down`, copy the **entire data folder** somewhere safe, then start it again with `docker compose up -d`. Keep the backup private.
 
-For access outside your local network, put the app behind an HTTPS reverse proxy and keep `OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER=true`. The proxy must pass the original scheme using `X-Forwarded-Proto`. The supplied Compose setup accepts forwarded headers, so restrict direct access to port `5802` to trusted systems or your proxy.
+For access outside your local network, put the app behind an HTTPS reverse proxy and keep `OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER=true`. The proxy must pass the original scheme using `X-Forwarded-Proto`. Forwarded headers are ignored unless the immediate proxy IP is listed in `ReverseProxy:KnownProxies` (for example `ReverseProxy__KnownProxies__0=172.20.0.2`). Restrict direct access to port `5802` to your proxy. Do not set `ASPNETCORE_FORWARDEDHEADERS_ENABLED`; startup rejects that unsafe trust-all mode.
 
 Other settings, such as browser session lifetime, can be adjusted in [appsettings.Production.json](src/OfficeDays/appsettings.Production.json) for Docker. Keep passwords in `.env`. Once the initial Admin account exists, you can remove its bootstrap password from `.env`; it is ignored on subsequent starts while users exist.
 
@@ -219,3 +219,33 @@ For custom integrations beyond Shortcuts, see the [HTTP request examples](http/R
 ## License
 
 [MIT](LICENSE)
+
+
+### Request limits for public hosting
+
+The initial deployment **must run exactly one application instance**. Limits are bounded, in-memory counters; restarting clears them. Multiple replicas each have their own allowance, so horizontal scaling requires shared enforcement at a trusted gateway or a distributed limiter first. Rolling deployments can briefly multiply allowances. These controls are preparation for public hosting, not a distributed abuse-prevention service.
+
+Configure `RateLimiting` in appsettings or environment variables, e.g. `RateLimiting__Login__Permits=15` and `RateLimiting__Login__WindowSeconds=300`. Defaults:
+
+| Policy | Requests | Window | Key |
+| --- | ---: | ---: | --- |
+| Source | 600 | 60 seconds | Trusted client IP, before authentication |
+| Api | 120 | 60 seconds | User across cookies and all tokens; anonymous requests by IP |
+| Token | 60 | 60 seconds | Authenticated token ID, in addition to user allowance |
+| Login | 20 | 300 seconds | IP |
+| LoginAccount | 10 | 300 seconds | Trimmed, uppercase username across all IPs |
+| Registration | 5 | 3600 seconds | IP |
+| Recovery | 10 | 900 seconds | IP; reserved for future recovery endpoints |
+| RecoveryAccount | 5 | 900 seconds | Normalized account target across IPs; reserved |
+| Verification | 10 | 900 seconds | IP; reserved for future verification endpoints |
+| Reports | 10 | 60 seconds | User or anonymous IP, in addition to API allowance |
+
+Windows begin with the first request and allow the full burst immediately, without queuing. A boundary can admit two bursts close together. Rejected requests never extend a window or persist an account lockout. Earlier layers still count requests rejected by later layers. All API requests, including invalid requests, count; static assets and `/health/*` are exempt. The source allowance is intentionally higher to accommodate users behind one NAT, but a saturated source can still affect them. Normal dashboard and Shortcut bursts fit within the default allowances.
+
+`MaxBodyBytes` defaults to 65,536 bytes for every API body, including streamed bodies without Content-Length; larger bodies receive 413. Holiday uploads must fit this bound. Reports already restrict queries to one year and now have a separate rate allowance; there is no separate export endpoint. Future recovery/verification endpoints must attach `SensitiveRequestLimit` metadata (recovery includes the JSON account-field name), and future expensive export endpoints must receive an appropriate limit before exposure.
+
+`MaxPartitions` bounds stored counter entries (default 10,000). At capacity, new identities receive 429 until an existing window expires; existing counters remain enforced. Metrics use meter `OfficeDays.RequestLimits`, counter `officedays.requests.rejected`, and a low-cardinality `policy` tag, including `body` for oversized requests. No credentials, account identifiers, IPs, or reset tokens are attached to these metrics. Collect this meter with your observability tooling and adjust limits based on rejection rates and legitimate demand.
+
+A rejection returns ProblemDetails with status 429, a `Retry-After` duration in seconds, and `retryAfterSeconds`. Browser errors display that delay. iOS Shortcuts and other clients should wait at least `Retry-After` (preferably with a small random delay) before retrying; never loop immediately or create extra tokens to increase throughput. Attendance recording remains duplicate-safe.
+
+**Azure launch gate:** no Azure ingress configuration exists in this repository, so its eventual behavior cannot yet be verified. Before public launch, verify the actual immediate proxy IP, a single sanitized forwarded-for/proto hop, HTTPS termination, and that the backend cannot be reached directly. Configure only that proxy in `ReverseProxy:KnownProxies`; the app processes one forwarded hop. Test a forged `X-Forwarded-For`/`X-Forwarded-Proto` from an untrusted connection and confirm it neither changes the limiter source nor bypasses bearer HTTPS enforcement. Do not deploy with an empty trust-all proxy/network list or enable platform automatic trust-all forwarding. Multi-hop ingress requires an explicit reviewed configuration change, not simply trusting arbitrary headers.

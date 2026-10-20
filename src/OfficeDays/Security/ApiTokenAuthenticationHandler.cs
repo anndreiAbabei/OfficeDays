@@ -34,14 +34,14 @@ public sealed class ApiTokenAuthenticationHandler : AuthenticationHandler<Authen
         var header = Request.Headers.Authorization.ToString();
         if (!header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
-            _logger.LogNoBearerCredentials();
+            Logging.ApiTokenAuthenticationHandlerLogging.LogNoBearerCredentials(_logger);
             return AuthenticateResult.NoResult();
         }
 
         var rawToken = header["Bearer ".Length..].Trim();
         if (rawToken.Length == 0)
         {
-            _logger.LogMissingToken(Context.Connection.RemoteIpAddress);
+            Logging.ApiTokenAuthenticationHandlerLogging.LogMissingToken(_logger, Context.Connection.RemoteIpAddress);
             return AuthenticateResult.Fail("A bearer token is required.");
         }
 
@@ -52,23 +52,24 @@ public sealed class ApiTokenAuthenticationHandler : AuthenticationHandler<Authen
                                                           Context.RequestAborted);
         if (token is null)
         {
-            _logger.LogInvalidToken(Context.Connection.RemoteIpAddress);
+            Logging.ApiTokenAuthenticationHandlerLogging.LogInvalidToken(_logger, Context.Connection.RemoteIpAddress);
             return AuthenticateResult.Fail("The bearer token is invalid or revoked.");
         }
 
         if (token.RevokedAt is not null)
         {
-            _logger.LogRevokedToken(token.Id, Context.Connection.RemoteIpAddress);
+            Logging.ApiTokenAuthenticationHandlerLogging.LogRevokedToken(_logger, token.Id, Context.Connection.RemoteIpAddress);
             return AuthenticateResult.Fail("The bearer token is invalid or revoked.");
         }
 
         token.LastUsedAt = _timeProvider.GetUtcNow();
         await _dbContext.SaveChangesAsync(Context.RequestAborted);
-        _logger.LogTokenAuthenticated(token.Id, token.UserId);
+        Logging.ApiTokenAuthenticationHandlerLogging.LogTokenAuthenticated(_logger, token.Id, token.UserId);
 
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, token.UserId.ToString()),
+            new Claim("api_token_id", token.Id.ToString()),
             new Claim(ClaimTypes.Name, token.User.Username),
             new Claim("timezone", token.User.TimeZoneId),
             new Claim("country", token.User.HolidayJurisdiction.Code),

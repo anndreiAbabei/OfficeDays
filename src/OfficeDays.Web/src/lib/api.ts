@@ -46,6 +46,14 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
       unauthorized();
     }
 
+    if (response.status === 429) {
+      const retrySeconds = Number(response.headers.get('Retry-After'));
+      const message = Number.isFinite(retrySeconds) && retrySeconds > 0
+        ? `Too many requests. Please try again in ${Math.ceil(retrySeconds)} seconds.`
+        : 'Too many requests. Please wait a little before trying again.';
+      throw new ApiError(message, response.status);
+    }
+
     const error = response.status === 401
         ? 'Please sign in again.'
         : `Request failed (${response.status})`;

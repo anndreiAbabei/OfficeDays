@@ -1,3 +1,4 @@
+using OfficeDays.Security.RateLimiting;
 using OfficeDays.Features.Authentication.Login.Contracts;
 using OfficeDays.Infrastructure;
 
@@ -10,6 +11,7 @@ public sealed class LoginEndpoint(IRequestExecutor executor) : IAuthenticationEn
     public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
         endpoints.MapPost("login", _executor.Execute<LoginRequest>)
+                 .WithMetadata(new SensitiveRequestLimit("login", "username"))
                  .AllowAnonymous();
     }
 }
