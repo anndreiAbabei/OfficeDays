@@ -72,6 +72,7 @@ Features/<Area>/<UseCase>/
 - Prefer explicit constructors. A primary constructor (the record-like constructor syntax on a class) is acceptable when the class and initialization logic are simple. In either style, assign injected services to `private readonly` fields named `_camelCase` and use those fields in instance methods. Do not directly capture primary-constructor service parameters in methods or use them as implicit backing fields.
 - Use async/await for I/O and pass cancellation tokens through validation, EF queries, and saves. Avoid `.Result`, `.Wait()`, `async void`, and `Task.Run` around database operations.
 - Treat warnings as errors, as configured in `Directory.Build.props`. Do not relax this setting.
+- Prefer to be explicit when creating an object (use `private Test _test = new Test();`; do not omit the type `private Test _test = new();`)
 
 For example, a simple endpoint may use a primary constructor with an explicit readonly field:
 
