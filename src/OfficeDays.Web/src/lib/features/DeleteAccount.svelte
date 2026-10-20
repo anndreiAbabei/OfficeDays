@@ -95,6 +95,10 @@
     border: 1px solid var(--danger); 
   }
   
+  .danger-section > button {
+    margin-top: 1.5rem;
+  }
+  
   dialog { 
     max-width: 32rem; 
     width: calc(100% - 2rem); 

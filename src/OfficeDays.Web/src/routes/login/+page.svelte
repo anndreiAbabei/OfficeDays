@@ -59,8 +59,14 @@
   
   <Feedback {error} message={$sessionMessage || (page.url.searchParams.has('registered') ? 'Account created. Sign in to continue.' : '')} />
   
-  <p>
+  <p class="register-link">
     New here? 
     <a href="/register">Create an account</a>
   </p>
 </AuthCard>
+
+<style>
+  .register-link {
+    margin-top: 2rem;
+  }
+</style>
