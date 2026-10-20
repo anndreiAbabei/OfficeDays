@@ -13,7 +13,7 @@ public sealed class VacationsIntegrationTests
     [Fact]
     public async Task Vacation_creation_and_removal_are_scoped_to_the_user()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var owner = factory.CreateClient();
         await CreateUser(owner, "vacationer"); await Login(owner, "vacationer", "Normal-user-password!");
         var csrf = await Csrf(owner);
@@ -30,7 +30,7 @@ public sealed class VacationsIntegrationTests
     [Fact]
     public async Task Vacation_endpoints_reject_invalid_ranges_and_filters_and_report_missing_records()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await CreateUser(client, "vacationfailures");
         await Login(client, "vacationfailures", "Normal-user-password!");
@@ -47,7 +47,7 @@ public sealed class VacationsIntegrationTests
     [Fact]
     public async Task Update_persists_dates_across_months_and_preserves_identity_and_creation_time()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var owner = factory.CreateClient();
         await CreateUser(owner, "vacationedit");
         await Login(owner, "vacationedit", "Normal-user-password!");
@@ -78,7 +78,7 @@ public sealed class VacationsIntegrationTests
     [Fact]
     public async Task Update_rejects_nonowners_missing_records_and_missing_antiforgery()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var owner = factory.CreateClient();
         await CreateUser(owner, "vacationowner");
         await Login(owner, "vacationowner", "Normal-user-password!");
@@ -104,7 +104,7 @@ public sealed class VacationsIntegrationTests
     [InlineData("2026-09-21", "2026-02-30")]
     public async Task Update_rejects_invalid_dates_without_changing_vacation(string from, string to)
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var owner = factory.CreateClient();
         await CreateUser(owner, "invalidvacationedit");
         await Login(owner, "invalidvacationedit", "Normal-user-password!");
@@ -120,7 +120,7 @@ public sealed class VacationsIntegrationTests
     [Fact]
     public async Task Updated_overlapping_ranges_remain_allowed_and_are_counted_once()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var owner = factory.CreateClient();
         await CreateUser(owner, "vacationoverlap");
         await Login(owner, "vacationoverlap", "Normal-user-password!");
@@ -137,7 +137,7 @@ public sealed class VacationsIntegrationTests
     [Fact]
     public async Task Updated_dates_refresh_calendar_eligibility_and_planned_and_summary_counts()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var owner = factory.CreateClient();
         await CreateUser(owner, "vacationplanning");
         await Login(owner, "vacationplanning", "Normal-user-password!");

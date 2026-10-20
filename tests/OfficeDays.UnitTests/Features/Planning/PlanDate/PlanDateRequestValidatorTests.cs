@@ -21,7 +21,7 @@ public sealed class PlanDateRequestValidatorTests
         // arrange
         var expectedToday = new DateOnly(2026, 10, 19);
         var user = new User { Id = Guid.NewGuid(), Username = "alice", NormalizedUsername = "ALICE", PasswordHash = "hash", TimeZoneId = "Pacific/Auckland" };
-        using var db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlite("Data Source=:memory:").Options);
+        await using var db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlite("Data Source=:memory:").Options);
         db.Users.Attach(user);
         var currentUser = Substitute.For<ICurrentUser>();
         currentUser.Id.Returns(user.Id);

@@ -14,7 +14,7 @@ public sealed class TeamDayIntegrationTests
     [Fact]
     public async Task Team_day_defaults_saves_persists_and_clears_without_affecting_other_users()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await CreateUser(client, "teamuser");
         await CreateUser(client, "otheruser");
@@ -78,7 +78,7 @@ public sealed class TeamDayIntegrationTests
     [InlineData("")]
     public async Task Invalid_team_day_does_not_overwrite_saved_preference(string day)
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await CreateUser(client, "teamuser");
         await Login(client, "teamuser", "Normal-user-password!");

@@ -14,8 +14,8 @@ public sealed class RequirementLoggingIntegrationTests
     public async Task Rejected_requests_emit_generated_logs_from_the_responsible_handler()
     {
         var logs = new CapturingLoggerProvider();
-        using var original = new OfficeDaysFactory();
-        using var factory = original.WithWebHostBuilder(builder => builder.ConfigureLogging(logging => logging.AddProvider(logs)));
+        await using var original = new OfficeDaysFactory();
+        await using var factory = original.WithWebHostBuilder(builder => builder.ConfigureLogging(logging => logging.AddProvider(logs)));
         using var client = factory.CreateClient();
         await CreateUser(client, "requirementlogs");
         await Login(client, "requirementlogs", "Normal-user-password!");

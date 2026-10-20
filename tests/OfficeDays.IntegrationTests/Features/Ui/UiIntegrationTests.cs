@@ -18,7 +18,7 @@ public sealed class UiIntegrationTests
     [InlineData("/admin")]
     public async Task Deep_links_serve_uncached_spa_with_hashed_entry_chunks(string route)
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         var response = await client.GetAsync(route);
         response.EnsureSuccessStatusCode();
@@ -41,7 +41,7 @@ public sealed class UiIntegrationTests
     [Fact]
     public async Task Every_generated_chunk_is_served_with_correct_caching_and_content_type()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         var content = factory.Services.GetRequiredService<UiContent>();
         Assert.Contains(content.Assets, asset => asset.Path.EndsWith(".css"));
@@ -59,7 +59,7 @@ public sealed class UiIntegrationTests
     [Fact]
     public async Task Public_chunks_are_compressed_but_api_responses_are_not()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         var content = factory.Services.GetRequiredService<UiContent>();
         var asset = content.Assets.First(item => item.Path.EndsWith(".js") && item.Bytes.Length > 1000);
@@ -68,8 +68,8 @@ public sealed class UiIntegrationTests
         var response = await client.SendAsync(request);
         Assert.Contains("gzip", response.Content.Headers.ContentEncoding);
         Assert.Contains("Accept-Encoding", response.Headers.Vary);
-        using var compressed = new System.IO.Compression.GZipStream(
-            await response.Content.ReadAsStreamAsync(), System.IO.Compression.CompressionMode.Decompress);
+        await using var compressed = new System.IO.Compression.GZipStream(
+                                                                          await response.Content.ReadAsStreamAsync(), System.IO.Compression.CompressionMode.Decompress);
         using var decoded = new MemoryStream();
         await compressed.CopyToAsync(decoded);
         Assert.Equal(asset.Bytes, decoded.ToArray());
@@ -87,7 +87,7 @@ public sealed class UiIntegrationTests
     [InlineData("/health/not-real")]
     public async Task Unknown_api_and_asset_urls_do_not_return_html(string route)
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync(route)).StatusCode);
     }

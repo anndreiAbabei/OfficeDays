@@ -10,7 +10,7 @@ public sealed class StatusIntegrationTests
     [Fact]
     public async Task Status_uses_persisted_holidays_vacations_and_attendance()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var admin = factory.CreateClient();
         await Login(admin, "Admin", "VeryStrongAdminPassword!");
         var adminCsrf = await Csrf(admin);
@@ -39,7 +39,7 @@ public sealed class StatusIntegrationTests
     [Fact]
     public async Task Status_defaults_to_the_users_current_month_and_rejects_incomplete_periods()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await CreateUser(client, "statusdefaults");
         await Login(client, "statusdefaults", "Normal-user-password!");

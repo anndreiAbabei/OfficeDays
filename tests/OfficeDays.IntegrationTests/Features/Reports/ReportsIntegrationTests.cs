@@ -27,7 +27,7 @@ public sealed class ReportsIntegrationTests
     [Fact]
     public async Task Generates_private_monthly_report_with_history_time_off_and_future_targets()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         var userId = await Register(client, factory, "reportuser");
         var otherId = await Register(client, factory, "otheruser");
@@ -83,7 +83,7 @@ public sealed class ReportsIntegrationTests
     [Fact]
     public async Task Range_is_inclusive_and_refresh_reflects_corrections_without_storing_reports()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await Register(client, factory, "refreshuser");
         await Login(client, "refreshuser", "Normal-user-password!");
@@ -108,7 +108,7 @@ public sealed class ReportsIntegrationTests
     [Fact]
     public async Task Requires_authentication_validates_filters_and_handles_deleted_users()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/reports")).StatusCode);
         await Register(client, factory, "validationuser");
@@ -123,9 +123,9 @@ public sealed class ReportsIntegrationTests
     public async Task Report_input_queries_share_one_database_transaction()
     {
         var capture = new TransactionCapture();
-        using var original = new OfficeDaysFactory();
-        using var factory = original.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
-            services.ConfigureDbContext<AppDbContext>(options => options.AddInterceptors(capture))));
+        await using var original = new OfficeDaysFactory();
+        await using var factory = original.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+                                                                                                       services.ConfigureDbContext<AppDbContext>(options => options.AddInterceptors(capture))));
         using var client = factory.CreateClient();
         await CreateUser(client, "snapshotuser");
         await Login(client, "snapshotuser", "Normal-user-password!");

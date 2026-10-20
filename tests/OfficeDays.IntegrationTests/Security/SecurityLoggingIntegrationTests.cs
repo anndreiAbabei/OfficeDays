@@ -20,8 +20,8 @@ public sealed class SecurityLoggingIntegrationTests
     public async Task Token_lifecycle_and_antiforgery_failures_emit_safe_generated_logs()
     {
         var logs = new CapturingLoggerProvider();
-        using var original = new OfficeDaysFactory();
-        using var factory = original.WithWebHostBuilder(builder => builder.ConfigureLogging(logging =>
+        await using var original = new OfficeDaysFactory();
+        await using var factory = original.WithWebHostBuilder(builder => builder.ConfigureLogging(logging =>
         {
             logging.AddProvider(logs);
             logging.AddFilter("OfficeDays.Security", LogLevel.Debug);

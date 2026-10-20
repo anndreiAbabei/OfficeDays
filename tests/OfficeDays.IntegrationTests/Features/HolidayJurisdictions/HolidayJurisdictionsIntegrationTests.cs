@@ -10,7 +10,7 @@ public sealed class HolidayJurisdictionsIntegrationTests
     [Fact]
     public async Task Holiday_jurisdictions_are_publicly_readable_and_admin_managed()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var anonymous = factory.CreateClient();
 
         var initial = await anonymous.GetFromJsonAsync<JsonElement[]>("/api/holiday-jurisdictions");

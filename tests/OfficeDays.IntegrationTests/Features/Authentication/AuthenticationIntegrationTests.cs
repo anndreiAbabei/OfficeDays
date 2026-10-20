@@ -9,7 +9,7 @@ public sealed class AuthenticationIntegrationTests
     [Fact]
     public async Task Login_cookie_is_persistent()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await CreateUser(client, "persistentuser");
 
@@ -25,7 +25,7 @@ public sealed class AuthenticationIntegrationTests
     [Fact]
     public async Task Login_rejects_unknown_users_and_wrong_passwords_and_logout_ends_the_session()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await CreateUser(client, "loginbranches");
 

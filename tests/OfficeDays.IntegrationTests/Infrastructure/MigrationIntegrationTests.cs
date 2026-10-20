@@ -12,7 +12,7 @@ public sealed class MigrationIntegrationTests
     [Fact]
     public async Task Startup_applies_all_migrations_and_reinitialization_preserves_bootstrap_data()
     {
-        using var factory = new OfficeDaysFactory();
+        await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
