@@ -26,6 +26,7 @@ app.UseBearerTokenHttpsProtection();
 app.UseRouting();
 app.UseMiddleware<RequestLimitingMiddleware>();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapApiEndpoints();

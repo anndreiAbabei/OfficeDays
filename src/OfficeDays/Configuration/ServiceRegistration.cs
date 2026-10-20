@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 using System.Net;
 using Microsoft.AspNetCore.HttpOverrides;
 using OfficeDays.Security.RateLimiting;
@@ -37,7 +38,6 @@ public static class ServiceRegistration
         builder.Services.AddOptions<RequestLimits>()
                .Bind(builder.Configuration.GetSection("RateLimiting"))
                .Validate(limits => limits.MaxBodyBytes is > 0 and <= 10_485_760 && 
-                                   limits.MaxPartitions > 0 && 
                                    new[] { 
                                            limits.Source, 
                                            limits.Api, 
@@ -54,7 +54,14 @@ public static class ServiceRegistration
                          "Rate limits must be positive; windows cannot exceed one day and bodies cannot exceed 10 MiB.")
             .ValidateOnStart();
         
-        builder.Services.AddSingleton<RequestLimitStore>();
+        builder.Services.AddSingleton<RequestRateLimiters>();
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.OnRejected = (context, _) => new ValueTask(RequestLimitResponses.RejectAsync(context.HttpContext, context.Lease));
+        });
+        builder.Services.AddOptions<RateLimiterOptions>().Configure<RequestRateLimiters>((options, limiters) =>
+            options.GlobalLimiter = limiters.Api);
         
         // Never enable ASPNETCORE_FORWARDEDHEADERS_ENABLED: it trusts every proxy.
         if (builder.Configuration.GetValue<bool>("FORWARDEDHEADERS_ENABLED"))

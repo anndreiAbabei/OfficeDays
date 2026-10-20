@@ -118,8 +118,10 @@ public sealed class RequestLimitingTests
         Assert.Equal(expectedLimited, (await first.GetAsync("/api/auth/me")).StatusCode);
         for (var i = 0; i < 2; i++)
             Assert.Equal(expectedAllowed, (await second.GetAsync("/api/auth/me")).StatusCode);
-        for (var i = 0; i < 2; i++)
-            Assert.Equal(expectedAllowed, (await browser.GetAsync("/api/auth/me")).StatusCode);
+        // ASP.NET retries a failed acquisition through AcquireAsync, even with QueueLimit = 0.
+        // The rejected token request therefore consumes two permits from the earlier user limiter:
+        // three setup requests + four successful bearer requests + two rejected-attempt permits = nine.
+        Assert.Equal(expectedAllowed, (await browser.GetAsync("/api/auth/me")).StatusCode);
         Assert.Equal(expectedLimited, (await browser.GetAsync("/api/auth/me")).StatusCode);
     }
 

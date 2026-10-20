@@ -9,7 +9,6 @@ public sealed class RequestLimitsTests
     {
         // Arrange
         const int expectedBodyBytes = 65_536;
-        const int expectedPartitions = 10_000;
         var expectedLimits = new[]
         {
             new RequestLimit(600, 60),
@@ -29,7 +28,6 @@ public sealed class RequestLimitsTests
 
         // Assert
         Assert.Equal(expectedBodyBytes, limits.MaxBodyBytes);
-        Assert.Equal(expectedPartitions, limits.MaxPartitions);
         var limitsList = new[]
         {
             limits.Source, 

@@ -6,7 +6,6 @@ namespace OfficeDays.Security.RateLimiting;
 public sealed class RequestLimits
 {
     public int MaxBodyBytes { get; init; } = 65_536;
-    public int MaxPartitions { get; init; } = 10_000;
     public RequestLimit Source { get; init; } = new RequestLimit(600, 60);
     public RequestLimit Api { get; init; } = new RequestLimit(120, 60);
     public RequestLimit Token { get; init; } = new RequestLimit(60, 60);
