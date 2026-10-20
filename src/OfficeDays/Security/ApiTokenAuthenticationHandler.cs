@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using OfficeDays.Data;
+using OfficeDays.Security.Logging;
 
 namespace OfficeDays.Security;
 
@@ -69,6 +70,7 @@ public sealed class ApiTokenAuthenticationHandler : AuthenticationHandler<Authen
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, token.UserId.ToString()),
+            new Claim("api_token_id", token.Id.ToString()),
             new Claim(ClaimTypes.Name, token.User.Username),
             new Claim("timezone", token.User.TimeZoneId),
             new Claim("country", token.User.HolidayJurisdiction.Code),

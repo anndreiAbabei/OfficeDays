@@ -32,11 +32,12 @@ public sealed class DatabaseInitializer
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.MigrateAsync(cancellationToken: cancellationToken);
         
-        _logger.LogInformation("Database migrations are up to date");
+        _logger.LogDbMigrationUpToDate();
 
         if (await db.Users.AnyAsync(cancellationToken: cancellationToken))
         {
-            _logger.LogDebug("Skipping bootstrap administrator creation because users already exist");
+            _logger.LogSkipAdminCreateAlreadyExists();
+            
             return;
         }
 
@@ -48,7 +49,7 @@ public sealed class DatabaseInitializer
         if (string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(timeZoneId) ||
             string.IsNullOrWhiteSpace(configuredCountryCode) || string.IsNullOrWhiteSpace(configuredCountryName))
         {
-            _logger.LogCritical("Bootstrap administrator environment variables are missing for an empty database");
+            _logger.LogBootstrapAdminInfoAreMissing();
             throw new InvalidOperationException("The database has no users. Set the BootstrapAdmin__Password, BootstrapAdmin__TimeZoneId, BootstrapAdmin__CountryCode, and BootstrapAdmin__CountryName environment variables to create the initial Admin account.");
         }
         
@@ -95,6 +96,24 @@ public sealed class DatabaseInitializer
         await db.Users.AddAsync(user, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         
-        _logger.LogInformation("Created bootstrap administrator {Username} with user ID {UserId}", user.Username, user.Id);
+        _logger.LogCreatedAdmin(user.Username, user.Id);
     }
+}
+
+internal static partial class DatabaseInitializerLogger
+{
+    private const int EventIdStart = 0200;
+    
+    [LoggerMessage(EventIdStart + 1, LogLevel.Information, "Database migrations are up to date")]
+    public static partial void LogDbMigrationUpToDate(this ILogger<DatabaseInitializer> logger);
+    
+    [LoggerMessage(EventIdStart + 2, LogLevel.Debug, "Skipping bootstrap administrator creation because users already exist")]
+    public static partial void LogSkipAdminCreateAlreadyExists(this ILogger<DatabaseInitializer> logger);
+    
+    [LoggerMessage(EventIdStart + 3, LogLevel.Critical, "Bootstrap administrator environment variables are missing for an empty database")]
+    public static partial void LogBootstrapAdminInfoAreMissing(this ILogger<DatabaseInitializer> logger);
+    
+    [LoggerMessage(EventIdStart + 4, LogLevel.Information, "Created bootstrap administrator {Username} with user ID {UserId}")]
+    public static partial void LogCreatedAdmin(this ILogger<DatabaseInitializer> logger, string username, Guid userId);
+
 }

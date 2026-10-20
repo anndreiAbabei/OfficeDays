@@ -1,3 +1,7 @@
+using Microsoft.AspNetCore.RateLimiting;
+using System.Net;
+using Microsoft.AspNetCore.HttpOverrides;
+using OfficeDays.Security.RateLimiting;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
@@ -31,6 +35,50 @@ public static class ServiceRegistration
             options.MimeTypes = ["text/javascript", "text/css", "application/json"];
         });
         
+        builder.Services.AddOptions<RequestLimits>()
+               .Bind(builder.Configuration.GetSection("RateLimiting"))
+               .Validate(limits => limits.MaxBodyBytes is > 0 and <= 10_485_760 && 
+                                   new[] { 
+                                           limits.Source, 
+                                           limits.Api, 
+                                           limits.Token, 
+                                           limits.Login, 
+                                           limits.LoginAccount,
+                                           limits.Registration,
+                                           limits.Recovery, 
+                                           limits.RecoveryAccount, 
+                                           limits.Verification,
+                                           limits.Reports 
+                                       }.All(limit => limit.Permits > 0 && 
+                                                      limit.WindowSeconds is > 0 and <= 86_400),
+                         "Rate limits must be positive; windows cannot exceed one day and bodies cannot exceed 10 MiB.")
+            .ValidateOnStart();
+        
+        builder.Services.AddSingleton<RequestRateLimiters>();
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.OnRejected = (context, _) => new ValueTask(RequestLimitResponses.RejectAsync(context.HttpContext, context.Lease));
+        });
+        builder.Services.AddOptions<RateLimiterOptions>().Configure<RequestRateLimiters>((options, limiters) =>
+            options.GlobalLimiter = limiters.Api);
+        
+        // Never enable ASPNETCORE_FORWARDEDHEADERS_ENABLED: it trusts every proxy.
+        if (builder.Configuration.GetValue<bool>("FORWARDEDHEADERS_ENABLED"))
+            throw new InvalidOperationException("Use ReverseProxy:KnownProxies instead of ASPNETCORE_FORWARDEDHEADERS_ENABLED.");
+       
+        builder.Services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            options.ForwardLimit = 1;
+            options.KnownProxies.Clear();
+            options.KnownIPNetworks.Clear();
+            var proxies = builder.Configuration.GetSection("ReverseProxy:KnownProxies").Get<string[]>() ?? [];
+            foreach (var proxy in proxies) options.KnownProxies.Add(IPAddress.Parse(proxy));
+            // An empty trust list in ASP.NET means trust everyone. Disable forwarding instead.
+            if (proxies.Length == 0) options.ForwardedHeaders = ForwardedHeaders.None;
+        });
+
         AddHealthCheck(builder);
         AddKeyPath(builder);
         AddAntiforgery(builder);

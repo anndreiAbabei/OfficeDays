@@ -72,6 +72,7 @@ Features/<Area>/<UseCase>/
 - Prefer explicit constructors. A primary constructor (the record-like constructor syntax on a class) is acceptable when the class and initialization logic are simple. In either style, assign injected services to `private readonly` fields named `_camelCase` and use those fields in instance methods. Do not directly capture primary-constructor service parameters in methods or use them as implicit backing fields.
 - Use async/await for I/O and pass cancellation tokens through validation, EF queries, and saves. Avoid `.Result`, `.Wait()`, `async void`, and `Task.Run` around database operations.
 - Treat warnings as errors, as configured in `Directory.Build.props`. Do not relax this setting.
+- Prefer to be explicit when creating an object (use `private Test _test = new Test();`; do not omit the type `private Test _test = new();`)
 
 For example, a simple endpoint may use a primary constructor with an explicit readonly field:
 
@@ -143,6 +144,7 @@ public sealed class DeleteJurisdictionEndpoint(IRequestExecutor executor) : IHol
 - Name test methods `Should_{ExpectedResult}_When{UseCase}`, for example `Should_ReturnFailure_WhenNameIsNull`. Follow this for new and changed tests even where older tests use shorter names.
 - Use explicit Arrange, Act, Assert sections. Keep each test focused on one behavior; use theories for meaningful input variations.
 - Store expected values in descriptive variables such as `expectedDate` or `expectedStatusCode` and use `Assert.Equal(expectedValue, actualValue)`. Do not inline expected literals in equality assertions. `Assert.True`/`Assert.False` are fine when the expected boolean is not reused elsewhere. If possible those variables can be const variables (eg. `const string expectedName = "Jack"; var expectedDate = DateTime.Now;`)
+- When comparing reference types (non-strings) use `Assert.Same` if it makes more sense 
 - Include tests for DTOs/models/records: constructor or initializer values, getters/setters or init properties, defaults, nullability behavior, and relevant equality semantics. Do not test compiler-generated machinery beyond the public contract.
 - Unit-test validators, mapping extensions, source-generated logging methods, endpoints, and shared calculations. Handler behavior may be exercised through integration tests instead of duplicating those tests with mocked persistence.
 - Mapper tests assert every mapped field and relevant null/optional cases. Logging tests verify level, message and relevant structured values/event IDs using `Testing/FakeLogger`; extend the helper when needed.

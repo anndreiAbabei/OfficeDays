@@ -1,3 +1,4 @@
+using OfficeDays.Security.RateLimiting;
 using OfficeDays.Features.Users.CreateUser.Contracts;
 using OfficeDays.Infrastructure;
 
@@ -10,6 +11,7 @@ public sealed class CreateUserEndpoint(IRequestExecutor executor) : IUsersEndpoi
     public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
         endpoints.MapPost("/", _executor.Execute<CreateUserRequest>)
+                 .WithMetadata(new SensitiveRequestLimit("registration"))
                  .AllowAnonymous();
     }
 }

@@ -48,3 +48,17 @@ it('allows retry when CSRF loading fails', async () => {
   await expect(mutate('/api/auth/logout', 'POST')).rejects.toThrow('Offline');
   await expect(mutate('/api/auth/logout', 'POST')).resolves.toBeUndefined();
 });
+
+it('Should_ShowRetryGuidance_WhenRateLimited', async () => {
+  // Arrange
+  const expectedMessage = 'Too many requests. Please try again in 42 seconds.';
+  const unauthorized = vi.fn();
+  onUnauthorized(unauthorized);
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', {
+    status: 429, headers: { 'Retry-After': '42' }
+  })));
+
+  // Act / Assert
+  await expect(request('/api/status')).rejects.toThrow(expectedMessage);
+  expect(unauthorized).not.toHaveBeenCalled();
+});

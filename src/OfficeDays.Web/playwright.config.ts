@@ -28,7 +28,12 @@ export default defineConfig({
       BootstrapAdmin__TimeZoneId: 'UTC',
       BootstrapAdmin__CountryCode: 'RO',
       BootstrapAdmin__CountryName: 'Romania',
-      Logging__LogLevel__Default: 'Warning'
+      Logging__LogLevel__Default: 'Warning',
+      // The suite creates many accounts from one source; HTTP integration tests exercise thresholds.
+      RateLimiting__Registration__Permits: '100',
+      RateLimiting__Login__Permits: '100',
+      RateLimiting__LoginAccount__Permits: '100',
+      RateLimiting__Source__Permits: '10000'
     }
   }
 });

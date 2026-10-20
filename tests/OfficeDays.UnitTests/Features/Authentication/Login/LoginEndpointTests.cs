@@ -1,3 +1,4 @@
+using OfficeDays.Security.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Routing;
 using NSubstitute;
@@ -11,9 +12,10 @@ namespace OfficeDays.UnitTests.Features.Authentication.Login;
 public sealed class LoginEndpointTests
 {
     [Fact]
-    public void Should_CreateEndpoint()
+    public void Should_ProtectSensitiveEndpoint_WhenMapped()
     {
         // arrange
+        var expectedLimit = new SensitiveRequestLimit("login", "username");
         var executor = new RequestExecutor();
         var epb = Substitute.For<IEndpointRouteBuilder>();
         epb.DataSources.Returns([]);
@@ -26,5 +28,6 @@ public sealed class LoginEndpointTests
         Assert.Endpoint<LoginRequest>(epb, executor, "login", HttpMethod.Post);
         var endpoint = Assert.Single(epb.DataSources.SelectMany(source => source.Endpoints));
         Assert.NotNull(endpoint.Metadata.GetMetadata<IAllowAnonymous>());
+        Assert.Equal(expectedLimit, endpoint.Metadata.GetMetadata<SensitiveRequestLimit>());
     }
 }

@@ -17,3 +17,8 @@ The Romania dates follow Article 139 of the Romanian Labour Code and the Orthodo
 The 2027 calendar contains 17 distinct holiday dates, including Orthodox Easter on 2–3 May and Pentecost on 20–21 June. Dates were checked against [Romania’s 2027 holiday calendar](https://www.timeanddate.com/holidays/romania/2027).
 
 `reports.http` generates the signed-in user’s report for a full year or month range. Each response is a fresh calculation; the Reports page exports its displayed response to CSV locally, without requesting another report.
+
+
+### Rate limits
+
+Every `/api` request may return `429 application/problem+json` with `Retry-After` (seconds) and `retryAfterSeconds`. Wait at least this duration before retrying, including in iOS Shortcuts; avoid immediate retry loops. All tokens share their user's total allowance and each token also has its own limit. Attendance retries remain duplicate-safe. Oversized request bodies return 413. See the README's request-limit table for defaults and deployment constraints.

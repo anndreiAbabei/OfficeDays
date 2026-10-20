@@ -33,6 +33,7 @@ public sealed class RevokeTokenHandler : IRequestHandler<RevokeTokenRequest>
         if (token is null)
         {
             _logger.LogTokenNotFound(id, userId);
+            
             return Results.NotFound();
         }
         
@@ -40,6 +41,7 @@ public sealed class RevokeTokenHandler : IRequestHandler<RevokeTokenRequest>
         {
             token.RevokedAt = _timeProvider.GetUtcNow();
             await _dbContext.SaveChangesAsync(cancellationToken);
+            
             _logger.LogTokenRevoked(userId, token.Id);
         }
         

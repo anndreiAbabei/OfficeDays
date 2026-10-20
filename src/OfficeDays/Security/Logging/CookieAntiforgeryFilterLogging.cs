@@ -1,6 +1,6 @@
-namespace OfficeDays.Security;
+namespace OfficeDays.Security.Logging;
 
-public static partial class CookieAntiforgeryFilterLogging
+internal static partial class CookieAntiforgeryFilterLogging
 {
     private const int EventIdStart = 4100;
 

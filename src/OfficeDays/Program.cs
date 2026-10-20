@@ -1,5 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.AspNetCore.HttpOverrides;
+using OfficeDays.Security.RateLimiting;
 using OfficeDays.Configuration;
 using OfficeDays.Data;
 using OfficeDays.Endpoints;
@@ -13,10 +13,7 @@ builder.Services.AddFeatures();
 var app = builder.Build();
 
 app.UseMiddleware<CorrelationIdMiddleware>();
-app.UseForwardedHeaders(new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-});
+app.UseForwardedHeaders();
 app.UseExceptionHandler();
 
 if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
@@ -26,7 +23,10 @@ if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"
 app.UseWhen(context => context.Request.Path.StartsWithSegments("/_app"),
     assets => assets.UseResponseCompression());
 app.UseBearerTokenHttpsProtection();
+app.UseRouting();
+app.UseMiddleware<RequestLimitingMiddleware>();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapApiEndpoints();

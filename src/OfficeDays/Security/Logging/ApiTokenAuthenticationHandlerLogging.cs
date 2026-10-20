@@ -1,8 +1,8 @@
 using System.Net;
 
-namespace OfficeDays.Security;
+namespace OfficeDays.Security.Logging;
 
-public static partial class ApiTokenAuthenticationHandlerLogging
+internal static partial class ApiTokenAuthenticationHandlerLogging
 {
     private const int EventIdStart = 4000;
 
