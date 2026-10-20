@@ -26,6 +26,7 @@ public sealed class RequestLimitingMiddleware
         if (!context.Request.Path.StartsWithSegments("/api"))
         {
             await _next(context);
+            
             return;
         }
 
@@ -34,6 +35,7 @@ public sealed class RequestLimitingMiddleware
         if (!lease.IsAcquired)
         {
             await RequestLimitResponses.RejectAsync(context, lease);
+            
             return;
         }
 
@@ -63,6 +65,7 @@ public sealed class RequestLimitingMiddleware
                 continue;
             
             await RequestLimitResponses.RejectBodyAsync(context);
+            
             return;
         }
         
@@ -72,33 +75,30 @@ public sealed class RequestLimitingMiddleware
         try
         {
             var sensitive = context.GetEndpoint()?.Metadata.GetMetadata<SensitiveRequestLimit>();
-            if (sensitive is not null)
+            if (sensitive?.AccountField != null && body.Length > 0)
             {
-                if (sensitive.AccountField is not null && body.Length > 0)
+                try
                 {
-                    try
+                    using var json = await JsonDocument.ParseAsync(body, cancellationToken: context.RequestAborted);
+                    if (json.RootElement.ValueKind == JsonValueKind.Object)
                     {
-                        using var json = await JsonDocument.ParseAsync(body, cancellationToken: context.RequestAborted);
-                        if (json.RootElement.ValueKind == JsonValueKind.Object)
+                        // Minimal API JSON property matching is case-insensitive too.
+                        var account = json.RootElement.EnumerateObject().LastOrDefault(x => x.Name.Equals(sensitive.AccountField, StringComparison.OrdinalIgnoreCase)).Value;
+                        if (account.ValueKind == JsonValueKind.String)
                         {
-                            // Minimal API JSON property matching is case-insensitive too.
-                            var account = json.RootElement.EnumerateObject().LastOrDefault(x => x.Name.Equals(sensitive.AccountField, StringComparison.OrdinalIgnoreCase)).Value;
-                            if (account.ValueKind == JsonValueKind.String)
-                            {
-                                var normalized = account.GetString()?.Trim().ToUpperInvariant() ?? "";
-                                var key = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalized)));
-                                context.Items[RequestRateLimiters.AccountKey] = key;
-                            }
+                            var normalized = account.GetString()?.Trim().ToUpperInvariant() ?? "";
+                            var key = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalized)));
+                            context.Items[RequestRateLimiters.AccountKey] = key;
                         }
                     }
-                    catch (JsonException ex)
-                    {
-                        _logger.LogJsonExceptionError(ex);
-                    }
-                    finally
-                    {
-                        body.Position = 0;
-                    }
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogJsonExceptionError(ex);
+                }
+                finally
+                {
+                    body.Position = 0;
                 }
             }
 

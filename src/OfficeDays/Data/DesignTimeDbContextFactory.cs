@@ -10,6 +10,7 @@ public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<App
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseSqlite("Data Source=officedays-design.db")
             .Options;
+        
         return new AppDbContext(options);
     }
 }
