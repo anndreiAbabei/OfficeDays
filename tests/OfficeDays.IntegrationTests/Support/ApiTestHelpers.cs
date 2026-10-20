@@ -37,7 +37,7 @@ internal static class ApiTestHelpers
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         
         await db.Users
-                .Where(x => x.NormalizedUsername.Equals(username, StringComparison.InvariantCultureIgnoreCase))
+                .Where(x => x.NormalizedUsername != username)
                 .ExecuteDeleteAsync();
     }
 
