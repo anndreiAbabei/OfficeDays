@@ -1,12 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
     <Version>2.2.1</Version>
     <InformationalVersion>$(Version)+local</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
     <Authors>anndreiAbabei</Authors>
     <RepositoryUrl>https://github.com/anndreiAbabei/OfficeDays</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>

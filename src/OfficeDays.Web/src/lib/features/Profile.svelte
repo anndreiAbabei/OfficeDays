@@ -8,13 +8,24 @@
   let email = $state(untrack(() => currentUser.email || ''));
   const teamDays: TeamDay[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
   let teamDay = $state<TeamDay | null>(untrack(() => currentUser.teamDay));
-  let busy = $state(false); let error = $state(''); let message = $state('');
+  let busy = $state(false); 
+  let error = $state(''); 
+  let message = $state('');
   
   async function save(event: SubmitEvent): Promise<void> {
-    event.preventDefault(); busy = true; error = ''; message = '';
+    event.preventDefault(); 
+    busy = true; 
+    error = ''; 
+    message = '';
+    
     try {
       const updated = await mutate<User>('/api/users/me', 'PUT', { email: email.trim() || null, teamDay });
-      email = updated.email || ''; teamDay = updated.teamDay; onsave(updated); message = 'Profile saved.';
+      
+      email = updated.email || ''; 
+      teamDay = updated.teamDay; 
+      onsave(updated); 
+      
+      message = 'Profile saved.';
     } catch (failure) { 
       error = errorMessage(failure); 
     }
