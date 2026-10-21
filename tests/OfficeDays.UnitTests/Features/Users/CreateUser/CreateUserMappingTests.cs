@@ -21,7 +21,7 @@ public sealed class CreateUserMappingTests
             IsAdmin = true,
             Email = "alice@example.com",
             Preferences = new UserPreferences { TeamDay = DayOfWeek.Wednesday },
-            RequiredOfficePercentages = [new UserRequiredOfficePercentage { RequiredOfficePercentage = 65 }]
+            AttendanceRequirements = [new UserAttendanceRequirement { Value = 65 }]
         };
 
         // act

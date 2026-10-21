@@ -6,6 +6,7 @@ namespace OfficeDays.Services;
 
 public interface IOfficeRequirementReader
 {
+    Task<UserAttendanceRequirement> CurrentRequirement(User user, CancellationToken cancellationToken);
     Task<int> Current(User user, CancellationToken cancellationToken);
     Task<int> ForDate(Guid userId, DateOnly date, CancellationToken cancellationToken);
 }
@@ -21,14 +22,23 @@ public sealed class OfficeRequirementReader : IOfficeRequirementReader
         _dates = dates;
     }
     
+    public Task<UserAttendanceRequirement> CurrentRequirement(User user, CancellationToken cancellationToken)
+    {
+        var today = _dates.Today(user);
+        return _db.UserAttendanceRequirements.AsNoTracking()
+                  .Where(x => x.UserId == user.Id && x.StartingFrom <= today)
+                  .OrderByDescending(x => x.StartingFrom)
+                  .FirstAsync(cancellationToken);
+    }
+
     public Task<int> Current(User user, CancellationToken cancellationToken) => ForDate(user.Id, _dates.Today(user), cancellationToken);
 
     public Task<int> ForDate(Guid userId, DateOnly date, CancellationToken cancellationToken)
     {
-        return _db.UserRequiredOfficePercentages
+        return _db.UserAttendanceRequirements
                   .Where(x => x.UserId == userId && x.StartingFrom <= date)
                   .OrderByDescending(x => x.StartingFrom)
-                  .Select(x => x.RequiredOfficePercentage)
+                  .Select(x => x.Mode == AttendanceRequirementMode.DaysPerWeek ? x.Value * 20 : x.Value)
                   .FirstAsync(cancellationToken);
     }
 }

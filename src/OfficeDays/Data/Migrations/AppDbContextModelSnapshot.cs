@@ -16,7 +16,7 @@ namespace OfficeDays.Data.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
 
             modelBuilder.Entity("OfficeDays.Domain.ApiToken", b =>
                 {
@@ -213,7 +213,7 @@ namespace OfficeDays.Data.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("OfficeDays.Domain.UserRequiredOfficePercentage", b =>
+            modelBuilder.Entity("OfficeDays.Domain.UserAttendanceRequirement", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -222,8 +222,9 @@ namespace OfficeDays.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("RequiredOfficePercentage")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Mode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<DateOnly>("StartingFrom")
                         .HasColumnType("TEXT");
@@ -231,16 +232,19 @@ namespace OfficeDays.Data.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Value")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.HasIndex("UserId", "StartingFrom")
                         .IsUnique();
 
-                    b.ToTable("UserRequiredOfficePercentages", t =>
+                    b.ToTable("UserAttendanceRequirements", t =>
                         {
-                            t.HasCheckConstraint("CK_UserRequiredOfficePercentages_Month", "substr(\"StartingFrom\", 9, 2) = '01'");
+                            t.HasCheckConstraint("CK_UserAttendanceRequirements_Month", "substr(\"StartingFrom\", 9, 2) = '01'");
 
-                            t.HasCheckConstraint("CK_UserRequiredOfficePercentages_Percentage", "\"RequiredOfficePercentage\" BETWEEN 0 AND 100");
+                            t.HasCheckConstraint("CK_UserAttendanceRequirements_Value", "(\"Mode\" = 'Percentage' AND \"Value\" BETWEEN 0 AND 100) OR (\"Mode\" = 'DaysPerWeek' AND \"Value\" BETWEEN 0 AND 5)");
                         });
                 });
 
@@ -327,10 +331,10 @@ namespace OfficeDays.Data.Migrations
                     b.Navigation("HolidayJurisdiction");
                 });
 
-            modelBuilder.Entity("OfficeDays.Domain.UserRequiredOfficePercentage", b =>
+            modelBuilder.Entity("OfficeDays.Domain.UserAttendanceRequirement", b =>
                 {
                     b.HasOne("OfficeDays.Domain.User", null)
-                        .WithMany("RequiredOfficePercentages")
+                        .WithMany("AttendanceRequirements")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -358,9 +362,9 @@ namespace OfficeDays.Data.Migrations
                 {
                     b.Navigation("ApiTokens");
 
-                    b.Navigation("Attendances");
+                    b.Navigation("AttendanceRequirements");
 
-                    b.Navigation("RequiredOfficePercentages");
+                    b.Navigation("Attendances");
 
                     b.Navigation("Vacations");
                 });

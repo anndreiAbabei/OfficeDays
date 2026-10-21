@@ -191,7 +191,7 @@ public sealed class UsersIntegrationTests
             status.GetProperty("requiredOfficeDays").GetInt32());
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        Assert.Equal(50, (await db.UserRequiredOfficePercentages.SingleAsync(x => x.UserId == db.Users.Single(u => u.Username == "otherpercentage").Id)).RequiredOfficePercentage);
+        Assert.Equal(50, (await db.UserAttendanceRequirements.SingleAsync(x => x.UserId == db.Users.Single(u => u.Username == "otherpercentage").Id)).RequiredOfficePercentage);
     }
 
     [Theory]

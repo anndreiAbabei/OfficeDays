@@ -5,7 +5,7 @@ namespace OfficeDays.Services;
 public interface IReportCalculator
 {
     AttendanceReport Calculate(int year, int startMonth, int endMonth, User user, DateTimeOffset generatedAt,
-                               IEnumerable<UserRequiredOfficePercentage> requirements, 
+                               IEnumerable<UserAttendanceRequirement> requirements,
                                IEnumerable<DateOnly> bankHolidays,
                                IEnumerable<(DateOnly From, DateOnly To)> vacations, 
                                IEnumerable<DateOnly> officeDates);
@@ -16,7 +16,7 @@ public sealed class ReportCalculator(IAttendanceCalculator attendanceCalculator)
     private readonly IAttendanceCalculator _attendanceCalculator = attendanceCalculator;
 
     public AttendanceReport Calculate(int year, int startMonth, int endMonth, User user, DateTimeOffset generatedAt,
-                                       IEnumerable<UserRequiredOfficePercentage> requirements, 
+                                       IEnumerable<UserAttendanceRequirement> requirements,
                                        IEnumerable<DateOnly> bankHolidays,
                                        IEnumerable<(DateOnly From, DateOnly To)> vacations, 
                                        IEnumerable<DateOnly> officeDates)
@@ -38,7 +38,8 @@ public sealed class ReportCalculator(IAttendanceCalculator attendanceCalculator)
             if (period.Start < registrationMonth)
                 continue;
 
-            var percentage = schedule.First(x => x.StartingFrom <= period.Start).RequiredOfficePercentage;
+            var requirement = schedule.First(x => x.StartingFrom <= period.Start);
+            var percentage = requirement.RequiredOfficePercentage;
             var status = _attendanceCalculator.Calculate(period, holidays, timeOff, attendance, percentage);
             var future = period.Start > currentMonth;
             var state = future ? ReportMonthState.NotStarted
@@ -49,7 +50,11 @@ public sealed class ReportCalculator(IAttendanceCalculator attendanceCalculator)
             months.Add(new AttendanceReportMonth(month, status.EligibleWorkingDays, percentage, status.RequiredOfficeDays, 
                                                  future ? null : status.OfficeDays, 
                                                  future ? null : Percentage(status.OfficeDays, status.EligibleWorkingDays), 
-                                                 state));
+                                                 state)
+            {
+                Mode = requirement.Mode,
+                Value = requirement.Value
+            });
         }
 
         var started = months.Where(x => x.State != ReportMonthState.NotStarted).ToArray();

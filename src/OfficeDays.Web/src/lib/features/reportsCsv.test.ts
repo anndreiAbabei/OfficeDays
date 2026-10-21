@@ -21,3 +21,17 @@ it('escapes quotes, commas and line breaks and neutralizes spreadsheet formula u
 it('exports a header for an empty report without inventing monthly rows', () => {
   expect(reportCsv({ ...reportFixture, months: [] }).split('\r\n')).toHaveLength(2);
 });
+
+it('Should_ExportOriginalWeeklySetting_WhenRequirementUsesWeeklyDays', () => {
+  // Arrange
+  const report = { ...reportFixture, months: [{ ...reportFixture.months[0], mode: 'DaysPerWeek', value: 3, requiredOfficePercentage: 60 }] };
+  const expectedHeader = '"Requirement mode","Requirement value"';
+  const expectedSetting = '"DaysPerWeek","3"';
+
+  // Act
+  const csv = reportCsv(report);
+
+  // Assert
+  expect(csv).toContain(expectedHeader);
+  expect(csv).toContain(expectedSetting);
+});

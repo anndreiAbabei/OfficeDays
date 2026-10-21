@@ -63,13 +63,13 @@ public sealed class DeleteAccountIntegrationTests
             Assert.False(await db.Attendances.AnyAsync(x => x.UserId == deletedId));
             Assert.False(await db.OfficePlans.AnyAsync(x => x.UserId == deletedId));
             Assert.False(await db.Vacations.AnyAsync(x => x.UserId == deletedId));
-            Assert.False(await db.UserRequiredOfficePercentages.AnyAsync(x => x.UserId == deletedId));
+            Assert.False(await db.UserAttendanceRequirements.AnyAsync(x => x.UserId == deletedId));
             Assert.False(await db.ApiTokens.AnyAsync(x => x.UserId == deletedId));
             Assert.Single(await db.Attendances.ToListAsync());
             Assert.Single(await db.OfficePlans.ToListAsync());
             Assert.Single(await db.Vacations.ToListAsync());
             Assert.Single(await db.ApiTokens.ToListAsync());
-            Assert.True(await db.UserRequiredOfficePercentages.AnyAsync(x => x.UserId != deletedId));
+            Assert.True(await db.UserAttendanceRequirements.AnyAsync(x => x.UserId != deletedId));
             Assert.True(await db.Users.AnyAsync(x => x.Username == "survivor"));
             Assert.Equal(holidayCount, await db.BankHolidays.CountAsync());
             Assert.NotEmpty(await db.HolidayJurisdictions.ToListAsync());
@@ -203,7 +203,7 @@ public sealed class DeleteAccountIntegrationTests
             var tokens = scope.ServiceProvider.GetRequiredService<IApiTokenService>();
             db.ApiTokens.Add(new ApiToken { Id = Guid.NewGuid(), UserId = user.Id, Name = "rollback", TokenHash = tokens.Hash(tokens.Generate()) });
             await db.SaveChangesAsync();
-            await db.Database.ExecuteSqlRawAsync("CREATE TRIGGER FailDeletion BEFORE DELETE ON UserRequiredOfficePercentages BEGIN SELECT RAISE(ABORT, 'test failure'); END;");
+            await db.Database.ExecuteSqlRawAsync("CREATE TRIGGER FailDeletion BEFORE DELETE ON UserAttendanceRequirements BEGIN SELECT RAISE(ABORT, 'test failure'); END;");
         }
 
         // Act
@@ -215,7 +215,7 @@ public sealed class DeleteAccountIntegrationTests
         using var verificationScope = factory.Services.CreateScope();
         var verificationDb = verificationScope.ServiceProvider.GetRequiredService<AppDbContext>();
         var survivingUser = await verificationDb.Users.SingleAsync(x => x.Username == "deleting");
-        Assert.True(await verificationDb.UserRequiredOfficePercentages.AnyAsync(x => x.UserId == survivingUser.Id));
+        Assert.True(await verificationDb.UserAttendanceRequirements.AnyAsync(x => x.UserId == survivingUser.Id));
         Assert.True(await verificationDb.Attendances.AnyAsync(x => x.UserId == survivingUser.Id));
         Assert.True(await verificationDb.OfficePlans.AnyAsync(x => x.UserId == survivingUser.Id));
         Assert.True(await verificationDb.Vacations.AnyAsync(x => x.UserId == survivingUser.Id));

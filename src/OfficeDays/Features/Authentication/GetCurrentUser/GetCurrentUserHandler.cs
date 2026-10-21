@@ -35,7 +35,10 @@ public sealed class GetCurrentUserHandler : IRequestHandler<GetCurrentUserReques
             _logger.LogUserNotFound(_currentUser.Id);
             return Results.NotFound();
         }
+
+        var requirement = await _requirements.CurrentRequirement(user, cancellationToken);
+        var model = user.ToViewModel(requirement);
         
-        return Results.Ok(user.ToViewModel(await _requirements.Current(user, cancellationToken)));
+        return Results.Ok(model);
     }
 }

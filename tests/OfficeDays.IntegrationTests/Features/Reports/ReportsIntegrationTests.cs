@@ -42,9 +42,9 @@ public sealed class ReportsIntegrationTests
             db.Attendances.AddRange(new OfficeDays.Domain.Attendance { Id = Guid.NewGuid(), UserId = userId, Date = monday },
                 new OfficeDays.Domain.Attendance { Id = Guid.NewGuid(), UserId = userId, Date = monday.AddDays(2) },
                 new OfficeDays.Domain.Attendance { Id = Guid.NewGuid(), UserId = otherId, Date = monday.AddDays(3) });
-            db.UserRequiredOfficePercentages.AddRange(
-                new UserRequiredOfficePercentage { Id = Guid.NewGuid(), UserId = userId, StartingFrom = new DateOnly(2099, 7, 1), RequiredOfficePercentage = 100 },
-                new UserRequiredOfficePercentage { Id = Guid.NewGuid(), UserId = userId, StartingFrom = new DateOnly(2099, 12, 1), RequiredOfficePercentage = 60 });
+            db.UserAttendanceRequirements.AddRange(
+                new UserAttendanceRequirement { Id = Guid.NewGuid(), UserId = userId, StartingFrom = new DateOnly(2099, 7, 1), Value = 100 },
+                new UserAttendanceRequirement { Id = Guid.NewGuid(), UserId = userId, StartingFrom = new DateOnly(2099, 12, 1), Value = 60 });
             await db.SaveChangesAsync();
         }
         await Login(client, "reportuser", "Normal-user-password!");

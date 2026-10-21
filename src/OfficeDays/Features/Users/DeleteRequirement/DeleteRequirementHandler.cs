@@ -25,7 +25,7 @@ public sealed class DeleteRequirementHandler : IRequestHandler<DeleteRequirement
     
     public async ValueTask<IResult> Handle(DeleteRequirementRequest request, CancellationToken cancellationToken)
     {
-        var row = await _db.UserRequiredOfficePercentages.SingleOrDefaultAsync(x => x.Id == request.Id && 
+        var row = await _db.UserAttendanceRequirements.SingleOrDefaultAsync(x => x.Id == request.Id &&
                                                                                    x.UserId == _currentUser.Id, 
                                                                               cancellationToken);
         
@@ -36,7 +36,7 @@ public sealed class DeleteRequirementHandler : IRequestHandler<DeleteRequirement
             return Results.NotFound();
         }
         
-        if (row.StartingFrom == UserRequiredOfficePercentage.BaselineDate)
+        if (row.StartingFrom == UserAttendanceRequirement.BaselineDate)
         {
             _logger.LogBaselineChangeRejected(request.Id, _currentUser.Id);
             
@@ -46,7 +46,7 @@ public sealed class DeleteRequirementHandler : IRequestHandler<DeleteRequirement
             });
         }
         
-        _db.UserRequiredOfficePercentages.Remove(row);
+        _db.UserAttendanceRequirements.Remove(row);
         
         try
         {

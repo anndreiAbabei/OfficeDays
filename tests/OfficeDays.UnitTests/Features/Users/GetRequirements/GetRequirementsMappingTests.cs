@@ -13,7 +13,7 @@ public sealed class GetRequirementsMappingTests
     public void Should_MapToViewModel(string startingFrom, bool expectedIsBaseline)
     {
         // arrange
-        var sut = new UserRequiredOfficePercentage { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), StartingFrom = DateOnly.Parse(startingFrom), RequiredOfficePercentage = 65, CreatedAt = new DateTimeOffset(2026, 10, 1, 9, 0, 0, TimeSpan.Zero) };
+        var sut = new UserAttendanceRequirement { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), StartingFrom = DateOnly.Parse(startingFrom), Value = 65, CreatedAt = new DateTimeOffset(2026, 10, 1, 9, 0, 0, TimeSpan.Zero) };
 
         // act
         var result = sut.ToViewModel();
@@ -45,10 +45,10 @@ public sealed class GetRequirementsMappingTests
         var expectedToday = new DateOnly(2026, 10, 19);
         var dates = Substitute.For<IUserDateService>();
         dates.Today(sut).Returns(expectedToday);
-        UserRequiredOfficePercentage[] requirements =
+        UserAttendanceRequirement[] requirements =
         [
-            new UserRequiredOfficePercentage { Id = Guid.NewGuid(), StartingFrom = expectedToday, RequiredOfficePercentage = 65 },
-            new UserRequiredOfficePercentage { Id = Guid.NewGuid(), StartingFrom = DateOnly.MinValue, RequiredOfficePercentage = 50 }
+            new UserAttendanceRequirement { Id = Guid.NewGuid(), StartingFrom = expectedToday, Value = 65 },
+            new UserAttendanceRequirement { Id = Guid.NewGuid(), StartingFrom = DateOnly.MinValue, Value = 50 }
         ];
 
         // act
@@ -88,5 +88,32 @@ public sealed class GetRequirementsMappingTests
         // assert
         Assert.Equal(expectedToday, result.Today);
         Assert.Empty(result.Items);
+    }
+
+    [Fact]
+    public void Should_PreserveWeeklyModeAndValue_WhenMappingRequirement()
+    {
+        // Arrange
+        const int expectedValue = 3;
+        const int expectedPercentage = 60;
+        const AttendanceRequirementMode expectedMode = AttendanceRequirementMode.DaysPerWeek;
+        var row = new UserAttendanceRequirement
+        {
+            Id = Guid.NewGuid(), UserId = Guid.NewGuid(), StartingFrom = new DateOnly(2026, 11, 1),
+            CreatedAt = new DateTimeOffset(2026, 10, 21, 12, 0, 0, TimeSpan.Zero),
+            Mode = AttendanceRequirementMode.DaysPerWeek, Value = expectedValue
+        };
+
+        // Act
+        var result = row.ToViewModel();
+
+        // Assert
+        Assert.Equal(row.Id, result.Id);
+        Assert.Equal(row.StartingFrom, result.StartingFrom);
+        Assert.Equal(row.CreatedAt, result.CreatedAt);
+        Assert.False(result.IsBaseline);
+        Assert.Equal(expectedMode, result.Mode);
+        Assert.Equal(expectedValue, result.Value);
+        Assert.Equal(expectedPercentage, result.RequiredOfficePercentage);
     }
 }

@@ -2,9 +2,10 @@
   import { onMount } from 'svelte';
   import { request, mutate, errorMessage } from '$lib/api';
   import type { User } from '$lib/types';
+  import RequirementInput from '$lib/components/RequirementInput.svelte';
   import Feedback from '$lib/components/Feedback.svelte';
 
-  type Requirement = { id: string; startingFrom: string; requiredOfficePercentage: number; isBaseline: boolean };
+  type Requirement = { id: string; startingFrom: string; requiredOfficePercentage: number; mode: string; value: number; isBaseline: boolean };
   type History = { today: string; items: Requirement[] };
   
   let { onsave }: { onsave: (user: User) => void } = $props();
@@ -12,7 +13,8 @@
   let loading = $state(true); let busy = $state(false);
   let error = $state(''); let message = $state('');
   let editing = $state<Requirement | null>(null); let formOpen = $state(false);
-  let month = $state(''); let percentage = $state<number | undefined>(50);
+  let month = $state(''); let requirementValue = $state<number | undefined>(50);
+  let mode = $state("Percentage");
   let deleting = $state<Requirement | null>(null);
   const path = '/api/users/me/requirements';
   let currentMonth = $derived(history ? `${history.today.slice(0, 7)}-01` : '');
@@ -25,6 +27,12 @@
     return `${new Intl.DateTimeFormat('en', { month: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(2000, month - 1, 1)))} ${year}`;
   }
   
+  function requirementLabel(row: Requirement): string {
+    return row.mode === 'DaysPerWeek' 
+            ? `${row.value} days per week` 
+            : `${row.value ?? row.requiredOfficePercentage}%`;
+  }
+
   async function load(): Promise<void> {
     loading = true; error = '';
     try { history = await request<History>(path); }
@@ -36,7 +44,9 @@
   function open(row: Requirement | null): void {
     editing = row; formOpen = true; deleting = null; error = ''; message = '';
     month = row && !row.isBaseline ? row.startingFrom.slice(0, 7) : history!.today.slice(0, 7);
-    percentage = row?.requiredOfficePercentage ?? past[0]?.requiredOfficePercentage ?? 50;
+    const selected = row ?? past[0];
+    mode = selected?.mode ?? "Percentage";
+    requirementValue = selected?.value ?? selected?.requiredOfficePercentage ?? 50;
   }
   
   async function refresh(): Promise<void> {
@@ -57,7 +67,7 @@
     
     try {
       await mutate(editing ? `${path}/${editing.id}` : path, editing ? 'PUT' : 'POST', {
-        startingFrom: editing?.isBaseline ? editing.startingFrom : `${month}-01`, requiredOfficePercentage: percentage
+        startingFrom: editing?.isBaseline ? editing.startingFrom : `${month}-01`, mode, value: requirementValue
       });
       
       saved = true; 
@@ -141,10 +151,7 @@
             <input type="month" min="0001-02" max="9999-12" required bind:value={month} disabled={busy} />
           </label>
         {/if}
-        <label>
-          Required office days (%) 
-          <input type="number" min="0" max="100" step="1" required bind:value={percentage} disabled={busy} />
-        </label>
+        <RequirementInput bind:mode bind:value={requirementValue} disabled={busy} />
         <div class="actions">
           <button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save requirement'}</button>
           <button type="button" class="secondary" disabled={busy} onclick={() => formOpen = false}>Cancel</button>
@@ -154,8 +161,8 @@
     {#if deleting}
       <div class="confirmation" role="group" aria-label="Confirm requirement removal">
         <p>
-          Delete the <b>{label(deleting)} requirement ({deleting.requiredOfficePercentage}%)?</b> 
-          The preceding percentage will apply until the next change. 
+          Delete the <b>{label(deleting)} requirement ({requirementLabel(deleting)})?</b>
+          The preceding requirement will apply until the next change.
           Calculations for affected months will update.
         </p>
         <div class="actions">
@@ -173,7 +180,7 @@
 {#snippet entry(row: Requirement, status: string)}
   <div class="requirement-row">
     <div>
-      <strong>{label(row)} · {row.requiredOfficePercentage}%</strong>
+      <strong>{label(row)} · {requirementLabel(row)}</strong>
       <span class="badge">{status}</span>
       {#if row.isBaseline}
         <p class="muted baseline-note">Applies to all history until the first change.</p>

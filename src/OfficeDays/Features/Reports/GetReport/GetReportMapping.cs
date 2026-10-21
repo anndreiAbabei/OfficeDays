@@ -37,6 +37,10 @@ public static class GetReportMapping
                                       ReportMonthState.TargetMet => "targetMet",
                                       ReportMonthState.BelowTarget => "belowTarget",
                                       _ => throw new ArgumentOutOfRangeException(nameof(month))
-                                  });
+                                  })
+        {
+            Mode = month.Mode,
+            Value = month.Value
+        };
     }
 }

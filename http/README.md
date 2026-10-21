@@ -24,3 +24,11 @@ The 2027 calendar contains 17 distinct holiday dates, including Orthodox Easter 
 Every `/api` request may return `429 application/problem+json` with `Retry-After` (seconds) and `retryAfterSeconds`. Wait at least this duration before retrying, including in iOS Shortcuts; avoid immediate retry loops. All tokens share their user's total allowance and each token also has its own limit. Attendance retries remain duplicate-safe. Oversized request bodies return 413. See the README's request-limit table for defaults and deployment constraints.
 
 Account deletion is documented in [account-deletion.http](account-deletion.http). Use only a disposable account when trying this irreversible operation. It requires a browser cookie, CSRF token, and current password; an API token is insufficient. See the root README for backup retention and restore requirements.
+
+### Requirement modes
+
+Registration and requirement POST/PUT accept `"mode": "Percentage", "value": 60` or `"mode": "DaysPerWeek", "value": 3`. Values must be integers: 0–100 for percentage, 0–5 for days per week. Supply both fields together. Legacy `requiredOfficePercentage` requests remain supported; do not combine that field with mode/value. Registration still defaults to 50% when no requirement is supplied.
+
+Account, requirement-history, report-month and personal-export requirement responses include `mode` and `value`, retaining the original choice. Their existing `requiredOfficePercentage` field remains the equivalent percentage (weekly days × 20). CSV reports append requirement mode and value columns, preserving existing columns.
+
+Weekly requirements are monthly averages: `ceil(eligible working days × days per week / 5)`. Holidays and vacations reduce eligible days, and rounding occurs once for the month. Attendance can be distributed freely among eligible dates. Effective-month history and baseline protections apply equally to both modes. Migrating an existing database preserves all percentage history. Downgrading converts weekly requirements to equivalent percentages, so their original display format cannot survive a downgrade.

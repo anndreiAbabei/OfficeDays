@@ -154,17 +154,17 @@ public sealed class RequirementsIntegrationTests
                 """, Guid.NewGuid(), $"user{percentage}", percentage);
         await migrator.MigrateAsync();
         db.ChangeTracker.Clear();
-        var rows = await db.UserRequiredOfficePercentages.ToListAsync();
+        var rows = await db.UserAttendanceRequirements.ToListAsync();
         Assert.Equal(new[] { 0, 37, 100 }, rows.Select(x => x.RequiredOfficePercentage).Order().ToArray());
         Assert.Equal(3, rows.Select(x => x.Id).Distinct().Count());
         Assert.All(rows, row => { Assert.Equal(DateOnly.MinValue, row.StartingFrom); Assert.NotEqual(default, row.CreatedAt); });
         await migrator.MigrateAsync();
-        Assert.Equal(3, await db.UserRequiredOfficePercentages.CountAsync());
+        Assert.Equal(3, await db.UserAttendanceRequirements.CountAsync());
         Assert.False(db.Database.HasPendingModelChanges());
         var user = await db.Users.FirstAsync();
         db.Users.Remove(user);
         await db.SaveChangesAsync();
-        Assert.Equal(2, await db.UserRequiredOfficePercentages.CountAsync());
+        Assert.Equal(2, await db.UserAttendanceRequirements.CountAsync());
     }
 
     [Fact]
@@ -176,10 +176,10 @@ public sealed class RequirementsIntegrationTests
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var user = await db.Users.SingleAsync(x => x.Username == "history");
-        db.UserRequiredOfficePercentages.Add(new UserRequiredOfficePercentage
+        db.UserAttendanceRequirements.Add(new UserAttendanceRequirement
         {
             Id = Guid.NewGuid(), UserId = user.Id, StartingFrom = new DateOnly(2099, 10, 1),
-            RequiredOfficePercentage = 80, CreatedAt = DateTimeOffset.UtcNow
+            Value = 80, CreatedAt = DateTimeOffset.UtcNow
         });
         await db.SaveChangesAsync();
         var dates = new UserDateService(new FixedTimeProvider(new DateTimeOffset(2099, 9, 30, 22, 0, 0, TimeSpan.Zero)));

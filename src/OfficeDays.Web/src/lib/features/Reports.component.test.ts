@@ -50,3 +50,15 @@ it('handles pre-registration ranges and rejects reversed filters without fetchin
   await screen.findByRole('alert');
   expect(fetcher).toHaveBeenCalledTimes(1);
 });
+
+it('Should_DisplayWeeklyDays_WhenReportPreservesWeeklyRequirement', async () => {
+  // Arrange
+  const report = { ...reportFixture, months: [{ ...reportFixture.months[0], mode: 'DaysPerWeek', value: 3, requiredOfficePercentage: 60 }] };
+  vi.stubGlobal('fetch', vi.fn(async (): Promise<Response> => Response.json(report)));
+
+  // Act
+  render(Reports, { timeZone: 'UTC' });
+
+  // Assert
+  expect(await screen.findByRole('cell', { name: '3 days per week' })).toBeVisible();
+});

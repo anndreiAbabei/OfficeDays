@@ -1,3 +1,5 @@
+using OfficeDays.Domain;
+
 namespace OfficeDays.Features.Users.CreateUser.Contracts;
 
 public sealed record CreateUserResponse
@@ -10,4 +12,6 @@ public sealed record CreateUserResponse
     public required bool IsAdmin { get; init; }
     public required string? Email { get; init; }
     public required int RequiredOfficePercentage { get; init; }
+    public AttendanceRequirementMode Mode { get; init; } = AttendanceRequirementMode.Percentage;
+    public int Value { get; init; }
 }

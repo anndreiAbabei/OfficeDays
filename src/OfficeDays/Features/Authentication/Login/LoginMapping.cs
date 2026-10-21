@@ -6,6 +6,13 @@ namespace OfficeDays.Features.Authentication.Login;
 
 public static class LoginMapping
 {
+    public static LoginResponse ToViewModel(this User user, UserAttendanceRequirement requirement) =>
+        user.ToViewModel(requirement.RequiredOfficePercentage) with
+        {
+            Mode = requirement.Mode,
+            Value = requirement.Value
+        };
+
     extension(User user)
     {
         public LoginResponse ToViewModel(int requiredOfficePercentage) =>

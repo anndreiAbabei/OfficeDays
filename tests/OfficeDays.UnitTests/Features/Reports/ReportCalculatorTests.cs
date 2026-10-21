@@ -11,9 +11,9 @@ public sealed class ReportCalculatorTests
         TimeZoneId = zone, CreatedAt = registered ?? new DateTimeOffset(2026, 6, 15, 0, 0, 0, TimeSpan.Zero)
     };
     private static readonly DateTimeOffset _now = new DateTimeOffset(2026, 10, 16, 9, 0, 0, TimeSpan.Zero);
-    private static UserRequiredOfficePercentage Requirement(string date, int percentage) => new UserRequiredOfficePercentage
+    private static UserAttendanceRequirement Requirement(string date, int percentage) => new UserAttendanceRequirement
     {
-        StartingFrom = DateOnly.Parse(date), RequiredOfficePercentage = percentage
+        StartingFrom = DateOnly.Parse(date), Value = percentage
     };
     private readonly ReportCalculator _calculator = new ReportCalculator(new AttendanceCalculator());
 

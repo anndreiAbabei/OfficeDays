@@ -100,14 +100,15 @@ X-CSRF-TOKEN: {{csrfToken}}
     client.global.set("requirementId", response.body.id);
 %}
 
-### Correct the scheduled percentage or month
+### Change the scheduled requirement to a weekly average or correct its month
 PUT {{baseUrl}}/api/users/me/requirements/{{requirementId}}
 Content-Type: application/json
 X-CSRF-TOKEN: {{csrfToken}}
 
 {
   "startingFrom": "2027-01-01",
-  "requiredOfficePercentage": 70
+  "mode": "DaysPerWeek",
+  "value": 3
 }
 
 ### Correct the initial requirement without moving its starting date

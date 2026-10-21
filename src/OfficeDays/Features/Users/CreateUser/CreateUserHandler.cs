@@ -61,13 +61,14 @@ public sealed class CreateUserHandler : IRequestHandler<CreateUserRequest>
             Id = Guid.NewGuid(),
             Username = username,
             Email = _userService.NormalizeEmail(request.Email),
-            RequiredOfficePercentages = 
+            AttendanceRequirements =
             [
-                new UserRequiredOfficePercentage
+                new UserAttendanceRequirement
                 {
                     Id = Guid.NewGuid(), 
-                    StartingFrom = UserRequiredOfficePercentage.BaselineDate,
-                    RequiredOfficePercentage = request.RequiredOfficePercentage.GetValueOrDefault(50),
+                    StartingFrom = UserAttendanceRequirement.BaselineDate,
+                    Mode = request.Mode ?? AttendanceRequirementMode.Percentage,
+                    Value = request.Value ?? request.RequiredOfficePercentage ?? 50,
                     CreatedAt = _timeProvider.GetUtcNow()
                 }
             ],

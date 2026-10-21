@@ -21,5 +21,5 @@ public sealed class User
     public List<Attendance> Attendances { get; init; } = [];
     public List<Vacation> Vacations { get; init; } = [];
     public List<ApiToken> ApiTokens { get; init; } = [];
-    public List<UserRequiredOfficePercentage> RequiredOfficePercentages { get; init; } = [];
+    public List<UserAttendanceRequirement> AttendanceRequirements { get; init; } = [];
 }

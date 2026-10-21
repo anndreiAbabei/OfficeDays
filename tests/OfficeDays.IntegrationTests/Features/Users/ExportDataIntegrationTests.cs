@@ -151,12 +151,12 @@ public sealed class ExportDataIntegrationTests
                     To = new DateOnly(2099, 9, 2),
                     CreatedAt = user.CreatedAt
                 });
-                db.UserRequiredOfficePercentages.Add(new UserRequiredOfficePercentage
+                db.UserAttendanceRequirements.Add(new UserAttendanceRequirement
                 {
                     Id = Guid.NewGuid(),
                     UserId = user.Id,
                     StartingFrom = new DateOnly(2099, 10, 1),
-                    RequiredOfficePercentage = 75,
+                    Value = 75,
                     CreatedAt = user.CreatedAt
                 });
                 db.ApiTokens.Add(new ApiToken
@@ -218,12 +218,12 @@ public sealed class ExportDataIntegrationTests
         };
         var report = calculator.Calculate(
             2099, 1, 12, reconstructedUser, export.ExportedAt,
-            export.RequirementHistory.Select(requirement => new UserRequiredOfficePercentage
+            export.RequirementHistory.Select(requirement => new UserAttendanceRequirement
             {
                 Id = requirement.Id,
                 UserId = requirement.UserId,
                 StartingFrom = requirement.StartingFrom,
-                RequiredOfficePercentage = requirement.RequiredOfficePercentage,
+                Value = requirement.RequiredOfficePercentage,
                 CreatedAt = requirement.CreatedAt
             }),
             export.HolidayCalendar.Holidays.Select(holiday => holiday.Date),

@@ -22,16 +22,15 @@ public sealed class OfficeDaysFactory : WebApplicationFactory<Program>
     {
         builder.UseEnvironment("Testing");
         builder.ConfigureLogging(logging => logging.AddFilter<ConsoleLoggerProvider>(level => level >= LogLevel.Critical));
-        builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
-            new Dictionary<string, string?>
-            {
-                ["ConnectionStrings:Default"] = $"Data Source={_databasePath}",
-                ["BootstrapAdmin:Password"] = "VeryStrongAdminPassword!",
-                ["BootstrapAdmin:TimeZoneId"] = "Europe/Bucharest",
-                ["BootstrapAdmin:CountryCode"] = "RO",
-                ["BootstrapAdmin:CountryName"] = "Romania",
-                ["Security:RequireHttpsForBearerTokens"] = _requireHttpsForBearerTokens.ToString()
-            }));
+        builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["ConnectionStrings:Default"] = $"Data Source={_databasePath}",
+            ["BootstrapAdmin:Password"] = "VeryStrongAdminPassword!",
+            ["BootstrapAdmin:TimeZoneId"] = "Europe/Bucharest",
+            ["BootstrapAdmin:CountryCode"] = "RO",
+            ["BootstrapAdmin:CountryName"] = "Romania",
+            ["Security:RequireHttpsForBearerTokens"] = _requireHttpsForBearerTokens.ToString()
+        }));
         builder.ConfigureServices(services =>
         {
             services.RemoveAll<TimeProvider>();

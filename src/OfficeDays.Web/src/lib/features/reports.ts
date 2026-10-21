@@ -1,16 +1,18 @@
 export type ReportResult = 'notStarted' | 'inProgress' | 'targetMet' | 'belowTarget';
 
-export interface ReportMonth {
+export type ReportMonth = {
   month: number;
   eligibleWorkingDays: number;
   requiredOfficePercentage: number;
+  mode: string;
+  value: number;
   requiredOfficeDays: number;
   officeDays: number | null;
   attendancePercentage: number | null;
   result: ReportResult;
 }
 
-export interface AttendanceReport {
+export type AttendanceReport = {
   year: number;
   startMonth: number;
   endMonth: number;
@@ -36,11 +38,11 @@ function csvCell(value: string | number | null): string {
 
 export function reportCsv(report: AttendanceReport): string {
   const header = ['Username', 'Generated at (UTC)', 'Timezone', 'Month', 'Eligible working days', 'Required office percentage',
-    'Required office days', 'Recorded office days', 'Attendance percentage', 'Result'];
+    'Required office days', 'Recorded office days', 'Attendance percentage', 'Result', 'Requirement mode', 'Requirement value'];
   const rows = report.months.map(month => [report.username, report.generatedAt, report.timeZoneId,
     `${String(report.year).padStart(4, '0')}-${String(month.month).padStart(2, '0')}`,
     month.eligibleWorkingDays, month.requiredOfficePercentage, month.requiredOfficeDays, month.officeDays,
-    month.attendancePercentage, resultLabels[month.result]]);
+    month.attendancePercentage, resultLabels[month.result], month.mode, month.value]);
   return '\uFEFF' + [header, ...rows].map(row => row.map(csvCell).join(',')).join('\r\n') + '\r\n';
 }
 

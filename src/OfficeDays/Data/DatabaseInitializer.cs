@@ -62,23 +62,28 @@ public sealed class DatabaseInitializer
         if (configuredCountryName.Trim().Length > 100)
             throw new InvalidOperationException("The BootstrapAdmin__CountryName environment variable must contain at most 100 characters.");
 
-        var jurisdiction = await db.HolidayJurisdictions.SingleOrDefaultAsync(x => x.Code == countryCode, cancellationToken: cancellationToken);
+        var jurisdiction = await db.HolidayJurisdictions
+                                   .SingleOrDefaultAsync(x => x.Code == countryCode, cancellationToken: cancellationToken);
         if (jurisdiction is null)
         {
-            jurisdiction = new HolidayJurisdiction { Code = countryCode, Name = configuredCountryName.Trim() };
+            jurisdiction = new HolidayJurisdiction
+            {
+                Code = countryCode, 
+                Name = configuredCountryName.Trim()
+            };
             db.HolidayJurisdictions.Add(jurisdiction);
         }
 
         var user = new User
         {
             Id = Guid.NewGuid(), 
-            RequiredOfficePercentages = 
+            AttendanceRequirements =
             [
-                new UserRequiredOfficePercentage
+                new UserAttendanceRequirement
                 {
                     Id = Guid.NewGuid(), 
-                    StartingFrom = UserRequiredOfficePercentage.BaselineDate,
-                    RequiredOfficePercentage = 50, 
+                    StartingFrom = UserAttendanceRequirement.BaselineDate,
+                    Value = 50,
                     CreatedAt = _timeProvider.GetUtcNow()
                 }
             ],
@@ -115,5 +120,4 @@ internal static partial class DatabaseInitializerLogger
     
     [LoggerMessage(EventIdStart + 4, LogLevel.Information, "Created bootstrap administrator {Username} with user ID {UserId}")]
     public static partial void LogCreatedAdmin(this ILogger<DatabaseInitializer> logger, string username, Guid userId);
-
 }

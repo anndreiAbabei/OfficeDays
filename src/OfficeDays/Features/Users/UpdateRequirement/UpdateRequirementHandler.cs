@@ -8,23 +8,35 @@ using OfficeDays.Features.Users.UpdateRequirement.Contracts;
 
 namespace OfficeDays.Features.Users.UpdateRequirement;
 
-public sealed class UpdateRequirementHandler(AppDbContext db, ICurrentUser currentUser, ILogger<UpdateRequirementHandler> logger) : IRequestHandler<UpdateRequirementRequest>
+public sealed class UpdateRequirementHandler : IRequestHandler<UpdateRequirementRequest>
 {
+    private readonly AppDbContext _db;
+    private readonly ICurrentUser _currentUser;
+    private readonly ILogger<UpdateRequirementHandler> _logger;
+
+    public UpdateRequirementHandler(AppDbContext db, ICurrentUser currentUser, ILogger<UpdateRequirementHandler> logger)
+    {
+        _db = db;
+        _currentUser = currentUser;
+        _logger = logger;
+    }
+
     public async ValueTask<IResult> Handle(UpdateRequirementRequest request, CancellationToken cancellationToken)
     {
-        var row = await db.UserRequiredOfficePercentages.SingleOrDefaultAsync(x => x.Id == request.Id && 
-                                                                                   x.UserId == currentUser.Id, 
+        var row = await _db.UserAttendanceRequirements.SingleOrDefaultAsync(x => x.Id == request.Id &&
+                                                                                 x.UserId == _currentUser.Id,
                                                                               cancellationToken);
         
         if (row is null)
         {
-            logger.LogRequirementNotFound(request.Id, currentUser.Id);
+            _logger.LogRequirementNotFound(request.Id, _currentUser.Id);
             return Results.NotFound();
         }
         
-        if (row.StartingFrom == UserRequiredOfficePercentage.BaselineDate != (request.Body.StartingFrom == UserRequiredOfficePercentage.BaselineDate))
+        if (row.StartingFrom == UserAttendanceRequirement.BaselineDate != (request.Body.StartingFrom == UserAttendanceRequirement.BaselineDate))
         {
-            logger.LogBaselineChangeRejected(request.Id, currentUser.Id);
+            _logger.LogBaselineChangeRejected(request.Id, _currentUser.Id);
+            
             return Results.ValidationProblem(new Dictionary<string, string[]>
             {
                 ["startingFrom"] = ["The initial requirement's starting month cannot be changed or assigned to another entry."]
@@ -32,16 +44,18 @@ public sealed class UpdateRequirementHandler(AppDbContext db, ICurrentUser curre
         }
         
         row.StartingFrom = request.Body.StartingFrom;
-        row.RequiredOfficePercentage = request.Body.RequiredOfficePercentage;
+        row.Mode = request.Body.Mode ?? AttendanceRequirementMode.Percentage;
+        row.Value = request.Body.Value ?? request.Body.RequiredOfficePercentage.GetValueOrDefault();
         
         try
         {
-            await db.SaveChangesAsync(cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateException exception) 
             when (exception.IsUniqueViolation())
         {
-            logger.LogDuplicateRequirement(exception, currentUser.Id, row.StartingFrom);
+            _logger.LogDuplicateRequirement(exception, _currentUser.Id, row.StartingFrom);
+            
             return Results.Problem(statusCode: StatusCodes.Status409Conflict,
                                    title: "A requirement already exists for this month.", 
                                    detail: "Edit the existing requirement or choose another month.");

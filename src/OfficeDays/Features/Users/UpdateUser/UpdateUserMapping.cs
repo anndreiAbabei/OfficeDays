@@ -5,6 +5,13 @@ namespace OfficeDays.Features.Users.UpdateUser;
 
 public static class UpdateUserMapping
 {
+    public static UpdateUserResponse ToViewModel(this User user, UserAttendanceRequirement requirement) =>
+        user.ToViewModel(requirement.RequiredOfficePercentage) with
+        {
+            Mode = requirement.Mode,
+            Value = requirement.Value
+        };
+
     public static UpdateUserResponse ToViewModel(this User user, int requiredOfficePercentage) => new UpdateUserResponse(user.Id,
                                                                                            user.Username, 
                                                                                            user.TimeZoneId,

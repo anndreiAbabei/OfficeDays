@@ -2,6 +2,7 @@ using System.Data;
 using System.Net.Mime;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using OfficeDays.Domain;
 using OfficeDays.Data;
 using OfficeDays.Features.Users.ExportData.Contracts;
 using OfficeDays.Infrastructure;
@@ -68,14 +69,20 @@ public sealed class ExportDataHandler : IRequestHandler<ExportDataRequest>
                                .Select(x => x.Preferences.TeamDay)
                                .SingleAsync(cancellationToken);
         
-        var requirements = await _db.UserRequiredOfficePercentages
+        var requirements = await _db.UserAttendanceRequirements
                                     .Where(x => x.UserId == _currentUser.Id)
                                     .OrderBy(x => x.StartingFrom)
                                     .Select(x => new ExportRequirement(x.Id, 
                                                                        x.UserId, 
                                                                        x.StartingFrom,
-                                                                       x.RequiredOfficePercentage, 
-                                                                       x.CreatedAt))
+                                                                       x.Mode == AttendanceRequirementMode.DaysPerWeek 
+                                                                            ? x.Value * 20 
+                                                                            : x.Value,
+                                                                       x.CreatedAt)
+                                    {
+                                        Mode = x.Mode,
+                                        Value = x.Value
+                                    })
                                     .ToArrayAsync(cancellationToken);
         
         var attendance = await _db.Attendances
