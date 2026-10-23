@@ -36,12 +36,11 @@ public sealed class GetRequirementsHandler : IRequestHandler<GetRequirementsRequ
             return Results.NotFound();
         }
         
-        var rows = await _db.UserRequiredOfficePercentages
+        var rows = await _db.UserAttendanceRequirements
                            .AsNoTracking()
                            .Where(x => x.UserId == user.Id)
                            .OrderByDescending(x => x.StartingFrom)
                            .ToListAsync(cancellationToken);
-        
         var result = user.ToViewModel(rows, _dates);
 
         return Results.Ok(result);

@@ -11,9 +11,9 @@ public sealed class ReportCalculatorTests
         TimeZoneId = zone, CreatedAt = registered ?? new DateTimeOffset(2026, 6, 15, 0, 0, 0, TimeSpan.Zero)
     };
     private static readonly DateTimeOffset _now = new DateTimeOffset(2026, 10, 16, 9, 0, 0, TimeSpan.Zero);
-    private static UserRequiredOfficePercentage Requirement(string date, int percentage) => new UserRequiredOfficePercentage
+    private static UserAttendanceRequirement Requirement(string date, int percentage) => new UserAttendanceRequirement
     {
-        StartingFrom = DateOnly.Parse(date), RequiredOfficePercentage = percentage
+        StartingFrom = DateOnly.Parse(date), RequirementValue = percentage
     };
     private readonly ReportCalculator _calculator = new ReportCalculator(new AttendanceCalculator());
 
@@ -26,7 +26,7 @@ public sealed class ReportCalculatorTests
         var expectedBelowTargetState = ReportMonthState.BelowTarget;
         var expectedCurrentState = ReportMonthState.InProgress;
         var expectedFutureState = ReportMonthState.NotStarted;
-        var expectedRequiredOfficePercentage = 60;
+        var expectedValue = 60;
         var expectedCompletedMonths = 4;
         var expectedMonthsMeetingTarget = 3;
         var expectedOfficeDays = 0;
@@ -41,7 +41,7 @@ public sealed class ReportCalculatorTests
         Assert.Equal(expectedBelowTargetState, report.Months[3].State);
         Assert.Equal(expectedCurrentState, report.Months[4].State);
         Assert.Equal(expectedFutureState, report.Months[5].State);
-        Assert.Equal(expectedRequiredOfficePercentage, report.Months[6].RequiredOfficePercentage);
+        Assert.Equal(expectedValue, report.Months[6].RequirementValue);
         Assert.Null(report.Months[6].OfficeDays);
         Assert.Null(report.Months[6].AttendancePercentage);
         Assert.Equal(expectedCompletedMonths, report.CompletedMonths);

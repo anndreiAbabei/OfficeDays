@@ -1,9 +1,11 @@
 <script lang="ts">
+  import type { AttendanceRequirementMode } from '$lib/attendanceRequirementMode';
   import AuthCard from '$lib/components/AuthCard.svelte';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { errorMessage, mutate, request } from '$lib/api';
   import type { Jurisdiction } from '$lib/types';
+  import RequirementInput from '$lib/components/RequirementInput.svelte';
   import Feedback from '$lib/components/Feedback.svelte';
   
   let username = $state(''); 
@@ -11,7 +13,9 @@
   let password = $state(''); 
   let confirmation = $state('');
   let timeZoneId = $state(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
-  let countryCode = $state(''); let requiredOfficePercentage = $state(50);
+  let countryCode = $state(''); 
+  let requirementValue = $state<number | undefined>(50);
+  let requirementMode = $state<AttendanceRequirementMode>('Percentage');
   let calendars = $state<Jurisdiction[]>([]); 
   let loading = $state(true); 
   let busy = $state(false); 
@@ -59,7 +63,8 @@
                                            password, 
                                            timeZoneId: timeZoneId.trim(), 
                                            countryCode, 
-                                           requiredOfficePercentage 
+                                           requirementMode,
+                                           requirementValue
                                          });
       password = ''; 
       confirmation = ''; 
@@ -124,10 +129,7 @@
       </select>
     </label>
     
-    <label>
-      Required office days (%)
-      <input type="number" min="0" max="100" step="1" required bind:value={requiredOfficePercentage} />
-    </label>
+    <RequirementInput bind:requirementMode bind:requirementValue disabled={busy} />
     
     <button type="submit" disabled={busy || loading || !!calendarError}>
       {busy ? 'Creating account…' : 'Create account'}

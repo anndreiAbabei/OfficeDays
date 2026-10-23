@@ -1,3 +1,4 @@
+import type { AttendanceRequirementMode } from '../src/lib/attendanceRequirementMode';
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
@@ -26,7 +27,7 @@ test('reports filter months and export the displayed snapshot until refreshed', 
   const history = await (await page.request.get('/api/users/me/requirements')).json();
   const baseline = history.items.find((item: { isBaseline: boolean }) => item.isBaseline);
   const updated = await page.request.put(`/api/users/me/requirements/${baseline.id}`, {
-    headers: { 'X-CSRF-TOKEN': csrf }, data: { startingFrom: baseline.startingFrom, requiredOfficePercentage: 80 }
+    headers: { 'X-CSRF-TOKEN': csrf }, data: { startingFrom: baseline.startingFrom, requirementMode: 'Percentage', requirementValue: 80 }
   });
   expect(updated.ok()).toBe(true);
   let reportFetches = 0;
@@ -38,12 +39,15 @@ test('reports filter months and export the displayed snapshot until refreshed', 
   expect(reportFetches).toBe(0);
   expect(csv).toContain(`"${username}","${snapshot.generatedAt}"`);
   for (const row of snapshot.months) {
-    expect(csv).toContain(`"${row.eligibleWorkingDays}","50","${row.requiredOfficeDays}"`);
+    expect(csv).toContain(`"${row.eligibleWorkingDays}","${row.requiredOfficeDays}"`);
   }
+  expect(csv).toContain('"Requirement mode","Requirement value"');
+  expect(csv).toContain('"Percentage","50"');
+  expect(csv).not.toContain('"Required office percentage"');
   const refreshedPromise = page.waitForResponse(response => response.url().includes('/api/reports?') && response.ok());
   await page.getByRole('button', { name: 'Refresh report' }).click();
   const refreshed = await (await refreshedPromise).json();
-  expect(refreshed.months.every((row: { requiredOfficePercentage: number }) => row.requiredOfficePercentage === 80)).toBe(true);
+  expect(refreshed.months.every((row: { requirementMode: AttendanceRequirementMode; requirementValue: number }) => row.requirementValue === 80)).toBe(true);
   await page.getByLabel('Year', { exact: true }).fill(String(snapshot.year - 1));
   await expect(page.getByRole('button', { name: 'Export CSV' })).toBeDisabled();
   await page.getByRole('button', { name: 'Generate report' }).click();

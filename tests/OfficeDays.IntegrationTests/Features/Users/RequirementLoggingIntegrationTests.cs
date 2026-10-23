@@ -23,10 +23,10 @@ public sealed class RequirementLoggingIntegrationTests
         const string path = "/api/users/me/requirements";
         var history = await client.GetFromJsonAsync<JsonElement>(path);
         var baselineId = history.GetProperty("items")[0].GetProperty("id").GetGuid();
-        var body = new { startingFrom = "2027-01-01", requiredOfficePercentage = 60 };
+        var body = new { startingFrom = "2027-01-01", requirementMode = "Percentage", requirementValue = 60 };
         (await PostJson(client, path, body, csrf)).EnsureSuccessStatusCode();
         Assert.Equal(HttpStatusCode.Conflict, (await PostJson(client, path, body, csrf)).StatusCode);
-        var other = await PostJson(client, path, new { startingFrom = "2027-02-01", requiredOfficePercentage = 70 }, csrf);
+        var other = await PostJson(client, path, new { startingFrom = "2027-02-01", requirementMode = "Percentage", requirementValue = 70 }, csrf);
         var otherId = (await Read(other)).GetProperty("id").GetGuid();
         Assert.Equal(HttpStatusCode.Conflict, (await PutJson(client, $"{path}/{otherId}", body, csrf)).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await PutJson(client, $"{path}/{baselineId}", body, csrf)).StatusCode);

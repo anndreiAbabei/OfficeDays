@@ -1,3 +1,4 @@
+using OfficeDays.Domain;
 using OfficeDays.Features.Users.CreateRequirement.Contracts;
 
 namespace OfficeDays.UnitTests.Features.Users.CreateRequirement.Contracts;
@@ -9,17 +10,18 @@ public sealed class CreateRequirementRequestBodyTests
     {
         // arrange
         var expectedStartingFrom = DateOnly.FromDateTime(DateTime.Now);
-        const int expectedRequiredOfficePercentage = 22;
+        const int expectedValue = 22;
 
         // act
         var sut = new CreateRequirementRequestBody
         {
+            RequirementMode = AttendanceRequirementMode.Percentage,
             StartingFrom = expectedStartingFrom,
-            RequiredOfficePercentage = expectedRequiredOfficePercentage
+            RequirementValue = expectedValue
         };
 
         // assert
         Assert.Equal(expectedStartingFrom, sut.StartingFrom);
-        Assert.Equal(expectedRequiredOfficePercentage, sut.RequiredOfficePercentage);
+        Assert.Equal(expectedValue, sut.RequirementValue);
     }
 }

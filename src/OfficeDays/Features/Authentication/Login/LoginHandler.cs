@@ -62,7 +62,7 @@ public sealed class LoginHandler : IRequestHandler<LoginRequest>
                                   new AuthenticationProperties { IsPersistent = true });
 
         _logger.LogSignedIn(user.Id);
-        var requirement = await _requirements.Current(user, cancellationToken);
+        var requirement = await _requirements.CurrentRequirement(user, cancellationToken);
         var result = user.ToViewModel(requirement);
 
         return Results.Ok(result);

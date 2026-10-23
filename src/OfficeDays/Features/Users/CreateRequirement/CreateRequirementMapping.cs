@@ -5,12 +5,15 @@ namespace OfficeDays.Features.Users.CreateRequirement;
 
 public static class CreateRequirementMapping
 {
-    public static CreateRequirementResponse ToViewModel(this UserRequiredOfficePercentage row)
+    public static CreateRequirementResponse ToViewModel(this UserAttendanceRequirement row)
     {
         return new CreateRequirementResponse(row.Id,
                                              row.StartingFrom,
-                                             row.RequiredOfficePercentage,
+                                             row.RequirementValue,
                                              row.CreatedAt,
-                                             row.StartingFrom == UserRequiredOfficePercentage.BaselineDate);
+                                             row.StartingFrom == UserAttendanceRequirement.BaselineDate)
+        {
+            RequirementMode = row.RequirementMode
+        };
     }
 }

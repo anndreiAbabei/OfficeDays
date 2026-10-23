@@ -37,16 +37,17 @@ public sealed class CreateRequirementHandler : IRequestHandler<CreateRequirement
             return Results.NotFound();
         }
         
-        var row = new UserRequiredOfficePercentage
+        var row = new UserAttendanceRequirement
         {
             Id = Guid.NewGuid(),
             UserId = _currentUser.Id, 
             StartingFrom = request.Body.StartingFrom,
-            RequiredOfficePercentage = request.Body.RequiredOfficePercentage, 
+            RequirementMode = request.Body.RequirementMode ?? AttendanceRequirementMode.Percentage,
+            RequirementValue = request.Body.RequirementValue.GetValueOrDefault(),
             CreatedAt = _clock.GetUtcNow()
         };
         
-        await _db.UserRequiredOfficePercentages.AddAsync(row, cancellationToken);
+        await _db.UserAttendanceRequirements.AddAsync(row, cancellationToken);
         
         try
         {

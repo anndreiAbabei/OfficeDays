@@ -58,7 +58,7 @@ public sealed class GetReportHandler : IRequestHandler<GetReportRequest>
         var endMonth = request.EndMonth ?? 12;
         var start = new DateOnly(year, startMonth, 1);
         var end = new DateOnly(year, endMonth, DateTime.DaysInMonth(year, endMonth));
-        var requirements = await _db.UserRequiredOfficePercentages
+        var requirements = await _db.UserAttendanceRequirements
                                     .AsNoTracking()
                                     .Where(x => x.UserId == user.Id && x.StartingFrom <= end)
                                     .ToListAsync(cancellationToken);

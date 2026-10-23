@@ -1,7 +1,12 @@
+using OfficeDays.Domain;
+
 namespace OfficeDays.Features.Users.CreateRequirement.Contracts;
 
 public sealed record CreateRequirementResponse(Guid Id,
                                                DateOnly StartingFrom,
-                                               int RequiredOfficePercentage,
+                                               int RequirementValue,
                                                DateTimeOffset CreatedAt,
-                                               bool IsBaseline);
+                                               bool IsBaseline)
+{
+    public AttendanceRequirementMode RequirementMode { get; init; } = AttendanceRequirementMode.Percentage;
+}

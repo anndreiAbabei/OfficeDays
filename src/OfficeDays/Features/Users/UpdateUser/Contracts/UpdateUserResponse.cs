@@ -1,3 +1,5 @@
+using OfficeDays.Domain;
+
 namespace OfficeDays.Features.Users.UpdateUser.Contracts;
 
 public sealed record UpdateUserResponse(Guid Id, 
@@ -7,5 +9,8 @@ public sealed record UpdateUserResponse(Guid Id,
                                         string CountryName, 
                                         bool IsAdmin, 
                                         string? Email, 
-                                        int RequiredOfficePercentage,
-                                        string? TeamDay = null);
+                                        int RequirementValue,
+                                        string? TeamDay = null)
+{
+    public AttendanceRequirementMode RequirementMode { get; init; } = AttendanceRequirementMode.Percentage;
+}

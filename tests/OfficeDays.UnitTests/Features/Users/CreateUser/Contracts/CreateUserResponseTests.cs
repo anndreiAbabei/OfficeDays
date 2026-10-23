@@ -15,7 +15,7 @@ public sealed class CreateUserResponseTests
         var expectedCountryName = "CountryName value";
         var expectedIsAdmin = true;
         var expectedEmail = "user@example.com";
-        var expectedRequiredOfficePercentage = 28;
+        var expectedValue = 28;
 
         // act
         var sut = new CreateUserResponse
@@ -27,7 +27,7 @@ public sealed class CreateUserResponseTests
             CountryName = expectedCountryName,
             IsAdmin = expectedIsAdmin,
             Email = expectedEmail,
-            RequiredOfficePercentage = expectedRequiredOfficePercentage
+            RequirementValue = expectedValue
         };
 
         // assert
@@ -38,6 +38,6 @@ public sealed class CreateUserResponseTests
         Assert.Equal(expectedCountryName, sut.CountryName);
         Assert.Equal(expectedIsAdmin, sut.IsAdmin);
         Assert.Equal(expectedEmail, sut.Email);
-        Assert.Equal(expectedRequiredOfficePercentage, sut.RequiredOfficePercentage);
+        Assert.Equal(expectedValue, sut.RequirementValue);
     }
 }

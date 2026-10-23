@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using FluentValidation;
+using OfficeDays.Domain;
 using OfficeDays.Features.Users.CreateRequirement.Contracts;
 
 namespace OfficeDays.Features.Users.CreateRequirement;
@@ -23,8 +24,19 @@ public sealed class CreateRequirementRequestBodyValidator : AbstractValidator<Cr
 {
     public CreateRequirementRequestBodyValidator()
     {
-        RuleFor(x => x.RequiredOfficePercentage)
-            .InclusiveBetween(0, 100);
+        const int maxDaysPerWeek = 5;
+        
+        RuleFor(x => x.RequirementMode)
+            .Must(mode => !mode.HasValue || Enum.IsDefined(mode.Value))
+            .WithMessage("Choose Percentage or DaysPerWeek.");
+        RuleFor(x => x.RequirementValue)
+            .NotNull();
+        RuleFor(x => x.RequirementMode)
+            .NotNull();
+        RuleFor(x => x.RequirementValue)
+            .InclusiveBetween(0, 100).When(x => x.RequirementMode == AttendanceRequirementMode.Percentage);
+        RuleFor(x => x.RequirementValue)
+            .InclusiveBetween(0, maxDaysPerWeek).When(x => x.RequirementMode == AttendanceRequirementMode.DaysPerWeek);
 
         RuleFor(x => x.StartingFrom)
             .Must(date => date.Day == 1)

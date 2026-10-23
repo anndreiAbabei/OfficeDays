@@ -8,7 +8,7 @@ public static class LoginMapping
 {
     extension(User user)
     {
-        public LoginResponse ToViewModel(int requiredOfficePercentage) =>
+        public LoginResponse ToViewModel(UserAttendanceRequirement requirement) =>
             new LoginResponse(user.Id, 
                               user.Username, 
                               user.TimeZoneId,
@@ -16,8 +16,11 @@ public static class LoginMapping
                               user.HolidayJurisdiction.Name, 
                               user.IsAdmin, 
                               user.Email, 
-                              requiredOfficePercentage,
-                              user.Preferences.TeamDay?.ToString().ToLowerInvariant());
+                              requirement.RequirementValue,
+                              user.Preferences.TeamDay?.ToString().ToLowerInvariant())
+        {
+            RequirementMode = requirement.RequirementMode
+        };
         
         public IEnumerable<Claim> ToClaims() =>
         [

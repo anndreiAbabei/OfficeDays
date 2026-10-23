@@ -1,3 +1,5 @@
+using OfficeDays.Domain;
+
 namespace OfficeDays.Features.Users.ExportData.Contracts;
 
 public sealed record PersonalDataExport
@@ -27,7 +29,10 @@ public sealed record ExportProfile(Guid Id,
                                    bool IsAdmin, 
                                    DateTimeOffset CreatedAt);
 public sealed record ExportPreferences(string? TeamDay);
-public sealed record ExportRequirement(Guid Id, Guid UserId, DateOnly StartingFrom, int RequiredOfficePercentage, DateTimeOffset CreatedAt);
+public sealed record ExportRequirement(Guid Id, Guid UserId, DateOnly StartingFrom, int RequirementValue, DateTimeOffset CreatedAt)
+{
+    public AttendanceRequirementMode RequirementMode { get; init; } = AttendanceRequirementMode.Percentage;
+}
 public sealed record ExportAttendance(Guid Id, Guid UserId, DateOnly Date, bool IsManual, DateTimeOffset CreatedAt);
 public sealed record ExportPlan(Guid Id, Guid UserId, DateOnly Date, DateTimeOffset CreatedAt);
 public sealed record ExportVacation(Guid Id, Guid UserId, DateOnly From, DateOnly To, DateTimeOffset CreatedAt);

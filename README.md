@@ -27,7 +27,7 @@ That idea grew into a web app with a calendar, vacation tracking, attendance tar
 - **See monthly progress:** check your required office days, remaining days, and maximum work-from-home days.
 - **Plan ahead:** mark upcoming office days on the calendar. Plans stay separate from recorded attendance.
 - **Account for time off:** exclude weekends, bank holidays, and vacations from your target.
-- **Set your own target:** choose an office attendance percentage, then manage past or future changes from Profile.
+- **Set your own target:** choose an office attendance percentage or days per week, then manage past or future changes from Profile.
 - **Highlight your team day:** choose a weekday as a visual reminder in the calendar.
 - **Review and export reports:** view monthly attendance across a year or a range of months and download a CSV.
 - **Automate with iOS Shortcuts:** use a personal API token to log attendance from your iPhone.
@@ -39,7 +39,7 @@ The default target is **50% of eligible working days**. Eligible days are weekda
 
 For example, with **21 eligible working days** and a **50% target**, you need **11 office days**, leaving up to **10 work-from-home days**. Only recorded attendance on eligible days counts toward that target; planning a visit does not mark it as attended.
 
-You can choose any whole percentage from 0 to 100. Later changes take effect from the first day of a chosen month. Editing an earlier requirement recalculates the affected months.
+Choose either a whole percentage from 0 to 100 or a whole number of office days per week from 0 to 5. Weekly days represent a monthly average over a five-day working week, not a minimum each week: the target is `ceil(eligible working days × days per week / 5)`. Eligible days exclude weekends, jurisdiction holidays, and vacations. For example, 3 days per week requires 12 office days in a month with 20 eligible days, or 14 with 22. Attend on any eligible dates to meet the quota; there are no mandatory weekdays. The total rounds up once per month. Your selected format is preserved in history, reports, and exports. Later changes take effect from the first day of a chosen month. Editing an earlier requirement recalculates the affected months.
 
 ## Requirements
 
@@ -149,7 +149,7 @@ If you change the web interface, rebuild it and restart the app. For live fronte
 ## First-time setup
 
 1. **Set up bank holidays.** Sign in as Admin and open **Admin**. Add any country or regional calendars you need, then enter the bank holidays for the relevant year. Holiday dates are maintained by the administrator, so check them each year.
-2. **Create your everyday account.** From the sign-in page, choose **Create an account**. Pick a username, a password of at least 12 characters, your timezone, holiday calendar, and attendance percentage. Email is optional.
+2. **Create your everyday account.** From the sign-in page, choose **Create an account**. Pick a username, a password of at least 12 characters, your timezone, holiday calendar, and attendance requirement. Email is optional.
 3. **Add your vacation dates.** Use the dashboard so your monthly target reflects time off.
 4. **Make it yours.** In **Profile**, choose a team day and adjust your attendance requirements if needed.
 

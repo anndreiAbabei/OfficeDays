@@ -15,11 +15,11 @@ public sealed class UpdateUserResponseTests
         var expectedCountryName = "CountryName value";
         var expectedIsAdmin = true;
         var expectedEmail = "user@example.com";
-        var expectedRequiredOfficePercentage = 28;
+        var expectedValue = 28;
         var expectedTeamDay = "TeamDay value";
 
         // act
-        var sut = new UpdateUserResponse(expectedId, expectedUsername, expectedTimeZoneId, expectedCountryCode, expectedCountryName, expectedIsAdmin, expectedEmail, expectedRequiredOfficePercentage, expectedTeamDay);
+        var sut = new UpdateUserResponse(expectedId, expectedUsername, expectedTimeZoneId, expectedCountryCode, expectedCountryName, expectedIsAdmin, expectedEmail, expectedValue, expectedTeamDay);
 
         // assert
         Assert.Equal(expectedId, sut.Id);
@@ -29,7 +29,7 @@ public sealed class UpdateUserResponseTests
         Assert.Equal(expectedCountryName, sut.CountryName);
         Assert.Equal(expectedIsAdmin, sut.IsAdmin);
         Assert.Equal(expectedEmail, sut.Email);
-        Assert.Equal(expectedRequiredOfficePercentage, sut.RequiredOfficePercentage);
+        Assert.Equal(expectedValue, sut.RequirementValue);
         Assert.Equal(expectedTeamDay, sut.TeamDay);
     }
 

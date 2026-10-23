@@ -68,14 +68,17 @@ public sealed class ExportDataHandler : IRequestHandler<ExportDataRequest>
                                .Select(x => x.Preferences.TeamDay)
                                .SingleAsync(cancellationToken);
         
-        var requirements = await _db.UserRequiredOfficePercentages
+        var requirements = await _db.UserAttendanceRequirements
                                     .Where(x => x.UserId == _currentUser.Id)
                                     .OrderBy(x => x.StartingFrom)
                                     .Select(x => new ExportRequirement(x.Id, 
                                                                        x.UserId, 
                                                                        x.StartingFrom,
-                                                                       x.RequiredOfficePercentage, 
-                                                                       x.CreatedAt))
+                                                                       x.RequirementValue,
+                                                                       x.CreatedAt)
+                                    {
+                                        RequirementMode = x.RequirementMode
+                                    })
                                     .ToArrayAsync(cancellationToken);
         
         var attendance = await _db.Attendances

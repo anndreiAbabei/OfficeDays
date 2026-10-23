@@ -1,3 +1,5 @@
+using OfficeDays.Domain;
+
 namespace OfficeDays.Services;
 
 public enum ReportMonthState
@@ -10,11 +12,14 @@ public enum ReportMonthState
 
 public sealed record AttendanceReportMonth(int Month,
                                            int EligibleWorkingDays,
-                                           int RequiredOfficePercentage,
+                                           int RequirementValue,
                                            int RequiredOfficeDays,
                                            int? OfficeDays,
                                            decimal? AttendancePercentage,
-                                           ReportMonthState State);
+                                           ReportMonthState State)
+{
+    public AttendanceRequirementMode RequirementMode { get; init; } = AttendanceRequirementMode.Percentage;
+}
 
 public sealed record AttendanceReport(int Year,
                                       int StartMonth,

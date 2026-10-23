@@ -8,7 +8,7 @@ public interface IAppDbContext : IDbContext
 {
     DbSet<OfficePlan> OfficePlans { get; }
     DbSet<User> Users { get; }
-    DbSet<UserRequiredOfficePercentage> UserRequiredOfficePercentages { get; }
+    DbSet<UserAttendanceRequirement> UserAttendanceRequirements { get; }
     DbSet<Attendance> Attendances { get; }
     DbSet<Vacation> Vacations { get; }
     DbSet<ApiToken> ApiTokens { get; }
@@ -19,7 +19,7 @@ public sealed class AppDbContext : DbContext, IAppDbContext
 {
     public DbSet<OfficePlan> OfficePlans => Set<OfficePlan>();
     public DbSet<User> Users => Set<User>();
-    public DbSet<UserRequiredOfficePercentage> UserRequiredOfficePercentages => Set<UserRequiredOfficePercentage>();
+    public DbSet<UserAttendanceRequirement> UserAttendanceRequirements => Set<UserAttendanceRequirement>();
     public DbSet<Attendance> Attendances => Set<Attendance>();
     public DbSet<Vacation> Vacations => Set<Vacation>();
     public DbSet<ApiToken> ApiTokens => Set<ApiToken>();
@@ -49,16 +49,18 @@ public sealed class AppDbContext : DbContext, IAppDbContext
                   .OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<UserRequiredOfficePercentage>(entity =>
+        modelBuilder.Entity<UserAttendanceRequirement>(entity =>
         {
             entity.HasKey(x => x.Id);
+            entity.Ignore(x => x.EffectivePercentage);
+            entity.Property(x => x.RequirementMode).HasConversion<string>();
             entity.HasIndex(x => new { x.UserId, x.StartingFrom }).IsUnique();
-            entity.HasOne<User>().WithMany(x => x.RequiredOfficePercentages)
+            entity.HasOne<User>().WithMany(x => x.AttendanceRequirements)
                   .HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             entity.ToTable(table =>
             {
-                table.HasCheckConstraint("CK_UserRequiredOfficePercentages_Percentage", "\"RequiredOfficePercentage\" BETWEEN 0 AND 100");
-                table.HasCheckConstraint("CK_UserRequiredOfficePercentages_Month", "substr(\"StartingFrom\", 9, 2) = '01'");
+                table.HasCheckConstraint("CK_UserAttendanceRequirements_Value", "(\"RequirementMode\" = 'Percentage' AND \"RequirementValue\" BETWEEN 0 AND 100) OR (\"RequirementMode\" = 'DaysPerWeek' AND \"RequirementValue\" BETWEEN 0 AND 5)");
+                table.HasCheckConstraint("CK_UserAttendanceRequirements_Month", "substr(\"StartingFrom\", 9, 2) = '01'");
             });
         });
 

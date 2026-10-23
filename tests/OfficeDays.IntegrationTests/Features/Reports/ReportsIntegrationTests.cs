@@ -42,9 +42,9 @@ public sealed class ReportsIntegrationTests
             db.Attendances.AddRange(new OfficeDays.Domain.Attendance { Id = Guid.NewGuid(), UserId = userId, Date = monday },
                 new OfficeDays.Domain.Attendance { Id = Guid.NewGuid(), UserId = userId, Date = monday.AddDays(2) },
                 new OfficeDays.Domain.Attendance { Id = Guid.NewGuid(), UserId = otherId, Date = monday.AddDays(3) });
-            db.UserRequiredOfficePercentages.AddRange(
-                new UserRequiredOfficePercentage { Id = Guid.NewGuid(), UserId = userId, StartingFrom = new DateOnly(2099, 7, 1), RequiredOfficePercentage = 100 },
-                new UserRequiredOfficePercentage { Id = Guid.NewGuid(), UserId = userId, StartingFrom = new DateOnly(2099, 12, 1), RequiredOfficePercentage = 60 });
+            db.UserAttendanceRequirements.AddRange(
+                new UserAttendanceRequirement { Id = Guid.NewGuid(), UserId = userId, StartingFrom = new DateOnly(2099, 7, 1), RequirementValue = 100 },
+                new UserAttendanceRequirement { Id = Guid.NewGuid(), UserId = userId, StartingFrom = new DateOnly(2099, 12, 1), RequirementValue = 60 });
             await db.SaveChangesAsync();
         }
         await Login(client, "reportuser", "Normal-user-password!");
@@ -62,11 +62,11 @@ public sealed class ReportsIntegrationTests
         var rows = report.GetProperty("months").EnumerateArray().ToArray();
         Assert.Equal(Enumerable.Range(6, 7), rows.Select(x => x.GetProperty("month").GetInt32()));
         Assert.Equal(1, rows[0].GetProperty("officeDays").GetInt32());
-        Assert.Equal(50, rows[0].GetProperty("requiredOfficePercentage").GetInt32());
-        Assert.Equal(100, rows[1].GetProperty("requiredOfficePercentage").GetInt32());
+        Assert.Equal(50, rows[0].GetProperty("requirementValue").GetInt32());
+        Assert.Equal(100, rows[1].GetProperty("requirementValue").GetInt32());
         Assert.Equal("inProgress", rows[3].GetProperty("result").GetString());
         Assert.Equal("notStarted", rows[6].GetProperty("result").GetString());
-        Assert.Equal(60, rows[6].GetProperty("requiredOfficePercentage").GetInt32());
+        Assert.Equal(60, rows[6].GetProperty("requirementValue").GetInt32());
         Assert.Equal(JsonValueKind.Null, rows[6].GetProperty("officeDays").ValueKind);
         Assert.Equal(1, report.GetProperty("summary").GetProperty("officeDays").GetInt32());
         Assert.Equal(3, report.GetProperty("summary").GetProperty("completedMonths").GetInt32());
@@ -92,7 +92,7 @@ public sealed class ReportsIntegrationTests
         Assert.Single(before.GetProperty("months").EnumerateArray());
         var day = Enumerable.Range(1, 7).Select(d => new DateOnly(2099, 6, d)).First(d => d.DayOfWeek == DayOfWeek.Monday);
         (await PutJson(client, $"/api/attendance/{day:yyyy-MM-dd}", new { }, csrf)).EnsureSuccessStatusCode();
-        (await PostJson(client, "/api/users/me/requirements", new { startingFrom = "2099-06-01", requiredOfficePercentage = 0 }, csrf)).EnsureSuccessStatusCode();
+        (await PostJson(client, "/api/users/me/requirements", new { startingFrom = "2099-06-01", requirementMode = "Percentage", requirementValue = 0 }, csrf)).EnsureSuccessStatusCode();
         var after = await client.GetFromJsonAsync<JsonElement>("/api/reports?year=2099&startMonth=6&endMonth=6");
         Assert.Equal(0, before.GetProperty("summary").GetProperty("officeDays").GetInt32());
         Assert.Equal(1, after.GetProperty("summary").GetProperty("officeDays").GetInt32());

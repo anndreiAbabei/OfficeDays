@@ -11,12 +11,12 @@ public sealed class CreateRequirementMappingTests
     public void Should_MapToViewModel(string startingFrom, bool expectedIsBaseline)
     {
         // arrange
-        var sut = new UserRequiredOfficePercentage
+        var sut = new UserAttendanceRequirement
         {
             Id = Guid.NewGuid(), 
             UserId = Guid.NewGuid(), 
             StartingFrom = DateOnly.Parse(startingFrom), 
-            RequiredOfficePercentage = 65, 
+            RequirementValue = 65,
             CreatedAt = new DateTimeOffset(2026, 10, 1, 9, 0, 0, TimeSpan.Zero)
         };
 
@@ -26,8 +26,35 @@ public sealed class CreateRequirementMappingTests
         // assert
         Assert.Equal(sut.Id, result.Id);
         Assert.Equal(sut.StartingFrom, result.StartingFrom);
-        Assert.Equal(sut.RequiredOfficePercentage, result.RequiredOfficePercentage);
+        Assert.Equal(sut.RequirementValue, result.RequirementValue);
         Assert.Equal(sut.CreatedAt, result.CreatedAt);
         Assert.Equal(expectedIsBaseline, result.IsBaseline);
+    }
+
+    [Fact]
+    public void Should_PreserveWeeklyModeAndValue_WhenMappingRequirement()
+    {
+        // Arrange
+        const int expectedValue = 3;
+        const AttendanceRequirementMode expectedMode = AttendanceRequirementMode.DaysPerWeek;
+        var row = new UserAttendanceRequirement
+        {
+            Id = Guid.NewGuid(), 
+            UserId = Guid.NewGuid(), 
+            StartingFrom = new DateOnly(2026, 11, 1),
+            CreatedAt = new DateTimeOffset(2026, 10, 21, 12, 0, 0, TimeSpan.Zero),
+            RequirementMode = AttendanceRequirementMode.DaysPerWeek, RequirementValue = expectedValue
+        };
+
+        // Act
+        var result = row.ToViewModel();
+
+        // Assert
+        Assert.Equal(row.Id, result.Id);
+        Assert.Equal(row.StartingFrom, result.StartingFrom);
+        Assert.Equal(row.CreatedAt, result.CreatedAt);
+        Assert.False(result.IsBaseline);
+        Assert.Equal(expectedMode, result.RequirementMode);
+        Assert.Equal(expectedValue, result.RequirementValue);
     }
 }

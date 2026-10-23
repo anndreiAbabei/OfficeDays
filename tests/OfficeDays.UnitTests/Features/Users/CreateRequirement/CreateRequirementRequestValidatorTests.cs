@@ -1,3 +1,4 @@
+using OfficeDays.Domain;
 using OfficeDays.Features.Users.CreateRequirement.Contracts;
 using OfficeDays.Features.Users.CreateRequirement;
 
@@ -14,8 +15,9 @@ public sealed class CreateRequirementRequestValidatorTests
         {
             Body = new CreateRequirementRequestBody
             {
+                RequirementMode = AttendanceRequirementMode.Percentage,
                 StartingFrom = new DateOnly(2026, 6, 1), 
-                RequiredOfficePercentage = 50
+                RequirementValue = 50
             }
         };
 
@@ -46,14 +48,14 @@ public sealed class CreateRequirementRequestValidatorTests
     {
         // arrange
         var sut = new CreateRequirementRequestValidator(new CreateRequirementRequestBodyValidator());
-        var request = new CreateRequirementRequest { Body = new CreateRequirementRequestBody { StartingFrom = DateOnly.FromDateTime(DateTime.Now), RequiredOfficePercentage = 50 } with { RequiredOfficePercentage = -1 } };
+        var request = new CreateRequirementRequest { Body = new CreateRequirementRequestBody { RequirementMode = AttendanceRequirementMode.Percentage, StartingFrom = DateOnly.FromDateTime(DateTime.Now), RequirementValue = 50 } with { RequirementValue = -1 } };
 
         // act
         var result = sut.Validate(request);
 
         // assert
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, error => error.PropertyName == "Body.RequiredOfficePercentage");
+        Assert.Contains(result.Errors, error => error.PropertyName == "Body.RequirementValue");
     }
 
     [Fact]
@@ -61,7 +63,7 @@ public sealed class CreateRequirementRequestValidatorTests
     {
         // arrange
         var sut = new CreateRequirementRequestValidator(new CreateRequirementRequestBodyValidator());
-        var request = new CreateRequirementRequest { Body = new CreateRequirementRequestBody { StartingFrom = DateOnly.FromDateTime(DateTime.Now), RequiredOfficePercentage = 50 } with { StartingFrom = DateOnly.MinValue } };
+        var request = new CreateRequirementRequest { Body = new CreateRequirementRequestBody { RequirementMode = AttendanceRequirementMode.Percentage, StartingFrom = DateOnly.FromDateTime(DateTime.Now), RequirementValue = 50 } with { StartingFrom = DateOnly.MinValue } };
 
         // act
         var result = sut.Validate(request);

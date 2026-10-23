@@ -21,7 +21,7 @@ public sealed class CreateUserMappingTests
             IsAdmin = true,
             Email = "alice@example.com",
             Preferences = new UserPreferences { TeamDay = DayOfWeek.Wednesday },
-            RequiredOfficePercentages = [new UserRequiredOfficePercentage { RequiredOfficePercentage = 65 }]
+            AttendanceRequirements = [new UserAttendanceRequirement { RequirementValue = 65 }]
         };
 
         // act
@@ -35,6 +35,6 @@ public sealed class CreateUserMappingTests
         Assert.Equal(sut.Email, result.Email);
         Assert.Equal(sut.HolidayJurisdiction.Code, result.CountryCode);
         Assert.Equal(sut.HolidayJurisdiction.Name, result.CountryName);
-        Assert.Equal(expectedPercentage, result.RequiredOfficePercentage);
+        Assert.Equal(expectedPercentage, result.RequirementValue);
     }
 }

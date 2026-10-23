@@ -1,4 +1,5 @@
 using FluentValidation;
+using OfficeDays.Domain;
 using OfficeDays.Features.Users.CreateUser.Contracts;
 using OfficeDays.Services;
 namespace OfficeDays.Features.Users.CreateUser;
@@ -17,6 +18,18 @@ public sealed class CreateUserRequestBodyValidator : AbstractValidator<CreateUse
 {
     public CreateUserRequestBodyValidator(IUserDateService dates)
     {
+        RuleFor(x => x.RequirementMode)
+            .Must(mode => !mode.HasValue || Enum.IsDefined(mode.Value))
+            .WithMessage("Choose Percentage or DaysPerWeek.");
+        RuleFor(x => x.RequirementValue)
+            .NotNull().When(x => x.RequirementMode is not null);
+        RuleFor(x => x.RequirementMode)
+            .NotNull().When(x => x.RequirementValue.HasValue);
+        RuleFor(x => x.RequirementValue)
+            .InclusiveBetween(0, 100).When(x => x.RequirementMode == AttendanceRequirementMode.Percentage);
+        RuleFor(x => x.RequirementValue)
+            .InclusiveBetween(0, 5).When(x => x.RequirementMode == AttendanceRequirementMode.DaysPerWeek);
+
         RuleFor(input => input.Username)
             .NotEmpty()
             .MinimumLength(3)
@@ -39,11 +52,6 @@ public sealed class CreateUserRequestBodyValidator : AbstractValidator<CreateUse
         RuleFor(input => input.Email)
             .EmailAddress()
             .When(input => !string.IsNullOrWhiteSpace(input.Email));
-            
-        When(input => input.RequiredOfficePercentage.HasValue, () =>
-            {
-                RuleFor(input => input.RequiredOfficePercentage)
-                    .InclusiveBetween(0, 100);
-            });
+
     }
 }

@@ -24,7 +24,7 @@ public sealed class UpdateUserMappingTests
         };
 
         // act
-        var result = sut.ToViewModel(expectedPercentage);
+        var result = sut.ToViewModel(new UserAttendanceRequirement { RequirementMode = AttendanceRequirementMode.Percentage, RequirementValue = expectedPercentage });
 
         // assert
         Assert.Equal(sut.Id, result.Id);
@@ -34,7 +34,7 @@ public sealed class UpdateUserMappingTests
         Assert.Equal(sut.Email, result.Email);
         Assert.Equal(sut.HolidayJurisdiction.Code, result.CountryCode);
         Assert.Equal(sut.HolidayJurisdiction.Name, result.CountryName);
-        Assert.Equal(expectedPercentage, result.RequiredOfficePercentage);
+        Assert.Equal(expectedPercentage, result.RequirementValue);
         Assert.Equal("wednesday", result.TeamDay);
     }
 
@@ -58,11 +58,11 @@ public sealed class UpdateUserMappingTests
         sut.Preferences.TeamDay = null;
 
         // act
-        var result = sut.ToViewModel(0);
+        var result = sut.ToViewModel(new UserAttendanceRequirement { RequirementMode = AttendanceRequirementMode.Percentage, RequirementValue = 0 });
 
         // assert
         Assert.Null(result.Email);
         Assert.Null(result.TeamDay);
-        Assert.Equal(0, result.RequiredOfficePercentage);
+        Assert.Equal(0, result.RequirementValue);
     }
 }
