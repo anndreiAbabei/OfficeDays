@@ -44,8 +44,8 @@ public sealed class UpdateRequirementHandler : IRequestHandler<UpdateRequirement
         }
         
         row.StartingFrom = request.Body.StartingFrom;
-        row.Mode = request.Body.Mode ?? AttendanceRequirementMode.Percentage;
-        row.Value = request.Body.Value ?? request.Body.RequiredOfficePercentage.GetValueOrDefault();
+        row.RequirementMode = request.Body.RequirementMode ?? AttendanceRequirementMode.Percentage;
+        row.RequirementValue = request.Body.RequirementValue.GetValueOrDefault();
         
         try
         {

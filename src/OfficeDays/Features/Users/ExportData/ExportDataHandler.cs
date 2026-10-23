@@ -2,7 +2,6 @@ using System.Data;
 using System.Net.Mime;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using OfficeDays.Domain;
 using OfficeDays.Data;
 using OfficeDays.Features.Users.ExportData.Contracts;
 using OfficeDays.Infrastructure;
@@ -75,13 +74,10 @@ public sealed class ExportDataHandler : IRequestHandler<ExportDataRequest>
                                     .Select(x => new ExportRequirement(x.Id, 
                                                                        x.UserId, 
                                                                        x.StartingFrom,
-                                                                       x.Mode == AttendanceRequirementMode.DaysPerWeek 
-                                                                            ? x.Value * 20 
-                                                                            : x.Value,
+                                                                       x.RequirementValue,
                                                                        x.CreatedAt)
                                     {
-                                        Mode = x.Mode,
-                                        Value = x.Value
+                                        RequirementMode = x.RequirementMode
                                     })
                                     .ToArrayAsync(cancellationToken);
         

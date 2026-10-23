@@ -29,10 +29,9 @@ public sealed record ExportProfile(Guid Id,
                                    bool IsAdmin, 
                                    DateTimeOffset CreatedAt);
 public sealed record ExportPreferences(string? TeamDay);
-public sealed record ExportRequirement(Guid Id, Guid UserId, DateOnly StartingFrom, int RequiredOfficePercentage, DateTimeOffset CreatedAt)
+public sealed record ExportRequirement(Guid Id, Guid UserId, DateOnly StartingFrom, int RequirementValue, DateTimeOffset CreatedAt)
 {
-    public AttendanceRequirementMode Mode { get; init; } = AttendanceRequirementMode.Percentage;
-    public int Value { get; init; } = RequiredOfficePercentage;
+    public AttendanceRequirementMode RequirementMode { get; init; } = AttendanceRequirementMode.Percentage;
 }
 public sealed record ExportAttendance(Guid Id, Guid UserId, DateOnly Date, bool IsManual, DateTimeOffset CreatedAt);
 public sealed record ExportPlan(Guid Id, Guid UserId, DateOnly Date, DateTimeOffset CreatedAt);

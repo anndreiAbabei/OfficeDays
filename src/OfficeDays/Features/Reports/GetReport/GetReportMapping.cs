@@ -26,7 +26,7 @@ public static class GetReportMapping
     {
         return new GetReportMonth(month.Month, 
                                   month.EligibleWorkingDays, 
-                                  month.RequiredOfficePercentage, 
+                                  month.RequirementValue,
                                   month.RequiredOfficeDays, 
                                   month.OfficeDays,
                                   month.AttendancePercentage, 
@@ -39,8 +39,7 @@ public static class GetReportMapping
                                       _ => throw new ArgumentOutOfRangeException(nameof(month))
                                   })
         {
-            Mode = month.Mode,
-            Value = month.Value
+            RequirementMode = month.RequirementMode
         };
     }
 }

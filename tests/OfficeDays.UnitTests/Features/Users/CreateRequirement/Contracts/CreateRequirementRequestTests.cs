@@ -1,3 +1,4 @@
+using OfficeDays.Domain;
 using OfficeDays.Features.Users.CreateRequirement.Contracts;
 
 namespace OfficeDays.UnitTests.Features.Users.CreateRequirement.Contracts;
@@ -10,8 +11,9 @@ public sealed class CreateRequirementRequestTests
         // arrange
         var expectedBody = new CreateRequirementRequestBody
         {
+            RequirementMode = AttendanceRequirementMode.Percentage,
             StartingFrom = DateOnly.FromDateTime(DateTime.Now), 
-            RequiredOfficePercentage = 22
+            RequirementValue = 22
         };
 
         // act

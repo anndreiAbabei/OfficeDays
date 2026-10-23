@@ -203,7 +203,7 @@
                 <tr>
                   <th scope="row">{months[month.month - 1]}</th>
                   <td>{month.eligibleWorkingDays}</td>
-                  <td>{month.mode === 'DaysPerWeek' ? `${month.value} days per week` : `${month.requiredOfficePercentage}%`}</td>
+                  <td>{month.requirementMode === 'DaysPerWeek' ? `${month.requirementValue} days per week` : `${month.requirementValue}%`}</td>
                   <td>{month.requiredOfficeDays}</td>
                   <td>{month.officeDays ?? '—'}</td>
                   <td>{month.attendancePercentage === null ? '—' : `${month.attendancePercentage}%`}</td>

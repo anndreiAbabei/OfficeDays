@@ -8,13 +8,13 @@ public sealed class UserAttendanceRequirement
     public Guid Id { get; init; }
     public Guid UserId { get; init; }
     public DateOnly StartingFrom { get; set; }
-    public AttendanceRequirementMode Mode { get; set; }
-    public int Value { get; set; }
+    public AttendanceRequirementMode RequirementMode { get; set; }
+    public int RequirementValue { get; set; }
 
-    public int RequiredOfficePercentage => Mode switch
+    public int EffectivePercentage => RequirementMode switch
     {
-        AttendanceRequirementMode.Percentage => Value,
-        AttendanceRequirementMode.DaysPerWeek => Value * 20,
+        AttendanceRequirementMode.Percentage => RequirementValue,
+        AttendanceRequirementMode.DaysPerWeek => RequirementValue * 20,
         _ => throw new InvalidOperationException("Unknown attendance requirement mode.")
     };
     public DateTimeOffset CreatedAt { get; init; }

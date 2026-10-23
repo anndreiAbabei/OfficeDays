@@ -11,17 +11,17 @@ public sealed class ExportRequirementTests
         var expectedId = Guid.NewGuid();
         var expectedUserId = Guid.NewGuid();
         var expectedStartingFrom = DateOnly.MinValue;
-        const int expectedRequiredOfficePercentage = 75;
+        const int expectedValue = 75;
         var expectedCreatedAt = new DateTimeOffset(2026, 10, 19, 9, 30, 0, TimeSpan.Zero);
 
         // act
-        var sut = new ExportRequirement(expectedId, expectedUserId, expectedStartingFrom, expectedRequiredOfficePercentage, expectedCreatedAt);
+        var sut = new ExportRequirement(expectedId, expectedUserId, expectedStartingFrom, expectedValue, expectedCreatedAt);
 
         // assert
         Assert.Equal(expectedId, sut.Id);
         Assert.Equal(expectedUserId, sut.UserId);
         Assert.Equal(expectedStartingFrom, sut.StartingFrom);
-        Assert.Equal(expectedRequiredOfficePercentage, sut.RequiredOfficePercentage);
+        Assert.Equal(expectedValue, sut.RequirementValue);
         Assert.Equal(expectedCreatedAt, sut.CreatedAt);
     }
 }

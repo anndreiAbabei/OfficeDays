@@ -1,3 +1,4 @@
+import type { AttendanceReport } from './reports';
 import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
 import { expect, it, vi } from 'vitest';
 import Reports from './Reports.svelte';
@@ -53,7 +54,7 @@ it('handles pre-registration ranges and rejects reversed filters without fetchin
 
 it('Should_DisplayWeeklyDays_WhenReportPreservesWeeklyRequirement', async () => {
   // Arrange
-  const report = { ...reportFixture, months: [{ ...reportFixture.months[0], mode: 'DaysPerWeek', value: 3, requiredOfficePercentage: 60 }] };
+  const report: AttendanceReport = { ...reportFixture, months: [{ ...reportFixture.months[0], requirementMode: 'DaysPerWeek', requirementValue: 3 }] };
   vi.stubGlobal('fetch', vi.fn(async (): Promise<Response> => Response.json(report)));
 
   // Act

@@ -39,7 +39,7 @@ public sealed class ReportCalculator(IAttendanceCalculator attendanceCalculator)
                 continue;
 
             var requirement = schedule.First(x => x.StartingFrom <= period.Start);
-            var percentage = requirement.RequiredOfficePercentage;
+            var percentage = requirement.EffectivePercentage;
             var status = _attendanceCalculator.Calculate(period, holidays, timeOff, attendance, percentage);
             var future = period.Start > currentMonth;
             var state = future ? ReportMonthState.NotStarted
@@ -47,13 +47,12 @@ public sealed class ReportCalculator(IAttendanceCalculator attendanceCalculator)
                 : status.OfficeDays >= status.RequiredOfficeDays ? ReportMonthState.TargetMet
                 : ReportMonthState.BelowTarget;
 
-            months.Add(new AttendanceReportMonth(month, status.EligibleWorkingDays, percentage, status.RequiredOfficeDays, 
+            months.Add(new AttendanceReportMonth(month, status.EligibleWorkingDays, requirement.RequirementValue, status.RequiredOfficeDays,
                                                  future ? null : status.OfficeDays, 
                                                  future ? null : Percentage(status.OfficeDays, status.EligibleWorkingDays), 
                                                  state)
             {
-                Mode = requirement.Mode,
-                Value = requirement.Value
+                RequirementMode = requirement.RequirementMode
             });
         }
 

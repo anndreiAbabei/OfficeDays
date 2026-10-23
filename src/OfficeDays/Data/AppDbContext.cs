@@ -52,14 +52,14 @@ public sealed class AppDbContext : DbContext, IAppDbContext
         modelBuilder.Entity<UserAttendanceRequirement>(entity =>
         {
             entity.HasKey(x => x.Id);
-            entity.Ignore(x => x.RequiredOfficePercentage);
-            entity.Property(x => x.Mode).HasConversion<string>();
+            entity.Ignore(x => x.EffectivePercentage);
+            entity.Property(x => x.RequirementMode).HasConversion<string>();
             entity.HasIndex(x => new { x.UserId, x.StartingFrom }).IsUnique();
             entity.HasOne<User>().WithMany(x => x.AttendanceRequirements)
                   .HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             entity.ToTable(table =>
             {
-                table.HasCheckConstraint("CK_UserAttendanceRequirements_Value", "(\"Mode\" = 'Percentage' AND \"Value\" BETWEEN 0 AND 100) OR (\"Mode\" = 'DaysPerWeek' AND \"Value\" BETWEEN 0 AND 5)");
+                table.HasCheckConstraint("CK_UserAttendanceRequirements_Value", "(\"RequirementMode\" = 'Percentage' AND \"RequirementValue\" BETWEEN 0 AND 100) OR (\"RequirementMode\" = 'DaysPerWeek' AND \"RequirementValue\" BETWEEN 0 AND 5)");
                 table.HasCheckConstraint("CK_UserAttendanceRequirements_Month", "substr(\"StartingFrom\", 9, 2) = '01'");
             });
         });

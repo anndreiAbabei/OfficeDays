@@ -42,8 +42,8 @@ public sealed class CreateRequirementHandler : IRequestHandler<CreateRequirement
             Id = Guid.NewGuid(),
             UserId = _currentUser.Id, 
             StartingFrom = request.Body.StartingFrom,
-            Mode = request.Body.Mode ?? AttendanceRequirementMode.Percentage,
-            Value = request.Body.Value ?? request.Body.RequiredOfficePercentage.GetValueOrDefault(),
+            RequirementMode = request.Body.RequirementMode ?? AttendanceRequirementMode.Percentage,
+            RequirementValue = request.Body.RequirementValue.GetValueOrDefault(),
             CreatedAt = _clock.GetUtcNow()
         };
         

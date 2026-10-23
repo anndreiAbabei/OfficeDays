@@ -20,7 +20,7 @@ public sealed class RequirementsIntegrationTests
     private const string Path = "/api/users/me/requirements";
     private static async Task<JsonElement[]> Items(HttpClient client) =>
         (await client.GetFromJsonAsync<JsonElement>(Path)).GetProperty("items").EnumerateArray().ToArray();
-    private static object Body(string date, int percentage) => new { startingFrom = date, requiredOfficePercentage = percentage };
+    private static object Body(string date, int percentage) => new { startingFrom = date, requirementMode = "Percentage", requirementValue = percentage };
     private static async Task<string> SignIn(HttpClient client, string name = "history")
     {
         await CreateUser(client, name);
@@ -51,16 +51,16 @@ public sealed class RequirementsIntegrationTests
         var future = await PostJson(client, Path, Body("2100-01-01", 80), csrf);
         Assert.Equal(HttpStatusCode.Created, future.StatusCode);
         var futureId = (await Read(future)).GetProperty("id").GetGuid();
-        Assert.Equal(60, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("requiredOfficePercentage").GetInt32());
+        Assert.Equal(60, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("requirementValue").GetInt32());
         await AssertTarget(client, 2020, 1, 40);
         await AssertTarget(client, 2099, 1, 60);
         await AssertTarget(client, 2099, 9, 60);
         await AssertTarget(client, 2100, 1, 80);
         var login = await client.PostAsJsonAsync("/api/auth/login", new { username = "history", password = "Normal-user-password!" });
-        Assert.Equal(60, (await Read(login)).GetProperty("requiredOfficePercentage").GetInt32());
+        Assert.Equal(60, (await Read(login)).GetProperty("requirementValue").GetInt32());
         csrf = await Csrf(client);
         var profile = await PutJson(client, "/api/users/me", new { email = "new@example.com" }, csrf);
-        Assert.Equal(60, (await Read(profile)).GetProperty("requiredOfficePercentage").GetInt32());
+        Assert.Equal(60, (await Read(profile)).GetProperty("requirementValue").GetInt32());
         var edited = await PutJson(client, $"{Path}/{futureId}", Body("2099-09-01", 75), csrf);
         Assert.Equal(HttpStatusCode.OK, edited.StatusCode);
         await AssertTarget(client, 2099, 8, 60);
@@ -90,7 +90,7 @@ public sealed class RequirementsIntegrationTests
         Assert.Equal(HttpStatusCode.BadRequest, (await PutJson(client, $"{Path}/{id}", Body("0001-01-01", 80), csrf)).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await PostJson(client, Path, Body("0001-01-01", 80), csrf)).StatusCode);
         // Legacy percentage fields are ignored by the profile contract and must not alter history.
-        Assert.Equal(HttpStatusCode.OK, (await PutJson(client, "/api/users/me", new { requiredOfficePercentage = 10 }, csrf)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await PutJson(client, "/api/users/me", new { requirementMode = "Percentage", requirementValue = 10 }, csrf)).StatusCode);
         Assert.Equal(3, (await Items(client)).Length);
         await AssertTarget(client, 2099, 1, 60);
         await AssertTarget(client, 2098, 1, 50);
@@ -155,7 +155,7 @@ public sealed class RequirementsIntegrationTests
         await migrator.MigrateAsync();
         db.ChangeTracker.Clear();
         var rows = await db.UserAttendanceRequirements.ToListAsync();
-        Assert.Equal(new[] { 0, 37, 100 }, rows.Select(x => x.RequiredOfficePercentage).Order().ToArray());
+        Assert.Equal(new[] { 0, 37, 100 }, rows.Select(x => x.RequirementValue).Order().ToArray());
         Assert.Equal(3, rows.Select(x => x.Id).Distinct().Count());
         Assert.All(rows, row => { Assert.Equal(DateOnly.MinValue, row.StartingFrom); Assert.NotEqual(default, row.CreatedAt); });
         await migrator.MigrateAsync();
@@ -179,7 +179,7 @@ public sealed class RequirementsIntegrationTests
         db.UserAttendanceRequirements.Add(new UserAttendanceRequirement
         {
             Id = Guid.NewGuid(), UserId = user.Id, StartingFrom = new DateOnly(2099, 10, 1),
-            Value = 80, CreatedAt = DateTimeOffset.UtcNow
+            RequirementValue = 80, CreatedAt = DateTimeOffset.UtcNow
         });
         await db.SaveChangesAsync();
         var dates = new UserDateService(new FixedTimeProvider(new DateTimeOffset(2099, 9, 30, 22, 0, 0, TimeSpan.Zero)));

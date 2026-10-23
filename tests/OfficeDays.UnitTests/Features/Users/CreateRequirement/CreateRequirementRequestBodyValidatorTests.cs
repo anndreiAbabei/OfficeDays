@@ -12,8 +12,9 @@ public sealed class CreateRequirementRequestBodyValidatorTests
         // arrange
         var request = new CreateRequirementRequestBody
         {
+            RequirementMode = AttendanceRequirementMode.Percentage,
             StartingFrom = new DateOnly(2026, 10, 1), 
-            RequiredOfficePercentage = 50
+            RequirementValue = 50
         };
         var sut = new CreateRequirementRequestBodyValidator();
 
@@ -25,13 +26,14 @@ public sealed class CreateRequirementRequestBodyValidatorTests
     }
 
     [Fact]
-    public void Should_ReturnValidationFailure_WhenRequiredOfficePercentageIsBelowZero()
+    public void Should_ReturnValidationFailure_WhenValueIsBelowZero()
     {
         // arrange
         var request = new CreateRequirementRequestBody
         {
+            RequirementMode = AttendanceRequirementMode.Percentage,
             StartingFrom = DateOnly.FromDateTime(DateTime.Now), 
-            RequiredOfficePercentage = -1
+            RequirementValue = -1
         };
         var sut = new CreateRequirementRequestBodyValidator();
 
@@ -40,17 +42,18 @@ public sealed class CreateRequirementRequestBodyValidatorTests
 
         // assert
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, error => error.PropertyName == "RequiredOfficePercentage");
+        Assert.Contains(result.Errors, error => error.PropertyName == "RequirementValue");
     }
 
     [Fact]
-    public void Should_ReturnValidationFailure_WhenRequiredOfficePercentageIsAboveOneHundred()
+    public void Should_ReturnValidationFailure_WhenValueIsAboveOneHundred()
     {
         // arrange
         var request = new CreateRequirementRequestBody
         {
+            RequirementMode = AttendanceRequirementMode.Percentage,
             StartingFrom = DateOnly.FromDateTime(DateTime.Now), 
-            RequiredOfficePercentage = 101
+            RequirementValue = 101
         };
         var sut = new CreateRequirementRequestBodyValidator();
 
@@ -59,7 +62,7 @@ public sealed class CreateRequirementRequestBodyValidatorTests
 
         // assert
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, error => error.PropertyName == "RequiredOfficePercentage");
+        Assert.Contains(result.Errors, error => error.PropertyName == "RequirementValue");
     }
 
     [Fact]
@@ -68,8 +71,9 @@ public sealed class CreateRequirementRequestBodyValidatorTests
         // arrange
         var request = new CreateRequirementRequestBody
         {
+            RequirementMode = AttendanceRequirementMode.Percentage,
             StartingFrom = new DateOnly(2026, 10, 2), 
-            RequiredOfficePercentage = 50
+            RequirementValue = 50
         };
         var sut = new CreateRequirementRequestBodyValidator();
 
@@ -82,13 +86,14 @@ public sealed class CreateRequirementRequestBodyValidatorTests
     }
 
     [Fact]
-    public void Should_ReturnValidationSuccess_WhenRequiredOfficePercentageIsZero()
+    public void Should_ReturnValidationSuccess_WhenValueIsZero()
     {
         // arrange
         var request = new CreateRequirementRequestBody
         {
+            RequirementMode = AttendanceRequirementMode.Percentage,
             StartingFrom = new DateOnly(2026, 10, 1),
-            RequiredOfficePercentage = 0
+            RequirementValue = 0
         } ;
         var sut = new CreateRequirementRequestBodyValidator();
 
@@ -100,13 +105,14 @@ public sealed class CreateRequirementRequestBodyValidatorTests
     }
 
     [Fact]
-    public void Should_ReturnValidationSuccess_WhenRequiredOfficePercentageIsOneHundred()
+    public void Should_ReturnValidationSuccess_WhenValueIsOneHundred()
     {
         // arrange
         var request = new CreateRequirementRequestBody
         {
+            RequirementMode = AttendanceRequirementMode.Percentage,
             StartingFrom = new DateOnly(2026, 10, 1),
-            RequiredOfficePercentage = 100
+            RequirementValue = 100
         };
         var sut = new CreateRequirementRequestBodyValidator();
 
@@ -132,7 +138,7 @@ public sealed class CreateRequirementRequestBodyValidatorTests
     public void Should_ValidateModeAndValueTogether_WhenUsingTypedRequirement(AttendanceRequirementMode? mode, int? value, bool expectedValid)
     {
         // Arrange
-        var request = new CreateRequirementRequestBody { StartingFrom = new DateOnly(2026, 11, 1), Mode = mode, Value = value };
+        var request = new CreateRequirementRequestBody { StartingFrom = new DateOnly(2026, 11, 1), RequirementMode = mode, RequirementValue = value };
         var validator = new CreateRequirementRequestBodyValidator();
 
         // Act
@@ -140,25 +146,8 @@ public sealed class CreateRequirementRequestBodyValidatorTests
 
         // Assert
         Assert.Equal(expectedValid, result.IsValid);
-        Assert.Equal(mode, request.Mode);
-        Assert.Equal(value, request.Value);
+        Assert.Equal(mode, request.RequirementMode);
+        Assert.Equal(value, request.RequirementValue);
     }
 
-    [Fact]
-    public void Should_RejectAmbiguousInput_WhenLegacyAndTypedRequirementsAreBothProvided()
-    {
-        // Arrange
-        var request = new CreateRequirementRequestBody
-        {
-            StartingFrom = new DateOnly(2026, 11, 1), Mode = AttendanceRequirementMode.DaysPerWeek,
-            Value = 3, RequiredOfficePercentage = 60
-        };
-        var validator = new CreateRequirementRequestBodyValidator();
-
-        // Act
-        var result = validator.Validate(request);
-
-        // Assert
-        Assert.False(result.IsValid);
-    }
 }

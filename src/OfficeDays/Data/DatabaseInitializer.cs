@@ -83,7 +83,7 @@ public sealed class DatabaseInitializer
                 {
                     Id = Guid.NewGuid(), 
                     StartingFrom = UserAttendanceRequirement.BaselineDate,
-                    Value = 50,
+                    RequirementValue = 50,
                     CreatedAt = _timeProvider.GetUtcNow()
                 }
             ],

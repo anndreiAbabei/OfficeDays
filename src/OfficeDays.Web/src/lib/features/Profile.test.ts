@@ -3,18 +3,18 @@ import { expect, it, vi } from 'vitest';
 import Profile from './Profile.svelte';
 import type { User } from '$lib/types';
 import { resetCsrf } from '$lib/api';
-const user: User = { id: '1', username: 'Andrei', email: 'old@example.com', timeZoneId: 'UTC', countryCode: 'RO', countryName: 'Romania', isAdmin: false, teamDay: null, requiredOfficePercentage: 50 };
+const user: User = { id: '1', username: 'Andrei', email: 'old@example.com', timeZoneId: 'UTC', countryCode: 'RO', countryName: 'Romania', isAdmin: false, teamDay: null, requirementMode: 'Percentage', requirementValue: 50 };
 
 it('clears optional email without changing attendance requirements', async () => {
   resetCsrf(); const onsave = vi.fn();
-  const fetcher = vi.fn().mockImplementation(async (path: string) => new Response(JSON.stringify(path.endsWith('csrf') ? { token: 'csrf' } : { ...user, email: null, requiredOfficePercentage: 50 })));
+  const fetcher = vi.fn().mockImplementation(async (path: string) => new Response(JSON.stringify(path.endsWith('csrf') ? { token: 'csrf' } : { ...user, email: null, requirementMode: 'Percentage', requirementValue: 50 })));
   vi.stubGlobal('fetch', fetcher);
   
   render(Profile, { currentUser: user, onsave });
   
   await fireEvent.input(screen.getByLabelText('Email address'), { target: { value: '' } });
   await fireEvent.submit(screen.getByRole('button', { name: 'Save profile' }).closest('form')!);
-  await waitFor(() => expect(onsave).toHaveBeenCalledWith({ ...user, email: null, requiredOfficePercentage: 50 }));
+  await waitFor(() => expect(onsave).toHaveBeenCalledWith({ ...user, email: null, requirementMode: 'Percentage', requirementValue: 50 }));
   
   expect(JSON.parse(fetcher.mock.calls.find(([path]) => path === '/api/users/me')![1].body)).toEqual({ email: null, teamDay: null });
   expect(screen.getByRole('status')).toHaveTextContent('Profile saved.');

@@ -1,3 +1,4 @@
+using OfficeDays.Domain;
 using OfficeDays.Features.Users.UpdateRequirement.Contracts;
 
 namespace OfficeDays.UnitTests.Features.Users.UpdateRequirement.Contracts;
@@ -9,7 +10,7 @@ public sealed class UpdateRequirementRequestTests
     {
         // arrange
         var expectedId = Guid.NewGuid();
-        var expectedBody = new UpdateRequirementRequestBody { StartingFrom = DateOnly.FromDateTime(DateTime.Now), RequiredOfficePercentage = 22 };
+        var expectedBody = new UpdateRequirementRequestBody { RequirementMode = AttendanceRequirementMode.Percentage, StartingFrom = DateOnly.FromDateTime(DateTime.Now), RequirementValue = 22 };
 
         // act
         var sut = new UpdateRequirementRequest

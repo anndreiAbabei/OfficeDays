@@ -4,17 +4,17 @@ import AttendanceRequirements from './AttendanceRequirements.svelte';
 import { resetCsrf } from '$lib/api';
 
 const initial = [
-  { id: 'baseline', startingFrom: '0001-01-01', requiredOfficePercentage: 50, mode: 'Percentage', value: 50, isBaseline: true },
-  { id: 'past', startingFrom: '2026-01-01', requiredOfficePercentage: 60, mode: 'Percentage', value: 60, isBaseline: false },
-  { id: 'later', startingFrom: '2027-04-01', requiredOfficePercentage: 80, mode: 'Percentage', value: 80, isBaseline: false },
-  { id: 'next', startingFrom: '2027-01-01', requiredOfficePercentage: 70, mode: 'Percentage', value: 70, isBaseline: false }];
+  { id: 'baseline', startingFrom: '0001-01-01', requirementMode: 'Percentage', requirementValue: 50, isBaseline: true },
+  { id: 'past', startingFrom: '2026-01-01', requirementMode: 'Percentage', requirementValue: 60, isBaseline: false },
+  { id: 'later', startingFrom: '2027-04-01', requirementMode: 'Percentage', requirementValue: 80, isBaseline: false },
+  { id: 'next', startingFrom: '2027-01-01', requirementMode: 'Percentage', requirementValue: 70, isBaseline: false }];
 const path = '/api/users/me/requirements';
 function mockApi() {
   resetCsrf(); let rows = structuredClone(initial);
   const fetcher = vi.fn(async (url: string, options?: RequestInit) => {
     const method = options?.method ?? 'GET';
     if (url.endsWith('/csrf')) return Response.json({ token: 'csrf' });
-    if (url === '/api/auth/me') return Response.json({ requiredOfficePercentage: 60 });
+    if (url === '/api/auth/me') return Response.json({ requirementMode: 'Percentage', requirementValue: 60 });
     if (method === 'GET') return Response.json({ today: '2026-10-16', items: rows });
     const id = url.split('/').at(-1);
     if (method === 'DELETE') rows = rows.filter(row => row.id !== id);
@@ -48,12 +48,12 @@ it('adds a month, edits the baseline and refreshes the current user', async () =
   await fireEvent.submit(screen.getByRole('button', { name: 'Save requirement' }).closest('form')!);
   await screen.findByText('December 2026 · 65%');
   expect(JSON.parse(String(fetcher.mock.calls.find(([url, options]) => url === path && options?.method === 'POST')![1]?.body)))
-    .toEqual({ startingFrom: '2026-12-01', mode: 'Percentage', value: 65 });
+    .toEqual({ startingFrom: '2026-12-01', requirementMode: 'Percentage', requirementValue: 65 });
   await fireEvent.click(screen.getByRole('button', { name: 'Edit Initial requirement' }));
   await fireEvent.input(screen.getByLabelText('Required office days (%)'), { target: { value: '40' } });
   await fireEvent.submit(screen.getByRole('button', { name: 'Save requirement' }).closest('form')!);
   await screen.findByText('Initial requirement · 40%');
-  expect(onsave).toHaveBeenCalledWith({ requiredOfficePercentage: 60 });
+  expect(onsave).toHaveBeenCalledWith({ requirementMode: 'Percentage', requirementValue: 60 });
 });
 
 it('requires confirmation to delete and explains its effect', async () => {
@@ -98,7 +98,7 @@ it('Should_PreserveWeeklyMode_WhenSavingAndReopeningRequirement', async () => {
 
   // Assert
   const expectedValue = 3;
-  const expectedBody = { startingFrom: '2026-12-01', mode: 'DaysPerWeek', value: expectedValue };
+  const expectedBody = { startingFrom: '2026-12-01', requirementMode: 'DaysPerWeek', requirementValue: expectedValue };
   const call = fetcher.mock.calls.find(([url, options]) => url === path && options?.method === 'POST');
   expect(JSON.parse(String(call?.[1]?.body))).toEqual(expectedBody);
   expect(screen.getByRole('combobox', { name: 'Requirement type' })).toHaveValue('DaysPerWeek');

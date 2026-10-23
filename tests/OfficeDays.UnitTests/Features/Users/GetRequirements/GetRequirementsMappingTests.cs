@@ -13,7 +13,7 @@ public sealed class GetRequirementsMappingTests
     public void Should_MapToViewModel(string startingFrom, bool expectedIsBaseline)
     {
         // arrange
-        var sut = new UserAttendanceRequirement { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), StartingFrom = DateOnly.Parse(startingFrom), Value = 65, CreatedAt = new DateTimeOffset(2026, 10, 1, 9, 0, 0, TimeSpan.Zero) };
+        var sut = new UserAttendanceRequirement { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), StartingFrom = DateOnly.Parse(startingFrom), RequirementValue = 65, CreatedAt = new DateTimeOffset(2026, 10, 1, 9, 0, 0, TimeSpan.Zero) };
 
         // act
         var result = sut.ToViewModel();
@@ -21,7 +21,7 @@ public sealed class GetRequirementsMappingTests
         // assert
         Assert.Equal(sut.Id, result.Id);
         Assert.Equal(sut.StartingFrom, result.StartingFrom);
-        Assert.Equal(sut.RequiredOfficePercentage, result.RequiredOfficePercentage);
+        Assert.Equal(sut.RequirementValue, result.RequirementValue);
         Assert.Equal(sut.CreatedAt, result.CreatedAt);
         Assert.Equal(expectedIsBaseline, result.IsBaseline);
     }
@@ -47,8 +47,8 @@ public sealed class GetRequirementsMappingTests
         dates.Today(sut).Returns(expectedToday);
         UserAttendanceRequirement[] requirements =
         [
-            new UserAttendanceRequirement { Id = Guid.NewGuid(), StartingFrom = expectedToday, Value = 65 },
-            new UserAttendanceRequirement { Id = Guid.NewGuid(), StartingFrom = DateOnly.MinValue, Value = 50 }
+            new UserAttendanceRequirement { Id = Guid.NewGuid(), StartingFrom = expectedToday, RequirementValue = 65 },
+            new UserAttendanceRequirement { Id = Guid.NewGuid(), StartingFrom = DateOnly.MinValue, RequirementValue = 50 }
         ];
 
         // act
@@ -95,13 +95,12 @@ public sealed class GetRequirementsMappingTests
     {
         // Arrange
         const int expectedValue = 3;
-        const int expectedPercentage = 60;
         const AttendanceRequirementMode expectedMode = AttendanceRequirementMode.DaysPerWeek;
         var row = new UserAttendanceRequirement
         {
             Id = Guid.NewGuid(), UserId = Guid.NewGuid(), StartingFrom = new DateOnly(2026, 11, 1),
             CreatedAt = new DateTimeOffset(2026, 10, 21, 12, 0, 0, TimeSpan.Zero),
-            Mode = AttendanceRequirementMode.DaysPerWeek, Value = expectedValue
+            RequirementMode = AttendanceRequirementMode.DaysPerWeek, RequirementValue = expectedValue
         };
 
         // Act
@@ -112,8 +111,7 @@ public sealed class GetRequirementsMappingTests
         Assert.Equal(row.StartingFrom, result.StartingFrom);
         Assert.Equal(row.CreatedAt, result.CreatedAt);
         Assert.False(result.IsBaseline);
-        Assert.Equal(expectedMode, result.Mode);
-        Assert.Equal(expectedValue, result.Value);
-        Assert.Equal(expectedPercentage, result.RequiredOfficePercentage);
+        Assert.Equal(expectedMode, result.RequirementMode);
+        Assert.Equal(expectedValue, result.RequirementValue);
     }
 }

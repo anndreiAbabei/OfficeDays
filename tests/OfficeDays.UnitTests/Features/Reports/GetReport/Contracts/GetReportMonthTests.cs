@@ -10,19 +10,19 @@ public sealed class GetReportMonthTests
         // arrange
         var expectedMonth = 21;
         var expectedEligibleWorkingDays = 22;
-        var expectedRequiredOfficePercentage = 23;
+        var expectedValue = 23;
         var expectedRequiredOfficeDays = 24;
         var expectedOfficeDays = 25;
         var expectedAttendancePercentage = 47.5m;
         var expectedResult = "Result value";
 
         // act
-        var sut = new GetReportMonth(expectedMonth, expectedEligibleWorkingDays, expectedRequiredOfficePercentage, expectedRequiredOfficeDays, expectedOfficeDays, expectedAttendancePercentage, expectedResult);
+        var sut = new GetReportMonth(expectedMonth, expectedEligibleWorkingDays, expectedValue, expectedRequiredOfficeDays, expectedOfficeDays, expectedAttendancePercentage, expectedResult);
 
         // assert
         Assert.Equal(expectedMonth, sut.Month);
         Assert.Equal(expectedEligibleWorkingDays, sut.EligibleWorkingDays);
-        Assert.Equal(expectedRequiredOfficePercentage, sut.RequiredOfficePercentage);
+        Assert.Equal(expectedValue, sut.RequirementValue);
         Assert.Equal(expectedRequiredOfficeDays, sut.RequiredOfficeDays);
         Assert.Equal(expectedOfficeDays, sut.OfficeDays);
         Assert.Equal(expectedAttendancePercentage, sut.AttendancePercentage);

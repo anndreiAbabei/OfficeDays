@@ -21,7 +21,7 @@ public sealed class GetReportMappingTests
         // assert
         Assert.Equal(sut.Month, result.Month);
         Assert.Equal(sut.EligibleWorkingDays, result.EligibleWorkingDays);
-        Assert.Equal(sut.RequiredOfficePercentage, result.RequiredOfficePercentage);
+        Assert.Equal(sut.RequirementValue, result.RequirementValue);
         Assert.Equal(sut.RequiredOfficeDays, result.RequiredOfficeDays);
         Assert.Equal(sut.OfficeDays, result.OfficeDays);
         Assert.Equal(sut.AttendancePercentage, result.AttendancePercentage);

@@ -21,16 +21,16 @@ public sealed class UserAttendanceRequirementTests
         var createdAt = new DateTimeOffset(2026, 10, 21, 12, 0, 0, TimeSpan.Zero);
         var requirement = new UserAttendanceRequirement
         {
-            Id = id, UserId = userId, StartingFrom = startingFrom, CreatedAt = createdAt, Mode = mode, Value = value
+            Id = id, UserId = userId, StartingFrom = startingFrom, CreatedAt = createdAt, RequirementMode = mode, RequirementValue = value
         };
 
         // Act
-        var percentage = requirement.RequiredOfficePercentage;
+        var percentage = requirement.EffectivePercentage;
 
         // Assert
         Assert.Equal(expectedPercentage, percentage);
-        Assert.Equal(mode, requirement.Mode);
-        Assert.Equal(value, requirement.Value);
+        Assert.Equal(mode, requirement.RequirementMode);
+        Assert.Equal(value, requirement.RequirementValue);
         Assert.Equal(id, requirement.Id);
         Assert.Equal(userId, requirement.UserId);
         Assert.Equal(startingFrom, requirement.StartingFrom);
@@ -46,7 +46,7 @@ public sealed class UserAttendanceRequirementTests
     public void Should_CalculateMonthlyQuota_WhenUsingWeeklyDays(int year, int month, int vacationDays, int expectedDays)
     {
         // Arrange
-        var requirement = new UserAttendanceRequirement { Mode = AttendanceRequirementMode.DaysPerWeek, Value = 3 };
+        var requirement = new UserAttendanceRequirement { RequirementMode = AttendanceRequirementMode.DaysPerWeek, RequirementValue = 3 };
         var calculator = new AttendanceCalculator();
         var period = CalculationPeriod.ForMonth(year, month);
         var firstMonday = new DateOnly(year, month, 2);
@@ -55,7 +55,7 @@ public sealed class UserAttendanceRequirementTests
             : [(firstMonday, firstMonday.AddDays(vacationDays - 1))];
 
         // Act
-        var result = calculator.Calculate(period, [], vacations, [], requirement.RequiredOfficePercentage);
+        var result = calculator.Calculate(period, [], vacations, [], requirement.EffectivePercentage);
 
         // Assert
         Assert.Equal(expectedDays, result.RequiredOfficeDays);
@@ -66,14 +66,14 @@ public sealed class UserAttendanceRequirementTests
     {
         // Arrange
         var calculator = new AttendanceCalculator();
-        var requirement = new UserAttendanceRequirement { Mode = AttendanceRequirementMode.DaysPerWeek, Value = 3 };
+        var requirement = new UserAttendanceRequirement { RequirementMode = AttendanceRequirementMode.DaysPerWeek, RequirementValue = 3 };
         var period = CalculationPeriod.ForMonth(2026, 2);
         var attendance = new[] { 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 26, 27 }.Select(day => new DateOnly(2026, 2, day));
         const int expectedDays = 12;
         const int expectedRemainingDays = 0;
 
         // Act
-        var result = calculator.Calculate(period, [], [], attendance, requirement.RequiredOfficePercentage);
+        var result = calculator.Calculate(period, [], [], attendance, requirement.EffectivePercentage);
 
         // Assert
         Assert.Equal(expectedDays, result.RequiredOfficeDays);
@@ -88,13 +88,13 @@ public sealed class UserAttendanceRequirementTests
         var calculator = new AttendanceCalculator();
         var period = CalculationPeriod.ForMonth(2026, 2);
         var holiday = new DateOnly(2026, 2, 2);
-        var requirement = new UserAttendanceRequirement { Mode = AttendanceRequirementMode.DaysPerWeek, Value = 3 };
+        var requirement = new UserAttendanceRequirement { RequirementMode = AttendanceRequirementMode.DaysPerWeek, RequirementValue = 3 };
         const int expectedEligibleDays = 18;
         const int expectedRequiredDays = 11;
         const int expectedOfficeDays = 0;
 
         // Act
-        var result = calculator.Calculate(period, [holiday], [(holiday, holiday.AddDays(1))], [holiday], requirement.RequiredOfficePercentage);
+        var result = calculator.Calculate(period, [holiday], [(holiday, holiday.AddDays(1))], [holiday], requirement.EffectivePercentage);
 
         // Assert
         Assert.Equal(expectedEligibleDays, result.EligibleWorkingDays);

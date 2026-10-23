@@ -1,6 +1,8 @@
+import type { AttendanceRequirementMode } from '$lib/attendanceRequirementMode';
+
 export type TeamDay = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday';
 
-export interface User {
+export type User = {
   id: string; 
   username: string; 
   email: string | null; 
@@ -8,7 +10,8 @@ export interface User {
   countryCode: string; 
   countryName: string; 
   isAdmin: boolean; 
-  requiredOfficePercentage: number;
+  requirementMode: AttendanceRequirementMode;
+  requirementValue: number;
   teamDay: TeamDay | null;
 }
 

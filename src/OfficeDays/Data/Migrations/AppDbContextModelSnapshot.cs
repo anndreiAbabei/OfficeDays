@@ -222,18 +222,18 @@ namespace OfficeDays.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Mode")
+                    b.Property<string>("RequirementMode")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("RequirementValue")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateOnly>("StartingFrom")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("Value")
-                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -244,7 +244,7 @@ namespace OfficeDays.Data.Migrations
                         {
                             t.HasCheckConstraint("CK_UserAttendanceRequirements_Month", "substr(\"StartingFrom\", 9, 2) = '01'");
 
-                            t.HasCheckConstraint("CK_UserAttendanceRequirements_Value", "(\"Mode\" = 'Percentage' AND \"Value\" BETWEEN 0 AND 100) OR (\"Mode\" = 'DaysPerWeek' AND \"Value\" BETWEEN 0 AND 5)");
+                            t.HasCheckConstraint("CK_UserAttendanceRequirements_Value", "(\"RequirementMode\" = 'Percentage' AND \"RequirementValue\" BETWEEN 0 AND 100) OR (\"RequirementMode\" = 'DaysPerWeek' AND \"RequirementValue\" BETWEEN 0 AND 5)");
                         });
                 });
 

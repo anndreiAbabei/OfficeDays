@@ -38,7 +38,7 @@ public sealed class OfficeRequirementReader : IOfficeRequirementReader
         return _db.UserAttendanceRequirements
                   .Where(x => x.UserId == userId && x.StartingFrom <= date)
                   .OrderByDescending(x => x.StartingFrom)
-                  .Select(x => x.Mode == AttendanceRequirementMode.DaysPerWeek ? x.Value * 20 : x.Value)
+                  .Select(x => x.RequirementMode == AttendanceRequirementMode.DaysPerWeek ? x.RequirementValue * 20 : x.RequirementValue)
                   .FirstAsync(cancellationToken);
     }
 }

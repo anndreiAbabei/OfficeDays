@@ -1,11 +1,12 @@
 <script lang="ts">
+  import type { AttendanceRequirementMode } from '$lib/attendanceRequirementMode';
   import { onMount } from 'svelte';
   import { request, mutate, errorMessage } from '$lib/api';
   import type { User } from '$lib/types';
   import RequirementInput from '$lib/components/RequirementInput.svelte';
   import Feedback from '$lib/components/Feedback.svelte';
 
-  type Requirement = { id: string; startingFrom: string; requiredOfficePercentage: number; mode: string; value: number; isBaseline: boolean };
+  type Requirement = { id: string; startingFrom: string; requirementMode: AttendanceRequirementMode; requirementValue: number; isBaseline: boolean };
   type History = { today: string; items: Requirement[] };
   
   let { onsave }: { onsave: (user: User) => void } = $props();
@@ -14,7 +15,7 @@
   let error = $state(''); let message = $state('');
   let editing = $state<Requirement | null>(null); let formOpen = $state(false);
   let month = $state(''); let requirementValue = $state<number | undefined>(50);
-  let mode = $state("Percentage");
+  let requirementMode = $state<AttendanceRequirementMode>('Percentage');
   let deleting = $state<Requirement | null>(null);
   const path = '/api/users/me/requirements';
   let currentMonth = $derived(history ? `${history.today.slice(0, 7)}-01` : '');
@@ -28,9 +29,9 @@
   }
   
   function requirementLabel(row: Requirement): string {
-    return row.mode === 'DaysPerWeek' 
-            ? `${row.value} days per week` 
-            : `${row.value ?? row.requiredOfficePercentage}%`;
+    return row.requirementMode === 'DaysPerWeek'
+            ? `${row.requirementValue} days per week`
+            : `${row.requirementValue}%`;
   }
 
   async function load(): Promise<void> {
@@ -45,8 +46,8 @@
     editing = row; formOpen = true; deleting = null; error = ''; message = '';
     month = row && !row.isBaseline ? row.startingFrom.slice(0, 7) : history!.today.slice(0, 7);
     const selected = row ?? past[0];
-    mode = selected?.mode ?? "Percentage";
-    requirementValue = selected?.value ?? selected?.requiredOfficePercentage ?? 50;
+    requirementMode = selected?.requirementMode ?? "Percentage";
+    requirementValue = selected?.requirementValue ?? 50;
   }
   
   async function refresh(): Promise<void> {
@@ -67,7 +68,7 @@
     
     try {
       await mutate(editing ? `${path}/${editing.id}` : path, editing ? 'PUT' : 'POST', {
-        startingFrom: editing?.isBaseline ? editing.startingFrom : `${month}-01`, mode, value: requirementValue
+        startingFrom: editing?.isBaseline ? editing.startingFrom : `${month}-01`, requirementMode, requirementValue
       });
       
       saved = true; 
@@ -151,7 +152,7 @@
             <input type="month" min="0001-02" max="9999-12" required bind:value={month} disabled={busy} />
           </label>
         {/if}
-        <RequirementInput bind:mode bind:value={requirementValue} disabled={busy} />
+        <RequirementInput bind:requirementMode bind:requirementValue disabled={busy} />
         <div class="actions">
           <button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save requirement'}</button>
           <button type="button" class="secondary" disabled={busy} onclick={() => formOpen = false}>Cancel</button>

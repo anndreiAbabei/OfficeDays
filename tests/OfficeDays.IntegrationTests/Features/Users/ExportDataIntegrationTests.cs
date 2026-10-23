@@ -156,7 +156,8 @@ public sealed class ExportDataIntegrationTests
                     Id = Guid.NewGuid(),
                     UserId = user.Id,
                     StartingFrom = new DateOnly(2099, 10, 1),
-                    Value = 75,
+                    RequirementMode = AttendanceRequirementMode.DaysPerWeek,
+                    RequirementValue = 3,
                     CreatedAt = user.CreatedAt
                 });
                 db.ApiTokens.Add(new ApiToken
@@ -223,7 +224,8 @@ public sealed class ExportDataIntegrationTests
                 Id = requirement.Id,
                 UserId = requirement.UserId,
                 StartingFrom = requirement.StartingFrom,
-                Value = requirement.RequiredOfficePercentage,
+                RequirementMode = requirement.RequirementMode,
+                RequirementValue = requirement.RequirementValue,
                 CreatedAt = requirement.CreatedAt
             }),
             export.HolidayCalendar.Holidays.Select(holiday => holiday.Date),

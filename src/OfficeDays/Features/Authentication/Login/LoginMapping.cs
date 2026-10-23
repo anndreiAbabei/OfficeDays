@@ -6,16 +6,9 @@ namespace OfficeDays.Features.Authentication.Login;
 
 public static class LoginMapping
 {
-    public static LoginResponse ToViewModel(this User user, UserAttendanceRequirement requirement) =>
-        user.ToViewModel(requirement.RequiredOfficePercentage) with
-        {
-            Mode = requirement.Mode,
-            Value = requirement.Value
-        };
-
     extension(User user)
     {
-        public LoginResponse ToViewModel(int requiredOfficePercentage) =>
+        public LoginResponse ToViewModel(UserAttendanceRequirement requirement) =>
             new LoginResponse(user.Id, 
                               user.Username, 
                               user.TimeZoneId,
@@ -23,8 +16,11 @@ public static class LoginMapping
                               user.HolidayJurisdiction.Name, 
                               user.IsAdmin, 
                               user.Email, 
-                              requiredOfficePercentage,
-                              user.Preferences.TeamDay?.ToString().ToLowerInvariant());
+                              requirement.RequirementValue,
+                              user.Preferences.TeamDay?.ToString().ToLowerInvariant())
+        {
+            RequirementMode = requirement.RequirementMode
+        };
         
         public IEnumerable<Claim> ToClaims() =>
         [

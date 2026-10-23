@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 using OfficeDays.Data;
 using OfficeDays.Domain;
-using OfficeDays.IntegrationTests.Support;
 using static OfficeDays.IntegrationTests.Support.ApiTestHelpers;
 
 namespace OfficeDays.IntegrationTests.Features.Users;
@@ -25,8 +24,7 @@ public sealed class AttendanceRequirementModesIntegrationTests
         using var client = factory.CreateClient();
         const string expectedMode = "DaysPerWeek";
         const int expectedValue = 3;
-        const int expectedPercentage = 60;
-        var body = new { username = "weekly", password = "Normal-user-password!", timeZoneId = "UTC", countryCode = "RO", mode = expectedMode, value = expectedValue };
+        var body = new { username = "weekly", password = "Normal-user-password!", timeZoneId = "UTC", countryCode = "RO", requirementMode = expectedMode, requirementValue = expectedValue };
 
         // Act
         var registration = await client.PostAsJsonAsync("/api/users", body);
@@ -46,15 +44,17 @@ public sealed class AttendanceRequirementModesIntegrationTests
         foreach (var item in new[] { await Read(registration), await Read(login), await Read(profile), current,
                      history.GetProperty("items").EnumerateArray().Single(), export.GetProperty("requirementHistory").EnumerateArray().Single() })
         {
-            Assert.Equal(expectedMode, item.GetProperty("mode").GetString());
-            Assert.Equal(expectedValue, item.GetProperty("value").GetInt32());
-            Assert.Equal(expectedPercentage, item.GetProperty("requiredOfficePercentage").GetInt32());
+            Assert.Equal(expectedMode, item.GetProperty("requirementMode").GetString());
+            Assert.Equal(expectedValue, item.GetProperty("requirementValue").GetInt32());
+            Assert.False(item.TryGetProperty("requiredOfficePercentage", out _));
+            Assert.False(item.TryGetProperty("mode", out _));
+            Assert.False(item.TryGetProperty("value", out _));
         }
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var row = await db.UserAttendanceRequirements.SingleAsync(x => x.UserId == current.GetProperty("id").GetGuid());
-        Assert.Equal(AttendanceRequirementMode.DaysPerWeek, row.Mode);
-        Assert.Equal(expectedValue, row.Value);
+        Assert.Equal(AttendanceRequirementMode.DaysPerWeek, row.RequirementMode);
+        Assert.Equal(expectedValue, row.RequirementValue);
     }
 
     [Fact]
@@ -67,9 +67,9 @@ public sealed class AttendanceRequirementModesIntegrationTests
         await Login(client, "switching", "Normal-user-password!");
         var csrf = await Csrf(client);
         const int expectedWeeklyValue = 3;
-        var created = await PostJson(client, Path, new { startingFrom = "2099-09-01", mode = "DaysPerWeek", value = expectedWeeklyValue }, csrf);
+        var created = await PostJson(client, Path, new { startingFrom = "2099-09-01", requirementMode = "DaysPerWeek", requirementValue = expectedWeeklyValue }, csrf);
         created.EnsureSuccessStatusCode();
-        var next = await PostJson(client, Path, new { startingFrom = "2099-10-01", mode = "Percentage", value = 40 }, csrf);
+        var next = await PostJson(client, Path, new { startingFrom = "2099-10-01", requirementMode = "Percentage", requirementValue = 40 }, csrf);
         next.EnsureSuccessStatusCode();
 
         // Act / Assert
@@ -81,26 +81,27 @@ public sealed class AttendanceRequirementModesIntegrationTests
             var reportResponse = await client.GetAsync($"/api/reports?year=2099&startMonth={month}&endMonth={month}");
             reportResponse.EnsureSuccessStatusCode();
             var reportMonth = (await Read(reportResponse)).GetProperty("months").EnumerateArray().Single();
-            Assert.Equal(mode, reportMonth.GetProperty("mode").GetString());
-            Assert.Equal(value, reportMonth.GetProperty("value").GetInt32());
+            Assert.False(reportMonth.TryGetProperty("requiredOfficePercentage", out _));
+            Assert.Equal(mode, reportMonth.GetProperty("requirementMode").GetString());
+            Assert.Equal(value, reportMonth.GetProperty("requirementValue").GetInt32());
             Assert.Equal(expectedDays, reportMonth.GetProperty("requiredOfficeDays").GetInt32());
         }
         var id = (await Read(created)).GetProperty("id").GetGuid();
-        var edited = await PutJson(client, $"{Path}/{id}", new { startingFrom = "2099-09-01", mode = "DaysPerWeek", value = 2 }, csrf);
+        var edited = await PutJson(client, $"{Path}/{id}", new { startingFrom = "2099-09-01", requirementMode = "DaysPerWeek", requirementValue = 2 }, csrf);
         edited.EnsureSuccessStatusCode();
         const int expectedEditedValue = 2;
-        Assert.Equal(expectedEditedValue, (await Read(edited)).GetProperty("value").GetInt32());
+        Assert.Equal(expectedEditedValue, (await Read(edited)).GetProperty("requirementValue").GetInt32());
     }
 
     [Theory]
-    [InlineData("{\"mode\":\"DaysPerWeek\",\"value\":6}")]
-    [InlineData("{\"mode\":\"DaysPerWeek\",\"value\":-1}")]
-    [InlineData("{\"mode\":\"DaysPerWeek\",\"value\":2.5}")]
-    [InlineData("{\"mode\":\"Percentage\",\"value\":101}")]
-    [InlineData("{\"mode\":\"Unknown\",\"value\":3}")]
-    [InlineData("{\"mode\":\"DaysPerWeek\"}")]
-    [InlineData("{\"value\":3}")]
-    [InlineData("{\"mode\":\"DaysPerWeek\",\"value\":3,\"requiredOfficePercentage\":60}")]
+    [InlineData("{\"requirementMode\":\"DaysPerWeek\",\"requirementValue\":6}")]
+    [InlineData("{\"requirementMode\":\"DaysPerWeek\",\"requirementValue\":-1}")]
+    [InlineData("{\"requirementMode\":\"DaysPerWeek\",\"requirementValue\":2.5}")]
+    [InlineData("{\"requirementMode\":\"Percentage\",\"requirementValue\":101}")]
+    [InlineData("{\"requirementMode\":\"Unknown\",\"requirementValue\":3}")]
+    [InlineData("{\"requirementMode\":\"DaysPerWeek\"}")]
+    [InlineData("{\"requirementValue\":3}")]
+    [InlineData("{\"requiredOfficePercentage\":60}")]
     [InlineData("{}")]
     public async Task Should_RejectInvalidRequirementsWithoutChanges_WhenPayloadIsInvalid(string json)
     {
@@ -160,18 +161,26 @@ public sealed class AttendanceRequirementModesIntegrationTests
         Assert.Equal(userId, row.UserId);
         Assert.Equal(expectedDate, row.StartingFrom);
         Assert.Equal(expectedCreatedAt, row.CreatedAt);
-        Assert.Equal(expectedValue, row.Value);
-        Assert.Equal(AttendanceRequirementMode.Percentage, row.Mode);
+        Assert.Equal(expectedValue, row.RequirementValue);
+        Assert.Equal(AttendanceRequirementMode.Percentage, row.RequirementMode);
         Assert.False(db.Database.HasPendingModelChanges());
-        await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("UPDATE UserAttendanceRequirements SET Mode = 'DaysPerWeek', Value = 6"));
-        await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("UPDATE UserAttendanceRequirements SET Mode = 'Unknown'"));
-        await db.Database.ExecuteSqlRawAsync("UPDATE UserAttendanceRequirements SET Mode = 'DaysPerWeek', Value = 3");
+        await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("UPDATE UserAttendanceRequirements SET RequirementMode = 'DaysPerWeek', RequirementValue = 6"));
+        await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("UPDATE UserAttendanceRequirements SET RequirementMode = 'Unknown'"));
+        await db.Database.ExecuteSqlRawAsync("UPDATE UserAttendanceRequirements SET RequirementMode = 'DaysPerWeek', RequirementValue = 3");
+        // Renaming the columns in either direction must preserve the configured weekly value.
+        await migrator.MigrateAsync("20261021173735_AddAttendanceRequirementModes");
+        await migrator.MigrateAsync();
+        var renamed = await db.UserAttendanceRequirements.AsNoTracking().SingleAsync();
+        const int expectedWeeklyValue = 3;
+        Assert.Equal(id, renamed.Id);
+        Assert.Equal(expectedWeeklyValue, renamed.RequirementValue);
+        Assert.Equal(AttendanceRequirementMode.DaysPerWeek, renamed.RequirementMode);
         await migrator.MigrateAsync("20261016072600_AddOfficeRequirementHistory");
         await migrator.MigrateAsync();
         var restored = await db.UserAttendanceRequirements.AsNoTracking().SingleAsync();
         const int expectedDowngradedPercentage = 60;
         Assert.Equal(id, restored.Id);
-        Assert.Equal(expectedDowngradedPercentage, restored.Value);
-        Assert.Equal(AttendanceRequirementMode.Percentage, restored.Mode);
+        Assert.Equal(expectedDowngradedPercentage, restored.RequirementValue);
+        Assert.Equal(AttendanceRequirementMode.Percentage, restored.RequirementMode);
     }
 }

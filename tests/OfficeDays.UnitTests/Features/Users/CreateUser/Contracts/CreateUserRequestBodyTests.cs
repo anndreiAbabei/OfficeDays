@@ -1,3 +1,4 @@
+using OfficeDays.Domain;
 using OfficeDays.Features.Users.CreateUser.Contracts;
 
 namespace OfficeDays.UnitTests.Features.Users.CreateUser.Contracts;
@@ -13,17 +14,18 @@ public sealed class CreateUserRequestBodyTests
         const string expectedTimeZoneId = "Europe/Bucharest";
         const string expectedCountryCode = "RO";
         const string expectedEmail = "user@example.com";
-        const int expectedRequiredOfficePercentage = 26;
+        const int expectedValue = 26;
 
         // act
         var sut = new CreateUserRequestBody
         {
+            RequirementMode = AttendanceRequirementMode.Percentage,
             Username = expectedUsername,
             Password = expectedPassword,
             TimeZoneId = expectedTimeZoneId,
             CountryCode = expectedCountryCode,
             Email = expectedEmail,
-            RequiredOfficePercentage = expectedRequiredOfficePercentage
+            RequirementValue = expectedValue
         };
 
         // assert
@@ -32,7 +34,7 @@ public sealed class CreateUserRequestBodyTests
         Assert.Equal(expectedTimeZoneId, sut.TimeZoneId);
         Assert.Equal(expectedCountryCode, sut.CountryCode);
         Assert.Equal(expectedEmail, sut.Email);
-        Assert.Equal(expectedRequiredOfficePercentage, sut.RequiredOfficePercentage);
+        Assert.Equal(expectedValue, sut.RequirementValue);
     }
 
     [Fact]
@@ -51,12 +53,12 @@ public sealed class CreateUserRequestBodyTests
         };
 
         // assert
-        Assert.Equal(expectedPercentage, sut.RequiredOfficePercentage);
+        Assert.Equal(expectedPercentage, sut.RequirementValue);
         Assert.Null(sut.Email);
     }
 
     [Fact]
-    public void Should_PreserveNullRequiredOfficePercentage()
+    public void Should_PreserveNullValue()
     {
         // arrange
         int? expectedPercentage = null;
@@ -68,10 +70,10 @@ public sealed class CreateUserRequestBodyTests
             Password = "long-password", 
             TimeZoneId = "UTC", 
             CountryCode = "RO", 
-            RequiredOfficePercentage = expectedPercentage
+            RequirementValue = expectedPercentage
         };
 
         // assert
-        Assert.Null(sut.RequiredOfficePercentage);
+        Assert.Null(sut.RequirementValue);
     }
 }

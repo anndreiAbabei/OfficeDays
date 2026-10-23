@@ -11,7 +11,6 @@ public sealed record CreateUserResponse
     public required string CountryName { get; init; }
     public required bool IsAdmin { get; init; }
     public required string? Email { get; init; }
-    public required int RequiredOfficePercentage { get; init; }
-    public AttendanceRequirementMode Mode { get; init; } = AttendanceRequirementMode.Percentage;
-    public int Value { get; init; }
+    public AttendanceRequirementMode RequirementMode { get; init; } = AttendanceRequirementMode.Percentage;
+    public int RequirementValue { get; init; }
 }

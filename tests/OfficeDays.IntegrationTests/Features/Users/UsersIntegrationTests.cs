@@ -126,7 +126,7 @@ public sealed class UsersIntegrationTests
         Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
         var profile = await client.GetFromJsonAsync<JsonElement>("/api/auth/me");
         Assert.Equal(JsonValueKind.Null, profile.GetProperty("email").ValueKind);
-        Assert.Equal(50, profile.GetProperty("requiredOfficePercentage").GetInt32());
+        Assert.Equal(50, profile.GetProperty("requirementValue").GetInt32());
     }
 
     [Fact]
@@ -165,33 +165,33 @@ public sealed class UsersIntegrationTests
         var created = await client.PostAsJsonAsync("/api/users", new
         {
             username = "percentageuser", password = "Normal-user-password!",
-            timeZoneId = "Europe/Bucharest", countryCode = "RO", email = "percentage@example.com", requiredOfficePercentage = percentage
+            timeZoneId = "Europe/Bucharest", countryCode = "RO", email = "percentage@example.com", requirementMode = "Percentage", requirementValue = percentage
         });
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
-        Assert.Equal(percentage, (await Read(created)).GetProperty("requiredOfficePercentage").GetInt32());
+        Assert.Equal(percentage, (await Read(created)).GetProperty("requirementValue").GetInt32());
         await CreateUser(client, "otherpercentage");
         await Login(client, "percentageuser", "Normal-user-password!");
         var csrf = await Csrf(client);
         var profile = await client.GetFromJsonAsync<JsonElement>("/api/auth/me");
-        Assert.Equal(percentage, profile.GetProperty("requiredOfficePercentage").GetInt32());
+        Assert.Equal(percentage, profile.GetProperty("requirementValue").GetInt32());
         var status = await client.GetFromJsonAsync<JsonElement>("/api/status?year=2026&month=9");
         Assert.Equal((int)Math.Ceiling(status.GetProperty("eligibleWorkingDays").GetInt32() * percentage / 100m),
             status.GetProperty("requiredOfficeDays").GetInt32());
 
         var history = await client.GetFromJsonAsync<JsonElement>("/api/users/me/requirements");
         var id = history.GetProperty("items")[0].GetProperty("id").GetGuid();
-        var updated = await PutJson(client, $"/api/users/me/requirements/{id}", new { startingFrom = "0001-01-01", requiredOfficePercentage = 25 }, csrf);
+        var updated = await PutJson(client, $"/api/users/me/requirements/{id}", new { startingFrom = "0001-01-01", requirementMode = "Percentage", requirementValue = 25 }, csrf);
         Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
-        Assert.Equal(25, (await Read(updated)).GetProperty("requiredOfficePercentage").GetInt32());
+        Assert.Equal(25, (await Read(updated)).GetProperty("requirementValue").GetInt32());
         // Older clients that only update email must preserve the percentage.
         (await PutJson(client, "/api/users/me", new { email = "user@example.com" }, csrf)).EnsureSuccessStatusCode();
-        Assert.Equal(25, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("requiredOfficePercentage").GetInt32());
+        Assert.Equal(25, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("requirementValue").GetInt32());
         status = await client.GetFromJsonAsync<JsonElement>("/api/status?year=2026&month=9");
         Assert.Equal((int)Math.Ceiling(status.GetProperty("eligibleWorkingDays").GetInt32() * .25m),
             status.GetProperty("requiredOfficeDays").GetInt32());
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        Assert.Equal(50, (await db.UserAttendanceRequirements.SingleAsync(x => x.UserId == db.Users.Single(u => u.Username == "otherpercentage").Id)).RequiredOfficePercentage);
+        Assert.Equal(50, (await db.UserAttendanceRequirements.SingleAsync(x => x.UserId == db.Users.Single(u => u.Username == "otherpercentage").Id)).RequirementValue);
     }
 
     [Theory]
@@ -205,7 +205,7 @@ public sealed class UsersIntegrationTests
         Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/users", new
         {
             username = "invalidpercentage", password = "Normal-user-password!",
-            timeZoneId = "Europe/Bucharest", countryCode = "RO", email = "percentage@example.com", requiredOfficePercentage = percentage
+            timeZoneId = "Europe/Bucharest", countryCode = "RO", email = "percentage@example.com", requirementMode = "Percentage", requirementValue = percentage
         })).StatusCode);
         await CreateUser(client, "percentagevalidation");
         await Login(client, "percentagevalidation", "Normal-user-password!");
@@ -213,10 +213,10 @@ public sealed class UsersIntegrationTests
         var history = await client.GetFromJsonAsync<JsonElement>("/api/users/me/requirements");
         var baselineId = history.GetProperty("items")[0].GetProperty("id").GetGuid();
         Assert.Equal(HttpStatusCode.BadRequest, (await PostJson(client, "/api/users/me/requirements",
-            new { startingFrom = "2027-01-01", requiredOfficePercentage = percentage }, csrf)).StatusCode);
+            new { startingFrom = "2027-01-01", requirementMode = "Percentage", requirementValue = percentage }, csrf)).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await PutJson(client, $"/api/users/me/requirements/{baselineId}",
-            new { startingFrom = "0001-01-01", requiredOfficePercentage = percentage }, csrf)).StatusCode);
-        Assert.Equal(50, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("requiredOfficePercentage").GetInt32());
+            new { startingFrom = "0001-01-01", requirementMode = "Percentage", requirementValue = percentage }, csrf)).StatusCode);
+        Assert.Equal(50, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("requirementValue").GetInt32());
     }
 
 }

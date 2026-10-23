@@ -18,9 +18,8 @@ public static class CreateUserMapping
             CountryName = user.HolidayJurisdiction.Name,
             IsAdmin = user.IsAdmin,
             Email = user.Email,
-            Mode = requirement.Mode,
-            Value = requirement.Value,
-            RequiredOfficePercentage =requirement.RequiredOfficePercentage
+            RequirementMode = requirement.RequirementMode,
+            RequirementValue = requirement.RequirementValue
         };
     }
 }

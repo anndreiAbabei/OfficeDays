@@ -9,7 +9,8 @@ GET {{baseUrl}}/api/holiday-jurisdictions
 Accept: application/json
 
 ### Create a normal user (anonymous; change the username before repeating)
-# requiredOfficePercentage accepts whole numbers from 0 to 100; omitted values default to 50.
+# Supply requirementMode and requirementValue together. Percentage accepts 0–100; DaysPerWeek accepts 0–5.
+# Omitting both during registration defaults to Percentage with value 50.
 POST {{baseUrl}}/api/users
 Content-Type: application/json
 
@@ -19,7 +20,8 @@ Content-Type: application/json
   "timeZoneId": "Europe/Bucharest",
   "countryCode": "RO",
   "email": null,
-  "requiredOfficePercentage": 50
+  "requirementMode": "Percentage",
+  "requirementValue": 50
 }
 
 ### Log in and store the persistent session cookie
@@ -56,12 +58,13 @@ X-CSRF-TOKEN: {{csrfToken}}
     client.test("Email is updated", function () {
         client.assert(response.status === 200, "Expected HTTP 200");
         client.assert(response.body.email === "andrei@example.com", "Expected updated email");
-        client.global.set("savedOfficePercentage", response.body.requiredOfficePercentage);
+        client.global.set("savedRequirementMode", response.body.requirementMode);
+        client.global.set("savedRequirementValue", response.body.requirementValue);
     });
 %}
 
 ### Clear the signed-in user's optional email
-# Run the profile update above first. Omitting requiredOfficePercentage preserves its saved value.
+# Run the profile update above first. Profile updates preserve the attendance requirement.
 PUT {{baseUrl}}/api/users/me
 Content-Type: application/json
 X-CSRF-TOKEN: {{csrfToken}}
@@ -74,7 +77,8 @@ X-CSRF-TOKEN: {{csrfToken}}
     client.test("Email is cleared", function () {
         client.assert(response.status === 200, "Expected HTTP 200");
         client.assert(response.body.email === null, "Expected null email");
-        client.assert(response.body.requiredOfficePercentage === client.global.get("savedOfficePercentage"), "Expected office requirement to be preserved");
+        client.assert(response.body.requirementMode === client.global.get("savedRequirementMode"), "Expected requirement mode to be preserved");
+        client.assert(response.body.requirementValue === client.global.get("savedRequirementValue"), "Expected requirement value to be preserved");
     });
 %}
 
@@ -93,7 +97,8 @@ X-CSRF-TOKEN: {{csrfToken}}
 
 {
   "startingFrom": "2027-01-01",
-  "requiredOfficePercentage": 60
+  "requirementMode": "Percentage",
+  "requirementValue": 60
 }
 
 > {%
@@ -107,8 +112,8 @@ X-CSRF-TOKEN: {{csrfToken}}
 
 {
   "startingFrom": "2027-01-01",
-  "mode": "DaysPerWeek",
-  "value": 3
+  "requirementMode": "DaysPerWeek",
+  "requirementValue": 3
 }
 
 ### Correct the initial requirement without moving its starting date
@@ -118,7 +123,8 @@ X-CSRF-TOKEN: {{csrfToken}}
 
 {
   "startingFrom": "0001-01-01",
-  "requiredOfficePercentage": 50
+  "requirementMode": "Percentage",
+  "requirementValue": 50
 }
 
 ### Delete a scheduled change (the preceding requirement extends until the next change)

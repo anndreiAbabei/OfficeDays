@@ -9,9 +9,8 @@ public sealed record LoginResponse(Guid Id,
                                    string CountryName, 
                                    bool IsAdmin, 
                                    string? Email, 
-                                   int RequiredOfficePercentage,
+                                   int RequirementValue,
                                    string? TeamDay = null)
 {
-    public AttendanceRequirementMode Mode { get; init; } = AttendanceRequirementMode.Percentage;
-    public int Value { get; init; } = RequiredOfficePercentage;
+    public AttendanceRequirementMode RequirementMode { get; init; } = AttendanceRequirementMode.Percentage;
 }

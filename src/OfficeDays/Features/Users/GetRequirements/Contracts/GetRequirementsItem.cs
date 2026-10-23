@@ -4,10 +4,9 @@ namespace OfficeDays.Features.Users.GetRequirements.Contracts;
 
 public sealed record GetRequirementsItem(Guid Id,
                                          DateOnly StartingFrom,
-                                         int RequiredOfficePercentage,
+                                         int RequirementValue,
                                          DateTimeOffset CreatedAt,
                                          bool IsBaseline)
 {
-    public AttendanceRequirementMode Mode { get; init; } = AttendanceRequirementMode.Percentage;
-    public int Value { get; init; } = RequiredOfficePercentage;
+    public AttendanceRequirementMode RequirementMode { get; init; } = AttendanceRequirementMode.Percentage;
 }

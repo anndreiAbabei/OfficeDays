@@ -9,12 +9,11 @@ public static class UpdateRequirementMapping
     {
         return new UpdateRequirementResponse(row.Id,
                                              row.StartingFrom,
-                                             row.RequiredOfficePercentage,
+                                             row.RequirementValue,
                                              row.CreatedAt,
                                              row.StartingFrom == UserAttendanceRequirement.BaselineDate)
         {
-            Mode = row.Mode,
-            Value = row.Value
+            RequirementMode = row.RequirementMode
         };
     }
 }

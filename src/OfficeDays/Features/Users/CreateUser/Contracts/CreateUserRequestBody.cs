@@ -9,7 +9,6 @@ public sealed record CreateUserRequestBody
     public required string TimeZoneId { get; init; }
     public required string CountryCode { get; init; }
     public string? Email { get; init; }
-    public AttendanceRequirementMode? Mode { get; init; }
-    public int? Value { get; init; }
-    public int? RequiredOfficePercentage { get; init; }
+    public AttendanceRequirementMode? RequirementMode { get; init; }
+    public int? RequirementValue { get; init; }
 }

@@ -5,14 +5,7 @@ namespace OfficeDays.Features.Authentication.GetCurrentUser;
 
 public static class GetCurrentUserMapping
 {
-    public static GetCurrentUserResponse ToViewModel(this User user, UserAttendanceRequirement requirement) =>
-        user.ToViewModel(requirement.RequiredOfficePercentage) with
-        {
-            Mode = requirement.Mode,
-            Value = requirement.Value
-        };
-
-    public static GetCurrentUserResponse ToViewModel(this User user, int requiredOfficePercentage)
+    public static GetCurrentUserResponse ToViewModel(this User user, UserAttendanceRequirement requirement)
     {
         return new GetCurrentUserResponse(user.Id,
                                           user.Username,
@@ -21,7 +14,10 @@ public static class GetCurrentUserMapping
                                           user.HolidayJurisdiction.Name,
                                           user.IsAdmin,
                                           user.Email,
-                                          requiredOfficePercentage,
-                                          user.Preferences.TeamDay?.ToString().ToLowerInvariant());
+                                          requirement.RequirementValue,
+                                          user.Preferences.TeamDay?.ToString().ToLowerInvariant())
+        {
+            RequirementMode = requirement.RequirementMode
+        };
     }
 }
