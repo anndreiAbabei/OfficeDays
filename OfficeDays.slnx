@@ -24,6 +24,10 @@
     <File Path="http\tokens.http" />
     <File Path="http\vacations.http" />
   </Folder>
+  <Folder Name="/docs/workflow/">
+    <File Path=".github\workflows\dotnet.yml" />
+    <File Path=".github\workflows\e2e.yml" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/OfficeDays/OfficeDays.csproj" />
   </Folder>

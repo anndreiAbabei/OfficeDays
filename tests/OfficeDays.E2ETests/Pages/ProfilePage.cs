@@ -7,21 +7,21 @@ public sealed class ProfilePage(IPage page) : AuthenticatedPage(page), IScenario
     public static string Url => "/profile";
     public static ProfilePage Create(IPage page) => new ProfilePage(page);
 
+    public ILocator TeamDaySelect => Page.GetByLabel("Team day");
+    public ILocator SaveButton => Page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Save profile" });
+    
+    public async Task<string> GetTeamDay()
+    {
+        return await TeamDaySelect.InputValueAsync();
+    }
+
     public async Task SelectTeamDay(string expectedTeamDay, bool doSave = true)
     {
-        await Page.GetByLabel("Team day").SelectOptionAsync([expectedTeamDay]);
+        await TeamDaySelect.SelectOptionAsync([expectedTeamDay]);
 
         if (doSave)
             await Save();
     }
     
-    public async Task Save()
-    {
-        await Page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Save profile" }).ClickAsync();
-    }
-    
-    public Task<string> GetTeamDay()
-    {
-        throw new NotImplementedException();
-    }
+    public async Task Save() => await SaveButton.ClickAsync();
 }

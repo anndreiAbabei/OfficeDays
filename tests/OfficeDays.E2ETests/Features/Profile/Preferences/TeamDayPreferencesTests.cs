@@ -28,8 +28,7 @@ public sealed class TeamDayPreferencesTests(ApplicationFixture application, ITes
             await dashboard.GoToProfile();
 
             // assert
-            var teamDay = await profile.GetTeamDay();
-            Assert.Equal(expectedTeamDay, teamDay);
+            await Expect(profile.TeamDaySelect).ToHaveValueAsync(expectedTeamDay);
         });
     }
 }
