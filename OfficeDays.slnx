@@ -9,6 +9,7 @@
     <File Path="Directory.Build.props" />
     <File Path="README.md" />
     <File Path="rebuild.sh" />
+    <File Path="record.sh" />
   </Folder>
   <Folder Name="/docs/http/">
     <File Path="http\attendance.http" />
@@ -27,6 +28,7 @@
     <Project Path="src/OfficeDays/OfficeDays.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/OfficeDays.E2ETests/OfficeDays.E2ETests.csproj" />
     <Project Path="tests/OfficeDays.IntegrationTests/OfficeDays.IntegrationTests.csproj" />
     <Project Path="tests/OfficeDays.UnitTests/OfficeDays.UnitTests.csproj" />
   </Folder>
