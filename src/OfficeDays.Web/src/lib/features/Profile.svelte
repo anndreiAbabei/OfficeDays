@@ -62,7 +62,7 @@
 <style>
   .profile-form { 
     max-width: 44rem; 
-    align-items: end; 
+    align-items: start; 
   }
   
   .profile-form button {
