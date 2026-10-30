@@ -282,7 +282,8 @@ Use .NET 10 and Node.js 24. The repository selects Microsoft.Testing.Platform
 through `global.json`. Run backend unit and integration tests with:
 
 ```sh
-dotnet test --exclude-module "**/OfficeDays.E2ETests.dll"
+dotnet test --project tests/OfficeDays.UnitTests
+dotnet test --project tests/OfficeDays.IntegrationTests
 ```
 
 For browser tests and their build prerequisites, see [the browser test guide](tests/OfficeDays.E2ETests/README.md).

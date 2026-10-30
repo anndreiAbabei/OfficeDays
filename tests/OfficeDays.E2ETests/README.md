@@ -97,5 +97,6 @@ if desired. The regular .NET workflow excludes E2E execution because the dedicat
 preparation. To run only the existing backend suites, use:
 
 ```sh
-dotnet test --exclude-module "**/OfficeDays.E2ETests.dll"
+dotnet test --project tests/OfficeDays.UnitTests
+dotnet test --project tests/OfficeDays.IntegrationTests
 ```
