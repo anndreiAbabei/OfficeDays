@@ -35,7 +35,7 @@ jobs:
       - name: Install Chromium and system dependencies
         run: dotnet run --no-build --project tests/OfficeDays.E2ETests -- install --with-deps chromium
       - name: Run browser tests
-        run: dotnet test tests/OfficeDays.E2ETests --no-build --logger trx --results-directory artifacts/e2e/results
+        run: dotnet test --project tests/OfficeDays.E2ETests --no-build --report-xunit-trx --results-directory artifacts/e2e/results
       - name: Upload results, screenshots, traces and API logs
         if: always()
         uses: actions/upload-artifact@v4

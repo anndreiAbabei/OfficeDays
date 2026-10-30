@@ -36,5 +36,7 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal --filter "FullyQualifiedName!~OfficeDays.E2ETests"
+    - name: Unit tests
+      run: dotnet test --project tests/OfficeDays.UnitTests --no-build
+    - name: Integration tests
+      run: dotnet test --project tests/OfficeDays.IntegrationTests --no-build
