@@ -37,4 +37,4 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal --filter "FullyQualifiedName!~OfficeDays.E2ETests"
+      run: dotnet test --no-build --exclude-module "**/OfficeDays.E2ETests.dll"
