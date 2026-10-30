@@ -1,4 +1,5 @@
 using OfficeDays.E2ETests.Infrastructure;
+using Xunit.MicrosoftTestingPlatform;
 
 namespace OfficeDays.E2ETests;
 
@@ -10,10 +11,7 @@ public static class RecordingProgram
             return Program.Main(args);
         
         if (args is not ["record"])
-        {
-            await Console.Error.WriteLineAsync("Usage: dotnet run --project tests/OfficeDays.E2ETests -- [record | install chromium]");
-            return 1;
-        }
+            return await TestPlatformTestFramework.RunAsync(args, SelfRegisteredExtensions.AddSelfRegisteredExtensions);
         
         await using var application = new ApplicationFixture();
         await application.InitializeAsync();

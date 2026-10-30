@@ -12,7 +12,7 @@ npm --prefix src/OfficeDays.Web ci
 npm --prefix src/OfficeDays.Web run build
 dotnet build
 dotnet run --no-build --project tests/OfficeDays.E2ETests -- install chromium
-dotnet test tests/OfficeDays.E2ETests --no-build
+dotnet test --project tests/OfficeDays.E2ETests --no-build
 ```
 
 On Linux/CI, install browser system dependencies with `install --with-deps chromium` instead.
@@ -97,5 +97,5 @@ if desired. The regular .NET workflow excludes E2E execution because the dedicat
 preparation. To run only the existing backend suites, use:
 
 ```sh
-dotnet test --filter 'FullyQualifiedName!~OfficeDays.E2ETests'
+dotnet test --exclude-module "**/OfficeDays.E2ETests.dll"
 ```

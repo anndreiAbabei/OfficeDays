@@ -33,6 +33,9 @@ public sealed class OfficeDaysFactory : WebApplicationFactory<Program>
         }));
         builder.ConfigureServices(services =>
         {
+            // Capture logs through the providers configured by each test, independently of Serilog.
+            services.RemoveAll<ILoggerFactory>();
+            services.AddSingleton<ILoggerFactory, LoggerFactory>();
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(new FixedTimeProvider(new DateTimeOffset(2099, 9, 15, 9, 0, 0, TimeSpan.Zero)));
         });

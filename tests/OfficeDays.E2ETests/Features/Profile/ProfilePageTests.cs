@@ -27,7 +27,7 @@ public sealed class ProfilePageTests(ApplicationFixture application, ITestOutput
     }
 
     [Fact]
-    public async Task Should_HaveFooter()
+    public async Task Should_ShowVersionAndAuthor_WhenProfileIsOpened()
     {
         await RunScenarioAsync(async (page, seeder, ct) =>
         {
@@ -37,7 +37,7 @@ public sealed class ProfilePageTests(ApplicationFixture application, ITestOutput
             var dashboard = await login.SignIn(user);
             var (expectedVersion, expectedAuthor, expectedRepositoryUrl) = await Application.Api.GetVersion(ct);
 
-            var expectedText = $"Created by {expectedAuthor} · Office Days · {expectedVersion}";
+            var expectedText = $"Created by {expectedAuthor} · Office Days · v{expectedVersion}";
 
             // act
             var profile = await dashboard.GoToProfile();

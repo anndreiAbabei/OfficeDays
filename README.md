@@ -275,3 +275,14 @@ The independent [OfficeDays.E2ETests guide](tests/OfficeDays.E2ETests/README.md)
 xUnit/Playwright setup, clean application/database lifecycle, recording C# scenarios, and
 failure screenshots/traces. The `C# E2E` GitHub Actions workflow runs these tests on pull requests
 and supports manual runs. Existing TypeScript browser tests remain unchanged.
+
+## Running tests
+
+Use .NET 10 and Node.js 24. The repository selects Microsoft.Testing.Platform
+through `global.json`. Run backend unit and integration tests with:
+
+```sh
+dotnet test --exclude-module "**/OfficeDays.E2ETests.dll"
+```
+
+For browser tests and their build prerequisites, see [the browser test guide](tests/OfficeDays.E2ETests/README.md).
