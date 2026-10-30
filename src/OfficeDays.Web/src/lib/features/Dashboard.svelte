@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { request, errorMessage } from '$lib/api';
+  import { errorMessage } from '$lib/api';
+  import { useDataSource } from './dataSource';
   import { periodQuery } from '$lib/dates';
   import type { Status, Period, TeamDay } from '$lib/types';
   import StatusSummary from '$lib/components/StatusSummary.svelte';
@@ -8,6 +9,7 @@
   import PlanningCalendar from './PlanningCalendar.svelte';
   import AttendanceList from './AttendanceList.svelte';
   import VacationList from './VacationList.svelte';
+  const { request } = useDataSource();
   
   let { period, timeZone, teamDay = null }: { period: Period; timeZone: string; teamDay?: TeamDay | null } = $props();
   let status = $state<Status | null>(null); let loading = $state(true); let error = $state('');

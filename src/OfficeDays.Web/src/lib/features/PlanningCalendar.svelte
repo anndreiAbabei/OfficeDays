@@ -1,10 +1,12 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
-  import { request, mutate, errorMessage } from '$lib/api';
+  import { errorMessage } from '$lib/api';
+  import { useDataSource } from './dataSource';
   import { displayDate, isoDate, localDate, periodQuery } from '$lib/dates';
   import type { Period, PlanningDay, PlanningMonth, TeamDay } from '$lib/types';
   import { describeDay, togglePlan } from './planning';
   import Feedback from '$lib/components/Feedback.svelte';
+  const { request, mutate } = useDataSource();
 
   const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   let { period, timeZone, teamDay = null, revision = 0, oncountchange, onchange }: {

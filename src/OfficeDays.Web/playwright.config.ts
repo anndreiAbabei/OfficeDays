@@ -33,7 +33,9 @@ export default defineConfig({
       RateLimiting__Registration__Permits: '100',
       RateLimiting__Login__Permits: '100',
       RateLimiting__LoginAccount__Permits: '100',
-      RateLimiting__Source__Permits: '10000'
+      RateLimiting__Source__Permits: '10000',
+      // Guest setup and session checks share the anonymous API bucket across browser projects.
+      RateLimiting__Api__Permits: '10000'
     }
   }
 });

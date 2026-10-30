@@ -223,6 +223,7 @@ For custom integrations beyond Shortcuts, see the [HTTP request examples](http/R
 
 [MIT](LICENSE)
 
+## Features
 
 ### Request limits for public hosting
 
@@ -287,3 +288,35 @@ dotnet test --project tests/OfficeDays.IntegrationTests
 ```
 
 For browser tests and their build prerequisites, see [the browser test guide](tests/OfficeDays.E2ETests/README.md).
+
+### Guest mode
+
+Choose **Continue as guest** to track attendance without an account. Setup asks for
+country/jurisdiction, timezone (defaulting to the browser timezone), and an attendance
+requirement (50% by default, with a days-per-week option). It downloads the current
+and next year's holidays. Guest features load when you enter guest mode.
+
+Attendance, plans, vacations, requirement history, team-day preferences, and reports
+stay in this browser's local storage. Tracking starts in the setup month; that month
+and subsequent months remain accessible. Once loaded, the guest dashboard, reports,
+and exports work without internet. Reopening the site offline is not yet supported;
+that will be part of PWA support.
+
+Holiday downloads happen only during setup or when you explicitly choose **Get holidays**
+for a missing year. You can view other years without downloading holidays, but targets
+may be incomplete until their calendar is available. There is no automatic refresh.
+The initial page checks the account session and app version; personal guest operations
+do not call the server.
+
+A signed-in account takes priority when opening the site. Otherwise, saved guest data
+opens the guest dashboard, and new visitors see Login and Continue as guest. If the
+account session cannot be checked, the app offers retry and an explicit choice to open
+saved guest data. Signing into an account does not upload or delete guest data.
+
+Use **Profile → Download guest data** for a JSON backup with format
+`officedays-guest-data` (version 1). Clearing browser/site data deletes guest history;
+private browsing may discard it when closed. Failed saves are reported rather than
+shown as successful. Guest data uses a versioned local format; unreadable or unsupported
+data is preserved instead of overwritten. API tokens and administration require an
+account. Guest migration, backup restore, jurisdiction/timezone changes, bulk holiday
+refresh, and clearing a guest session through the UI are separate future features.

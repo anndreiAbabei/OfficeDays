@@ -1,10 +1,12 @@
 <script lang="ts">
   import type { AttendanceRequirementMode } from '$lib/attendanceRequirementMode';
   import { onMount } from 'svelte';
-  import { request, mutate, errorMessage } from '$lib/api';
+  import { errorMessage } from '$lib/api';
+  import { useDataSource } from './dataSource';
   import type { User } from '$lib/types';
   import RequirementInput from '$lib/components/RequirementInput.svelte';
   import Feedback from '$lib/components/Feedback.svelte';
+  const { request, mutate } = useDataSource();
 
   type Requirement = { id: string; startingFrom: string; requirementMode: AttendanceRequirementMode; requirementValue: number; isBaseline: boolean };
   type History = { today: string; items: Requirement[] };

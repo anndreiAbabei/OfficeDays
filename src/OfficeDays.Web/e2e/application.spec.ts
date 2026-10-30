@@ -11,7 +11,7 @@ async function noOverflow(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 }
 
-test('register, attendance, vacation, profile, tokens and logout work against the real API', async ({ page }, testInfo) => {
+test('Should_SupportAccountWorkflow_WhenUsingTheRealApi', async ({ page }, testInfo) => {
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   const username = `user-${testInfo.project.name}-${Date.now()}`;
   await page.goto('/#register');
@@ -66,6 +66,8 @@ test('register, attendance, vacation, profile, tokens and logout work against th
   await expect(page.locator('.token-reveal code')).toContainText('odt_');
   page.once('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: 'Revoke' }).click();
+  await expect(page.getByText('Token revoked.', { exact: true })).toBeVisible();
+  await page.getByRole('checkbox', { name: 'Show revoked tokens' }).check();
   await expect(page.getByText('Revoked', { exact: true })).toBeVisible();
   await noOverflow(page);
   await page.goto('/admin');
