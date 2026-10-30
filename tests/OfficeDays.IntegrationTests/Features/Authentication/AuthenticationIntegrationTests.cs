@@ -14,7 +14,7 @@ public sealed class AuthenticationIntegrationTests
         await CreateUser(client, "persistentuser");
 
         var response = await client.PostAsJsonAsync("/api/auth/login", new
-            { username = "persistentuser", password = "Normal-user-password!" });
+            { username = "persistentuser", password = "Normal-user-password!" }, cancellationToken: TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
         var cookie = Assert.Single(response.Headers.GetValues("Set-Cookie"),
@@ -30,22 +30,22 @@ public sealed class AuthenticationIntegrationTests
         await CreateUser(client, "loginbranches");
 
         var unknown = await client.PostAsJsonAsync("/api/auth/login", new
-            { username = "does-not-exist", password = "Normal-user-password!" });
+            { username = "does-not-exist", password = "Normal-user-password!" }, cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Unauthorized, unknown.StatusCode);
 
         var wrongPassword = await client.PostAsJsonAsync("/api/auth/login", new
-            { username = "loginbranches", password = "Incorrect-password!" });
+            { username = "loginbranches", password = "Incorrect-password!" }, cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Unauthorized, wrongPassword.StatusCode);
 
         var missingCredentials = await client.PostAsJsonAsync("/api/auth/login", new
-            { username = "", password = "" });
+            { username = "", password = "" }, cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, missingCredentials.StatusCode);
 
         await Login(client, "loginbranches", "Normal-user-password!");
         var csrf = await Csrf(client);
         var logout = await PostJson(client, "/api/auth/logout", new { }, csrf);
         Assert.Equal(HttpStatusCode.NoContent, logout.StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/auth/me")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
     }
 
 }

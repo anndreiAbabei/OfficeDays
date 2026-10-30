@@ -21,7 +21,7 @@ public sealed class RequirementLoggingIntegrationTests
         await Login(client, "requirementlogs", "Normal-user-password!");
         var csrf = await Csrf(client);
         const string path = "/api/users/me/requirements";
-        var history = await client.GetFromJsonAsync<JsonElement>(path);
+        var history = await client.GetFromJsonAsync<JsonElement>(path, cancellationToken: TestContext.Current.CancellationToken);
         var baselineId = history.GetProperty("items")[0].GetProperty("id").GetGuid();
         var body = new { startingFrom = "2027-01-01", requirementMode = "Percentage", requirementValue = 60 };
         (await PostJson(client, path, body, csrf)).EnsureSuccessStatusCode();
@@ -38,7 +38,7 @@ public sealed class RequirementLoggingIntegrationTests
         // Deleted sessions are now rejected before feature handlers run.
         var expectedUnauthorized = HttpStatusCode.Unauthorized;
         await DeleteUser(original, "requirementlogs");
-        Assert.Equal(expectedUnauthorized, (await client.GetAsync(path)).StatusCode);
+        Assert.Equal(expectedUnauthorized, (await client.GetAsync(path, TestContext.Current.CancellationToken)).StatusCode);
         Assert.Equal(expectedUnauthorized, (await PostJson(client, path, body, csrf)).StatusCode);
 
         foreach (var eventId in new[] { 4202, 4301, 4302, 4501, 4502, 4503 })

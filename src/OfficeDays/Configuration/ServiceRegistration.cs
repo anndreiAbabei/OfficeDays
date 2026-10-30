@@ -12,6 +12,7 @@ using OfficeDays.Domain;
 using OfficeDays.Infrastructure;
 using OfficeDays.Security;
 using OfficeDays.Services;
+using Serilog;
 
 namespace OfficeDays.Configuration;
 
@@ -28,7 +29,8 @@ public static class ServiceRegistration
         if (cookieExpireTimeSpan <= TimeSpan.Zero)
             throw new InvalidOperationException("Authentication:CookieExpireTimeSpan must be a positive TimeSpan.");
 
-        builder.Logging.AddJsonConsole(options => options.IncludeScopes = true);
+        builder.Services.AddSerilog();
+        
         builder.Services.AddResponseCompression(options =>
         {
             options.EnableForHttps = true;

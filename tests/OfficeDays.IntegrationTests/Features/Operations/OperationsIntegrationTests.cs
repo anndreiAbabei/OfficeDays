@@ -14,9 +14,9 @@ public sealed class OperationsIntegrationTests
     {
         await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
-        var response = await client.GetAsync("/api/version");
+        var response = await client.GetAsync("/api/version", TestContext.Current.CancellationToken);
         response.EnsureSuccessStatusCode();
-        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Assert.Equal(typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!
             .InformationalVersion, json.RootElement.GetProperty("version").GetString());
         Assert.True(response.Headers.CacheControl!.NoStore);
@@ -27,18 +27,18 @@ public sealed class OperationsIntegrationTests
     {
         await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
-        var healthy = await client.GetAsync("/health/ready");
+        var healthy = await client.GetAsync("/health/ready", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, healthy.StatusCode);
-        Assert.Contains("\"database\":\"Healthy\"", await healthy.Content.ReadAsStringAsync());
+        Assert.Contains("\"database\":\"Healthy\"", await healthy.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
 
         // Break only this test's isolated database after successful application startup.
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await db.Database.ExecuteSqlRawAsync("ALTER TABLE Users RENAME TO UnavailableUsers");
-        var unhealthy = await client.GetAsync("/health/ready");
+        await db.Database.ExecuteSqlRawAsync("ALTER TABLE Users RENAME TO UnavailableUsers", cancellationToken: TestContext.Current.CancellationToken);
+        var unhealthy = await client.GetAsync("/health/ready", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.ServiceUnavailable, unhealthy.StatusCode);
-        Assert.Contains("\"database\":\"Unhealthy\"", await unhealthy.Content.ReadAsStringAsync());
-        Assert.DoesNotContain("SQLite", await unhealthy.Content.ReadAsStringAsync());
-        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/health/live")).StatusCode);
+        Assert.Contains("\"database\":\"Unhealthy\"", await unhealthy.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        Assert.DoesNotContain("SQLite", await unhealthy.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/health/live", TestContext.Current.CancellationToken)).StatusCode);
     }
 }

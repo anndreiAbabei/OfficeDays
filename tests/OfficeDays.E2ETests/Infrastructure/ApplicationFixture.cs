@@ -1,23 +1,40 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
 namespace OfficeDays.E2ETests.Infrastructure;
 
-public sealed class ApplicationFixture : IAsyncLifetime
+public interface IApplicationFixture
+{
+    string BaseUrl { get; }
+    string RepositoryRoot { get; }
+    string ArtifactsDirectory { get; }
+    
+    BrowserFixture Browser { get; }
+    IApiClient Api { get; }
+    CancellationToken CancellationToken { get; }
+}
+
+[ExcludeFromCodeCoverage]
+public sealed class ApplicationFixture : IApplicationFixture, IAsyncLifetime
 {
     public const string AdminPassword = "BrowserTestsOnly!123";
     private readonly string _temporaryDirectory = Path.Combine(Path.GetTempPath(), $"officedays-e2e-{Guid.NewGuid():N}");
     private readonly ConcurrentQueue<string> _logs = new ConcurrentQueue<string>();
     private readonly TaskCompletionSource<string> _address = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private Process? _process;
 
     public string BaseUrl { get; private set; } = string.Empty;
     public string RepositoryRoot { get; } = FindRepositoryRoot();
     public string ArtifactsDirectory { get; private set; } = string.Empty;
+    
     public BrowserFixture Browser { get; } = new BrowserFixture();
+    public IApiClient Api => field ??= new ApiClient(BaseUrl);
+    public CancellationToken CancellationToken => TestContext.Current.CancellationToken;
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         ArtifactsDirectory = Path.Combine(RepositoryRoot, "artifacts", "e2e", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(ArtifactsDirectory);
@@ -51,7 +68,7 @@ public sealed class ApplicationFixture : IAsyncLifetime
             start.Environment["BootstrapAdmin__CountryName"] = "Romania";
             start.Environment["Logging__LogLevel__Default"] = "Warning";
             start.Environment["Logging__LogLevel__Microsoft.Hosting.Lifetime"] = "Information";
-            // Many independent users share the runner's IP. Threshold behavior has HTTP integration coverage.
+            // Many independent users share the runner's IP. Threshold behaviour has HTTP integration coverage.
             start.Environment["RateLimiting__Registration__Permits"] = "1000";
             start.Environment["RateLimiting__Login__Permits"] = "1000";
             start.Environment["RateLimiting__LoginAccount__Permits"] = "1000";
@@ -63,14 +80,9 @@ public sealed class ApplicationFixture : IAsyncLifetime
             _process.Start();
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
-            BaseUrl = await _address.Task.WaitAsync(TimeSpan.FromSeconds(60));
+            BaseUrl = await _address.Task.WaitAsync(TimeSpan.FromSeconds(60), CancellationToken);
             
-            // ReSharper disable once ShortLivedHttpClient
-            using var client = new HttpClient();
-            client.BaseAddress = new Uri(BaseUrl);
-            client.Timeout = TimeSpan.FromSeconds(30);
-            using var response = await client.GetAsync("/health/ready");
-            response.EnsureSuccessStatusCode();
+            await Api.EnsureLive(CancellationToken);
         }
         catch
         {
@@ -79,7 +91,7 @@ public sealed class ApplicationFixture : IAsyncLifetime
         }
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         try
         {
@@ -91,15 +103,18 @@ public sealed class ApplicationFixture : IAsyncLifetime
             {
                 if (!_process.HasExited)
                     _process.Kill(entireProcessTree: true);
-                await _process.WaitForExitAsync();
+                await _process.WaitForExitAsync(CancellationToken);
                 _process.Dispose();
                 _process = null;
             }
             if (Directory.Exists(ArtifactsDirectory))
-                await File.WriteAllLinesAsync(Path.Combine(ArtifactsDirectory, "api.log"), _logs);
+                await File.WriteAllLinesAsync(Path.Combine(ArtifactsDirectory, "api.log"), _logs, CancellationToken);
             if (Directory.Exists(_temporaryDirectory))
                 Directory.Delete(_temporaryDirectory, recursive: true);
         }
+        
+        Api.Dispose();
+        _cancellationTokenSource.Dispose();
     }
 
     private void OnOutput(object sender, DataReceivedEventArgs args)

@@ -150,12 +150,12 @@
       Retry loading requirements
     </button>
   {:else}
-    <h3>Current and past requirements</h3>
+    <h3 class="current-attendances">Current and past requirements</h3>
     {#each past as row, index (row.id)}
       {@render entry(row, index === 0 ? 'Current' : 'Previous')}
     {/each}
     
-    <h3>Upcoming changes</h3>
+    <h3 class="upcoming-attendances">Upcoming changes</h3>
     {#each upcoming as row (row.id)}
       {@render entry(row, 'Scheduled')}
     {:else}

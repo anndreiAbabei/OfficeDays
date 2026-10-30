@@ -51,12 +51,12 @@ public sealed class RequirementsIntegrationTests
         var future = await PostJson(client, Path, Body("2100-01-01", 80), csrf);
         Assert.Equal(HttpStatusCode.Created, future.StatusCode);
         var futureId = (await Read(future)).GetProperty("id").GetGuid();
-        Assert.Equal(60, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("requirementValue").GetInt32());
+        Assert.Equal(60, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me", cancellationToken: TestContext.Current.CancellationToken)).GetProperty("requirementValue").GetInt32());
         await AssertTarget(client, 2020, 1, 40);
         await AssertTarget(client, 2099, 1, 60);
         await AssertTarget(client, 2099, 9, 60);
         await AssertTarget(client, 2100, 1, 80);
-        var login = await client.PostAsJsonAsync("/api/auth/login", new { username = "history", password = "Normal-user-password!" });
+        var login = await client.PostAsJsonAsync("/api/auth/login", new { username = "history", password = "Normal-user-password!" }, cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(60, (await Read(login)).GetProperty("requirementValue").GetInt32());
         csrf = await Csrf(client);
         var profile = await PutJson(client, "/api/users/me", new { email = "new@example.com" }, csrf);
@@ -116,15 +116,15 @@ public sealed class RequirementsIntegrationTests
     {
         await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
-        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync(Path)).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync(Path, Body("2099-01-01", 50))).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PutAsJsonAsync($"{Path}/{Guid.NewGuid()}", Body("2099-01-01", 50))).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await client.DeleteAsync($"{Path}/{Guid.NewGuid()}")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync(Path, TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync(Path, Body("2099-01-01", 50), cancellationToken: TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PutAsJsonAsync($"{Path}/{Guid.NewGuid()}", Body("2099-01-01", 50), cancellationToken: TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.DeleteAsync($"{Path}/{Guid.NewGuid()}", TestContext.Current.CancellationToken)).StatusCode);
         var csrf = await SignIn(client);
         var baselineId = (await Items(client))[0].GetProperty("id").GetGuid();
-        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync(Path, Body("2099-01-01", 50))).StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, (await client.PutAsJsonAsync($"{Path}/{baselineId}", Body("0001-01-01", 50))).StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, (await client.DeleteAsync($"{Path}/{baselineId}")).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync(Path, Body("2099-01-01", 50), cancellationToken: TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PutAsJsonAsync($"{Path}/{baselineId}", Body("0001-01-01", 50), cancellationToken: TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.DeleteAsync($"{Path}/{baselineId}", TestContext.Current.CancellationToken)).StatusCode);
         var created = await PostJson(client, Path, Body("2099-01-01", 60), csrf);
         var id = (await Read(created)).GetProperty("id").GetGuid();
         using var other = factory.CreateClient();
@@ -143,28 +143,28 @@ public sealed class RequirementsIntegrationTests
     public async Task Migration_preserves_all_percentages_and_backfills_one_baseline_per_user()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
-        await connection.OpenAsync();
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
         await using var db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlite(connection).Options);
         var migrator = db.GetService<IMigrator>();
-        await migrator.MigrateAsync("20261015154740_AddUserPreferences");
+        await migrator.MigrateAsync("20261015154740_AddUserPreferences", TestContext.Current.CancellationToken);
         foreach (var percentage in new[] { 0, 37, 100 })
             await db.Database.ExecuteSqlRawAsync("""
                 INSERT INTO Users (Id, Username, NormalizedUsername, PasswordHash, TimeZoneId, HolidayJurisdictionId, IsAdmin, CreatedAt, RequiredOfficePercentage, Preferences)
                 VALUES ({0}, {1}, {1}, 'hash', 'UTC', 1, 0, '2026-10-15 00:00:00+00:00', {2}, '{{"TeamDay":null}}');
                 """, Guid.NewGuid(), $"user{percentage}", percentage);
-        await migrator.MigrateAsync();
+        await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
         db.ChangeTracker.Clear();
-        var rows = await db.UserAttendanceRequirements.ToListAsync();
+        var rows = await db.UserAttendanceRequirements.ToListAsync(cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(new[] { 0, 37, 100 }, rows.Select(x => x.RequirementValue).Order().ToArray());
         Assert.Equal(3, rows.Select(x => x.Id).Distinct().Count());
         Assert.All(rows, row => { Assert.Equal(DateOnly.MinValue, row.StartingFrom); Assert.NotEqual(default, row.CreatedAt); });
-        await migrator.MigrateAsync();
-        Assert.Equal(3, await db.UserAttendanceRequirements.CountAsync());
+        await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
+        Assert.Equal(3, await db.UserAttendanceRequirements.CountAsync(cancellationToken: TestContext.Current.CancellationToken));
         Assert.False(db.Database.HasPendingModelChanges());
-        var user = await db.Users.FirstAsync();
+        var user = await db.Users.FirstAsync(cancellationToken: TestContext.Current.CancellationToken);
         db.Users.Remove(user);
-        await db.SaveChangesAsync();
-        Assert.Equal(2, await db.UserAttendanceRequirements.CountAsync());
+        await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(2, await db.UserAttendanceRequirements.CountAsync(cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -175,13 +175,13 @@ public sealed class RequirementsIntegrationTests
         await SignIn(client);
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var user = await db.Users.SingleAsync(x => x.Username == "history");
+        var user = await db.Users.SingleAsync(x => x.Username == "history", cancellationToken: TestContext.Current.CancellationToken);
         db.UserAttendanceRequirements.Add(new UserAttendanceRequirement
         {
             Id = Guid.NewGuid(), UserId = user.Id, StartingFrom = new DateOnly(2099, 10, 1),
             RequirementValue = 80, CreatedAt = DateTimeOffset.UtcNow
         });
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(TestContext.Current.CancellationToken);
         var dates = new UserDateService(new FixedTimeProvider(new DateTimeOffset(2099, 9, 30, 22, 0, 0, TimeSpan.Zero)));
         Assert.Equal(80, await new OfficeRequirementReader(db, dates).Current(user, CancellationToken.None));
     }

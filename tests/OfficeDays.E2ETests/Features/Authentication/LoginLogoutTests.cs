@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using OfficeDays.E2ETests.Infrastructure;
+using OfficeDays.E2ETests.Infrastructure.Extensions;
 using OfficeDays.E2ETests.Pages;
-using Xunit.Abstractions;
 
 namespace OfficeDays.E2ETests.Features.Authentication;
 
@@ -16,11 +16,11 @@ public sealed partial class LoginLogoutTests : E2ETestBase
     [Fact]
     public async Task Should_AllowSigningInAgain_WhenUserSignsOut()
     {
-        await RunScenarioAsync(async (page, seeder) =>
+        await RunScenarioAsync(static async (page, seeder, ct) =>
         {
             // Arrange
-            var user = await seeder.CreateUserAsync();
-            var login = new LoginPage(page);
+            var user = await seeder.CreateUserAsync(ct);
+            var login = await page.GoTo<LoginPage>();
             await login.SignIn(user);
 
             // Act

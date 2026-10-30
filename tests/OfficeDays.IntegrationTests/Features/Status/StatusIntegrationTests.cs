@@ -28,7 +28,7 @@ public sealed class StatusIntegrationTests
         await PutJson(user, "/api/attendance/2026-09-02", new { }, csrf);
         await PutJson(user, "/api/attendance/2026-09-14", new { }, csrf); // holiday, does not count
 
-        var status = await user.GetFromJsonAsync<JsonElement>("/api/status?year=2026&month=9");
+        var status = await user.GetFromJsonAsync<JsonElement>("/api/status?year=2026&month=9", cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(16, status.GetProperty("eligibleWorkingDays").GetInt32()); // 22 weekdays - 1 holiday - 5 vacation
         Assert.Equal(8, status.GetProperty("maximumWfhDays").GetInt32());
         Assert.Equal(8, status.GetProperty("requiredOfficeDays").GetInt32());
@@ -44,23 +44,23 @@ public sealed class StatusIntegrationTests
         await CreateUser(client, "statusdefaults");
         await Login(client, "statusdefaults", "Normal-user-password!");
 
-        var current = await client.GetAsync("/api/status");
+        var current = await client.GetAsync("/api/status", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, current.StatusCode);
         Assert.Equal("2099-09", (await Read(current)).GetProperty("period").GetString());
 
-        var incomplete = await client.GetAsync("/api/status?year=2099");
+        var incomplete = await client.GetAsync("/api/status?year=2099", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, incomplete.StatusCode);
 
         foreach (var month in new[] { 0, 13, 9998 })
         {
-            var invalid = await client.GetAsync($"/api/status?year=2099&month={month}");
+            var invalid = await client.GetAsync($"/api/status?year=2099&month={month}", TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
             Assert.True((await Read(invalid)).GetProperty("errors").TryGetProperty("Month", out _));
         }
 
         var expectedUnauthorized = HttpStatusCode.Unauthorized;
         await DeleteUser(factory, "statusdefaults");
-        Assert.Equal(expectedUnauthorized, (await client.GetAsync("/api/status")).StatusCode);
+        Assert.Equal(expectedUnauthorized, (await client.GetAsync("/api/status", TestContext.Current.CancellationToken)).StatusCode);
     }
 
 }

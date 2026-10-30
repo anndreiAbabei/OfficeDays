@@ -25,7 +25,7 @@ public sealed class RecordDateRequestValidatorTests
         };
     
         // act
-        var result = await sut.ValidateAsync(request);
+        var result = await sut.ValidateAsync(request, TestContext.Current.CancellationToken);
     
         // assert
         Assert.True(result.IsValid);
@@ -46,7 +46,7 @@ public sealed class RecordDateRequestValidatorTests
         };
     
         // act
-        var result = await sut.ValidateAsync(request);
+        var result = await sut.ValidateAsync(request, TestContext.Current.CancellationToken);
     
         // assert
         Assert.False(result.IsValid);
@@ -80,7 +80,7 @@ public sealed class RecordDateRequestValidatorTests
         };
     
         // act
-        var result = await sut.ValidateAsync(request);
+        var result = await sut.ValidateAsync(request, TestContext.Current.CancellationToken);
     
         // assert
         Assert.True(result.IsValid);
@@ -114,7 +114,7 @@ public sealed class RecordDateRequestValidatorTests
         };
     
         // act
-        var result = await sut.ValidateAsync(request);
+        var result = await sut.ValidateAsync(request, TestContext.Current.CancellationToken);
     
         // assert
         Assert.False(result.IsValid);

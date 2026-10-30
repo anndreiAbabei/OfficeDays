@@ -20,13 +20,13 @@ public sealed class UsersIntegrationTests
         {
             username = "andrew", password = "A-personal-password!", timeZoneId = "Europe/Bucharest",
             countryCode = "RO", email = "andrew@example.com", isAdmin = true
-        });
+        }, cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var created = await Read(response);
         Assert.False(created.GetProperty("isAdmin").GetBoolean());
 
         await Login(client, "andrew", "A-personal-password!");
-        var me = await client.GetFromJsonAsync<JsonElement>("/api/auth/me");
+        var me = await client.GetFromJsonAsync<JsonElement>("/api/auth/me", cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal("andrew", me.GetProperty("username").GetString());
         Assert.False(me.GetProperty("isAdmin").GetBoolean());
     }
@@ -38,16 +38,16 @@ public sealed class UsersIntegrationTests
         using var client = factory.CreateClient();
 
         var invalid = await client.PostAsJsonAsync("/api/users", new
-            { username = "x", password = "short", timeZoneId = "Not/AZone", countryCode = "RO", email = "invalid@example.com" });
+            { username = "x", password = "short", timeZoneId = "Not/AZone", countryCode = "RO", email = "invalid@example.com" }, cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
 
         await CreateUser(client, "CaseSensitiveName");
         var duplicate = await client.PostAsJsonAsync("/api/users", new
-            { username = "casesensitivename", password = "Normal-user-password!", timeZoneId = "Europe/Bucharest", countryCode = "RO", email = "duplicate@example.com" });
+            { username = "casesensitivename", password = "Normal-user-password!", timeZoneId = "Europe/Bucharest", countryCode = "RO", email = "duplicate@example.com" }, cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Conflict, duplicate.StatusCode);
 
         var unknownJurisdiction = await client.PostAsJsonAsync("/api/users", new
-            { username = "unknowncountry", password = "Normal-user-password!", timeZoneId = "Europe/Bucharest", countryCode = "US", email = "unknowncountry@example.com" });
+            { username = "unknowncountry", password = "Normal-user-password!", timeZoneId = "Europe/Bucharest", countryCode = "US", email = "unknowncountry@example.com" }, cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, unknownJurisdiction.StatusCode);
     }
 
@@ -62,7 +62,7 @@ public sealed class UsersIntegrationTests
         {
             username = "emailuser", password = "Normal-user-password!",
             timeZoneId = "Europe/Bucharest", countryCode = "RO", email
-        });
+        }, cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
         Assert.Equal(email.Trim(), (await Read(created)).GetProperty("email").GetString());
         await CreateUser(client, "otheruser");
@@ -71,11 +71,11 @@ public sealed class UsersIntegrationTests
         var updated = await PutJson(client, "/api/users/me", new { email = " updated@example.com " }, csrf);
         Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
         Assert.Equal("updated@example.com", (await Read(updated)).GetProperty("email").GetString());
-        Assert.Equal("updated@example.com", (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("email").GetString());
+        Assert.Equal("updated@example.com", (await client.GetFromJsonAsync<JsonElement>("/api/auth/me", cancellationToken: TestContext.Current.CancellationToken)).GetProperty("email").GetString());
         using (var scope = factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            Assert.Equal("otheruser@example.com", (await db.Users.SingleAsync(x => x.Username == "otheruser")).Email);
+            Assert.Equal("otheruser@example.com", (await db.Users.SingleAsync(x => x.Username == "otheruser", cancellationToken: TestContext.Current.CancellationToken)).Email);
         }
         foreach (var empty in new[] { null, "", "   " })
         {
@@ -83,7 +83,7 @@ public sealed class UsersIntegrationTests
             var cleared = await PutJson(client, "/api/users/me", new { email = empty }, csrf);
             Assert.Equal(HttpStatusCode.OK, cleared.StatusCode);
             Assert.Equal(JsonValueKind.Null, (await Read(cleared)).GetProperty("email").ValueKind);
-            Assert.Equal(JsonValueKind.Null, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("email").ValueKind);
+            Assert.Equal(JsonValueKind.Null, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me", cancellationToken: TestContext.Current.CancellationToken)).GetProperty("email").ValueKind);
         }
     }
 
@@ -99,12 +99,12 @@ public sealed class UsersIntegrationTests
         {
             username = "missingemail", password = "Normal-user-password!",
             timeZoneId = "Europe/Bucharest", countryCode = "RO", email
-        });
+        }, cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         Assert.Equal(JsonValueKind.Null, (await Read(response)).GetProperty("email").ValueKind);
         using var scope = factory.Services.CreateScope();
         Assert.Null((await scope.ServiceProvider.GetRequiredService<AppDbContext>()
-            .Users.SingleAsync(user => user.Username == "missingemail")).Email);
+            .Users.SingleAsync(user => user.Username == "missingemail", cancellationToken: TestContext.Current.CancellationToken)).Email);
     }
 
     [Fact]
@@ -116,7 +116,7 @@ public sealed class UsersIntegrationTests
         {
             username = "omittedemail", password = "Normal-user-password!",
             timeZoneId = "Europe/Bucharest", countryCode = "RO"
-        });
+        }, cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
         Assert.Equal(JsonValueKind.Null, (await Read(created)).GetProperty("email").ValueKind);
 
@@ -124,7 +124,7 @@ public sealed class UsersIntegrationTests
         await Login(client, "existingemail", "Normal-user-password!");
         var updated = await PutJson(client, "/api/users/me", new { }, await Csrf(client));
         Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
-        var profile = await client.GetFromJsonAsync<JsonElement>("/api/auth/me");
+        var profile = await client.GetFromJsonAsync<JsonElement>("/api/auth/me", cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(JsonValueKind.Null, profile.GetProperty("email").ValueKind);
         Assert.Equal(50, profile.GetProperty("requirementValue").GetInt32());
     }
@@ -135,11 +135,11 @@ public sealed class UsersIntegrationTests
         await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         Assert.Equal(HttpStatusCode.Unauthorized,
-            (await client.PutAsJsonAsync("/api/users/me", new { email = "user@example.com" })).StatusCode);
+            (await client.PutAsJsonAsync("/api/users/me", new { email = "user@example.com" }, cancellationToken: TestContext.Current.CancellationToken)).StatusCode);
         await CreateUser(client, "emailvalidation");
         await Login(client, "emailvalidation", "Normal-user-password!");
         Assert.Equal(HttpStatusCode.BadRequest,
-            (await client.PutAsJsonAsync("/api/users/me", new { email = "user@example.com" })).StatusCode);
+            (await client.PutAsJsonAsync("/api/users/me", new { email = "user@example.com" }, cancellationToken: TestContext.Current.CancellationToken)).StatusCode);
         var csrf = await Csrf(client);
         foreach (var invalid in new[] { "invalid", "a@b@example.com", "@example.com", "person@" })
         {
@@ -149,9 +149,9 @@ public sealed class UsersIntegrationTests
             {
                 username = "invalidemail", password = "Normal-user-password!",
                 timeZoneId = "Europe/Bucharest", countryCode = "RO", email = invalid
-            })).StatusCode);
+            }, cancellationToken: TestContext.Current.CancellationToken)).StatusCode);
         }
-        Assert.Equal("emailvalidation@example.com", (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("email").GetString());
+        Assert.Equal("emailvalidation@example.com", (await client.GetFromJsonAsync<JsonElement>("/api/auth/me", cancellationToken: TestContext.Current.CancellationToken)).GetProperty("email").GetString());
     }
 
     [Theory]
@@ -166,32 +166,32 @@ public sealed class UsersIntegrationTests
         {
             username = "percentageuser", password = "Normal-user-password!",
             timeZoneId = "Europe/Bucharest", countryCode = "RO", email = "percentage@example.com", requirementMode = "Percentage", requirementValue = percentage
-        });
+        }, cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
         Assert.Equal(percentage, (await Read(created)).GetProperty("requirementValue").GetInt32());
         await CreateUser(client, "otherpercentage");
         await Login(client, "percentageuser", "Normal-user-password!");
         var csrf = await Csrf(client);
-        var profile = await client.GetFromJsonAsync<JsonElement>("/api/auth/me");
+        var profile = await client.GetFromJsonAsync<JsonElement>("/api/auth/me", cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(percentage, profile.GetProperty("requirementValue").GetInt32());
-        var status = await client.GetFromJsonAsync<JsonElement>("/api/status?year=2026&month=9");
+        var status = await client.GetFromJsonAsync<JsonElement>("/api/status?year=2026&month=9", cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal((int)Math.Ceiling(status.GetProperty("eligibleWorkingDays").GetInt32() * percentage / 100m),
             status.GetProperty("requiredOfficeDays").GetInt32());
 
-        var history = await client.GetFromJsonAsync<JsonElement>("/api/users/me/requirements");
+        var history = await client.GetFromJsonAsync<JsonElement>("/api/users/me/requirements", cancellationToken: TestContext.Current.CancellationToken);
         var id = history.GetProperty("items")[0].GetProperty("id").GetGuid();
         var updated = await PutJson(client, $"/api/users/me/requirements/{id}", new { startingFrom = "0001-01-01", requirementMode = "Percentage", requirementValue = 25 }, csrf);
         Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
         Assert.Equal(25, (await Read(updated)).GetProperty("requirementValue").GetInt32());
         // Older clients that only update email must preserve the percentage.
         (await PutJson(client, "/api/users/me", new { email = "user@example.com" }, csrf)).EnsureSuccessStatusCode();
-        Assert.Equal(25, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("requirementValue").GetInt32());
-        status = await client.GetFromJsonAsync<JsonElement>("/api/status?year=2026&month=9");
+        Assert.Equal(25, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me", cancellationToken: TestContext.Current.CancellationToken)).GetProperty("requirementValue").GetInt32());
+        status = await client.GetFromJsonAsync<JsonElement>("/api/status?year=2026&month=9", cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal((int)Math.Ceiling(status.GetProperty("eligibleWorkingDays").GetInt32() * .25m),
             status.GetProperty("requiredOfficeDays").GetInt32());
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        Assert.Equal(50, (await db.UserAttendanceRequirements.SingleAsync(x => x.UserId == db.Users.Single(u => u.Username == "otherpercentage").Id)).RequirementValue);
+        Assert.Equal(50, (await db.UserAttendanceRequirements.SingleAsync(x => x.UserId == db.Users.Single(u => u.Username == "otherpercentage").Id, cancellationToken: TestContext.Current.CancellationToken)).RequirementValue);
     }
 
     [Theory]
@@ -206,17 +206,17 @@ public sealed class UsersIntegrationTests
         {
             username = "invalidpercentage", password = "Normal-user-password!",
             timeZoneId = "Europe/Bucharest", countryCode = "RO", email = "percentage@example.com", requirementMode = "Percentage", requirementValue = percentage
-        })).StatusCode);
+        }, cancellationToken: TestContext.Current.CancellationToken)).StatusCode);
         await CreateUser(client, "percentagevalidation");
         await Login(client, "percentagevalidation", "Normal-user-password!");
         var csrf = await Csrf(client);
-        var history = await client.GetFromJsonAsync<JsonElement>("/api/users/me/requirements");
+        var history = await client.GetFromJsonAsync<JsonElement>("/api/users/me/requirements", cancellationToken: TestContext.Current.CancellationToken);
         var baselineId = history.GetProperty("items")[0].GetProperty("id").GetGuid();
         Assert.Equal(HttpStatusCode.BadRequest, (await PostJson(client, "/api/users/me/requirements",
             new { startingFrom = "2027-01-01", requirementMode = "Percentage", requirementValue = percentage }, csrf)).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await PutJson(client, $"/api/users/me/requirements/{baselineId}",
             new { startingFrom = "0001-01-01", requirementMode = "Percentage", requirementValue = percentage }, csrf)).StatusCode);
-        Assert.Equal(50, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me")).GetProperty("requirementValue").GetInt32());
+        Assert.Equal(50, (await client.GetFromJsonAsync<JsonElement>("/api/auth/me", cancellationToken: TestContext.Current.CancellationToken)).GetProperty("requirementValue").GetInt32());
     }
 
 }

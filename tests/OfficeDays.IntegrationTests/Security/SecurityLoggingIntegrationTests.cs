@@ -30,18 +30,18 @@ public sealed class SecurityLoggingIntegrationTests
         using var login = await browser.PostAsJsonAsync("/api/auth/login", new
         {
             username = "Admin", password = "VeryStrongAdminPassword!"
-        });
+        }, cancellationToken: TestContext.Current.CancellationToken);
         login.EnsureSuccessStatusCode();
 
-        using var rejected = await browser.PostAsJsonAsync("/api/tokens", new { name = "No csrf" });
+        using var rejected = await browser.PostAsJsonAsync("/api/tokens", new { name = "No csrf" }, cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
         Assert.Contains(logs.Entries, entry => entry.EventId == 4101 && entry.Level == LogLevel.Error && entry.Exception is not null);
 
-        var csrf = (await browser.GetFromJsonAsync<JsonElement>("/api/auth/csrf")).GetProperty("token").GetString();
+        var csrf = (await browser.GetFromJsonAsync<JsonElement>("/api/auth/csrf", cancellationToken: TestContext.Current.CancellationToken)).GetProperty("token").GetString();
         browser.DefaultRequestHeaders.Add("X-CSRF-TOKEN", csrf);
-        using var created = await browser.PostAsJsonAsync("/api/tokens", new { name = "Logging check" });
+        using var created = await browser.PostAsJsonAsync("/api/tokens", new { name = "Logging check" }, cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
-        var body = await created.Content.ReadFromJsonAsync<JsonElement>();
+        var body = await created.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: TestContext.Current.CancellationToken);
         var token = body.GetProperty("token").GetString()!;
         var id = body.GetProperty("id").GetGuid();
 
@@ -59,18 +59,18 @@ public sealed class SecurityLoggingIntegrationTests
 
         const string unknownToken = "odt_unknown-secret-token";
         bearer.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", unknownToken);
-        using var unknown = await bearer.GetAsync("/api/auth/me");
+        using var unknown = await bearer.GetAsync("/api/auth/me", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Unauthorized, unknown.StatusCode);
         Assert.Contains(logs.Entries, entry => entry.EventId == 4003 && entry.Level == LogLevel.Warning);
 
         bearer.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        using var authenticated = await bearer.GetAsync("/api/auth/me");
+        using var authenticated = await bearer.GetAsync("/api/auth/me", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, authenticated.StatusCode);
         Assert.Contains(logs.Entries, entry => entry.EventId == 4005 && entry.Level == LogLevel.Debug);
 
-        using var revoked = await browser.DeleteAsync($"/api/tokens/{id}");
+        using var revoked = await browser.DeleteAsync($"/api/tokens/{id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, revoked.StatusCode);
-        using var denied = await bearer.GetAsync("/api/auth/me");
+        using var denied = await bearer.GetAsync("/api/auth/me", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Unauthorized, denied.StatusCode);
         Assert.Contains(logs.Entries, entry => entry.EventId == 4004 && entry.Level == LogLevel.Warning);
         Assert.All(logs.Entries, entry =>

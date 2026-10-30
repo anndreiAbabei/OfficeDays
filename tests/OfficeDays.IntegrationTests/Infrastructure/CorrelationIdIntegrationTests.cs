@@ -32,7 +32,7 @@ public sealed class CorrelationIdIntegrationTests
         if (path == "/api/auth/login")
             request.Content = new StringContent("{", Encoding.UTF8, "application/json");
 
-        using var response = await client.SendAsync(request);
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
         Assert.Equal(status, (int)response.StatusCode);
         Assert.Equal("support-case-123", Assert.Single(response.Headers.GetValues(CorrelationIdMiddleware.HeaderName)));
@@ -49,7 +49,7 @@ public sealed class CorrelationIdIntegrationTests
             using var request = new HttpRequestMessage(HttpMethod.Get, "/api/version");
             if (supplied.Length > 0)
                 request.Headers.TryAddWithoutValidation(CorrelationIdMiddleware.HeaderName, supplied);
-            using var response = await client.SendAsync(request);
+            using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
             var id = Assert.Single(response.Headers.GetValues(CorrelationIdMiddleware.HeaderName));
             Assert.True(Guid.TryParseExact(id, "N", out _));
             Assert.True(ids.Add(id));
@@ -74,7 +74,7 @@ public sealed class CorrelationIdIntegrationTests
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/version");
         request.Headers.Add(CorrelationIdMiddleware.HeaderName, "failed-request");
 
-        using var response = await client.SendAsync(request);
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
         Assert.Equal("failed-request", Assert.Single(response.Headers.GetValues(CorrelationIdMiddleware.HeaderName)));

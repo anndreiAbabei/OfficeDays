@@ -23,7 +23,7 @@ public sealed class VacationsIntegrationTests
         await CreateUser(other, "outsider"); await Login(other, "outsider", "Normal-user-password!");
         var otherCsrf = await Csrf(other);
         Assert.Equal(HttpStatusCode.NotFound, (await Delete(other, $"/api/vacations/{created.GetProperty("id").GetGuid()}", otherCsrf)).StatusCode);
-        Assert.Single((await owner.GetFromJsonAsync<JsonElement[]>("/api/vacations?year=2026&month=9"))!);
+        Assert.Single((await owner.GetFromJsonAsync<JsonElement[]>("/api/vacations?year=2026&month=9", cancellationToken: TestContext.Current.CancellationToken))!);
         Assert.Equal(HttpStatusCode.NoContent, (await Delete(owner, $"/api/vacations/{created.GetProperty("id").GetGuid()}", csrf)).StatusCode);
     }
 
@@ -39,7 +39,7 @@ public sealed class VacationsIntegrationTests
         Assert.Equal(HttpStatusCode.BadRequest,
             (await PostJson(client, "/api/vacations", new { from = "2026-09-25", to = "2026-09-21" }, csrf)).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest,
-            (await client.GetAsync("/api/vacations?month=9")).StatusCode);
+            (await client.GetAsync("/api/vacations?month=9", TestContext.Current.CancellationToken)).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound,
             (await Delete(client, $"/api/vacations/{Guid.NewGuid()}", csrf)).StatusCode);
     }
@@ -57,20 +57,20 @@ public sealed class VacationsIntegrationTests
         var originalCreatedAt = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await db.Vacations.Where(x => x.Id == id).ExecuteUpdateAsync(setters => setters.SetProperty(x => x.CreatedAt, originalCreatedAt));
-        var before = await db.Vacations.AsNoTracking().SingleAsync(x => x.Id == id);
+        await db.Vacations.Where(x => x.Id == id).ExecuteUpdateAsync(setters => setters.SetProperty(x => x.CreatedAt, originalCreatedAt), cancellationToken: TestContext.Current.CancellationToken);
+        var before = await db.Vacations.AsNoTracking().SingleAsync(x => x.Id == id, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent,
             (await PutJson(owner, $"/api/vacations/{id}", new { from = "2026-10-05", to = "2026-10-05" }, csrf)).StatusCode);
-        var after = await db.Vacations.AsNoTracking().SingleAsync(x => x.Id == id);
+        var after = await db.Vacations.AsNoTracking().SingleAsync(x => x.Id == id, cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(before.Id, after.Id);
         Assert.Equal(before.UserId, after.UserId);
         Assert.Equal(originalCreatedAt, after.CreatedAt);
         Assert.Equal(new DateOnly(2026, 10, 5), after.From);
         Assert.Equal(after.From, after.To);
-        Assert.Equal(1, await db.Vacations.CountAsync());
-        Assert.Empty((await owner.GetFromJsonAsync<JsonElement[]>("/api/vacations?year=2026&month=9"))!);
-        var october = Assert.Single((await owner.GetFromJsonAsync<JsonElement[]>("/api/vacations?year=2026&month=10"))!);
+        Assert.Equal(1, await db.Vacations.CountAsync(cancellationToken: TestContext.Current.CancellationToken));
+        Assert.Empty((await owner.GetFromJsonAsync<JsonElement[]>("/api/vacations?year=2026&month=9", cancellationToken: TestContext.Current.CancellationToken))!);
+        var october = Assert.Single((await owner.GetFromJsonAsync<JsonElement[]>("/api/vacations?year=2026&month=10", cancellationToken: TestContext.Current.CancellationToken))!);
         Assert.Equal(id, october.GetProperty("id").GetGuid());
         Assert.Equal(originalCreatedAt, october.GetProperty("createdAt").GetDateTimeOffset());
     }
@@ -87,13 +87,13 @@ public sealed class VacationsIntegrationTests
         var path = $"/api/vacations/{created.GetProperty("id").GetGuid()}";
         var dates = new { from = "2026-09-22", to = "2026-09-24" };
         using var other = factory.CreateClient();
-        Assert.Equal(HttpStatusCode.Unauthorized, (await other.PutAsJsonAsync(path, dates)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await other.PutAsJsonAsync(path, dates, cancellationToken: TestContext.Current.CancellationToken)).StatusCode);
         await CreateUser(other, "vacationoutsider");
         await Login(other, "vacationoutsider", "Normal-user-password!");
         Assert.Equal(HttpStatusCode.NotFound, (await PutJson(other, path, dates, await Csrf(other))).StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, (await owner.PutAsJsonAsync(path, dates)).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await owner.PutAsJsonAsync(path, dates, cancellationToken: TestContext.Current.CancellationToken)).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await PutJson(owner, $"/api/vacations/{Guid.NewGuid()}", dates, csrf)).StatusCode);
-        var unchanged = Assert.Single((await owner.GetFromJsonAsync<JsonElement[]>("/api/vacations?year=2026&month=9"))!);
+        var unchanged = Assert.Single((await owner.GetFromJsonAsync<JsonElement[]>("/api/vacations?year=2026&month=9", cancellationToken: TestContext.Current.CancellationToken))!);
         Assert.Equal("2026-09-21", unchanged.GetProperty("from").GetString());
         Assert.Equal("2026-09-25", unchanged.GetProperty("to").GetString());
     }
@@ -112,7 +112,7 @@ public sealed class VacationsIntegrationTests
         var created = await Read(await PostJson(owner, "/api/vacations", new { from = "2026-09-21", to = "2026-09-25" }, csrf));
         Assert.Equal(HttpStatusCode.BadRequest,
             (await PutJson(owner, $"/api/vacations/{created.GetProperty("id").GetGuid()}", new { from, to }, csrf)).StatusCode);
-        var unchanged = Assert.Single((await owner.GetFromJsonAsync<JsonElement[]>("/api/vacations?year=2026&month=9"))!);
+        var unchanged = Assert.Single((await owner.GetFromJsonAsync<JsonElement[]>("/api/vacations?year=2026&month=9", cancellationToken: TestContext.Current.CancellationToken))!);
         Assert.Equal("2026-09-21", unchanged.GetProperty("from").GetString());
         Assert.Equal("2026-09-25", unchanged.GetProperty("to").GetString());
     }
@@ -129,8 +129,8 @@ public sealed class VacationsIntegrationTests
         (await PostJson(owner, "/api/vacations", new { from = "2026-09-23", to = "2026-09-25" }, csrf)).EnsureSuccessStatusCode();
         Assert.Equal(HttpStatusCode.NoContent,
             (await PutJson(owner, $"/api/vacations/{created.GetProperty("id").GetGuid()}", new { from = "2026-09-21", to = "2026-09-24" }, csrf)).StatusCode);
-        Assert.Equal(2, (await owner.GetFromJsonAsync<JsonElement[]>("/api/vacations?year=2026&month=9"))!.Length);
-        var status = await Read(await owner.GetAsync("/api/status?year=2026&month=9"));
+        Assert.Equal(2, (await owner.GetFromJsonAsync<JsonElement[]>("/api/vacations?year=2026&month=9", cancellationToken: TestContext.Current.CancellationToken))!.Length);
+        var status = await Read(await owner.GetAsync("/api/status?year=2026&month=9", TestContext.Current.CancellationToken));
         Assert.Equal(17, status.GetProperty("eligibleWorkingDays").GetInt32());
     }
 
@@ -144,11 +144,11 @@ public sealed class VacationsIntegrationTests
         var csrf = await Csrf(owner);
         (await PutJson(owner, "/api/planning/2099-09-16", new { }, csrf)).EnsureSuccessStatusCode();
         var created = await Read(await PostJson(owner, "/api/vacations", new { from = "2099-09-16", to = "2099-09-16" }, csrf));
-        var before = await Read(await owner.GetAsync("/api/planning?year=2099&month=9"));
+        var before = await Read(await owner.GetAsync("/api/planning?year=2099&month=9", TestContext.Current.CancellationToken));
         Assert.Equal(0, before.GetProperty("upcomingPlannedDays").GetInt32());
         Assert.Equal(HttpStatusCode.NoContent,
             (await PutJson(owner, $"/api/vacations/{created.GetProperty("id").GetGuid()}", new { from = "2099-09-17", to = "2099-09-17" }, csrf)).StatusCode);
-        var after = await Read(await owner.GetAsync("/api/planning?year=2099&month=9"));
+        var after = await Read(await owner.GetAsync("/api/planning?year=2099&month=9", TestContext.Current.CancellationToken));
         var days = after.GetProperty("days").EnumerateArray().ToArray();
         Assert.False(days[15].GetProperty("isVacation").GetBoolean());
         Assert.True(days[15].GetProperty("isPlanned").GetBoolean());
@@ -156,7 +156,7 @@ public sealed class VacationsIntegrationTests
         Assert.True(days[16].GetProperty("isVacation").GetBoolean());
         Assert.Equal("holiday", days[16].GetProperty("status").GetString());
         Assert.Equal(1, after.GetProperty("upcomingPlannedDays").GetInt32());
-        var status = await Read(await owner.GetAsync("/api/status?year=2099&month=9"));
+        var status = await Read(await owner.GetAsync("/api/status?year=2099&month=9", TestContext.Current.CancellationToken));
         Assert.Equal(1, status.GetProperty("upcomingPlannedDays").GetInt32());
     }
 

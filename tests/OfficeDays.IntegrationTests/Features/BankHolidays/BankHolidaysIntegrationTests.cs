@@ -20,8 +20,8 @@ public sealed class BankHolidaysIntegrationTests
             new[] { new { date = "2027-01-01", name = "New Year" } }, csrf);
         var response = await PutJson(client, "/api/bank-holidays/RO/2026", Array.Empty<object>(), csrf);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Empty((await client.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/RO/2026"))!);
-        Assert.Single((await client.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/RO/2027"))!);
+        Assert.Empty((await client.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/RO/2026", cancellationToken: TestContext.Current.CancellationToken))!);
+        Assert.Single((await client.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/RO/2027", cancellationToken: TestContext.Current.CancellationToken))!);
     }
 
     [Fact]
@@ -46,7 +46,7 @@ public sealed class BankHolidaysIntegrationTests
         var second = await PutJson(admin, "/api/bank-holidays/RO/2026", new[] { new { date = "2026-05-01", name = "Labour Day" } }, adminCsrf);
         Assert.Equal(HttpStatusCode.OK, second.StatusCode);
 
-        var holidays = await admin.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/RO/2026");
+        var holidays = await admin.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/RO/2026", cancellationToken: TestContext.Current.CancellationToken);
         Assert.Single(holidays!);
         Assert.Equal("2026-05-01", holidays![0].GetProperty("date").GetString());
 
@@ -55,8 +55,8 @@ public sealed class BankHolidaysIntegrationTests
         Assert.Equal(HttpStatusCode.OK,
             (await PutJson(admin, "/api/bank-holidays/GB-NIR/2026",
                 new[] { new { date = "2026-05-01", name = "Northern Ireland holiday" } }, adminCsrf)).StatusCode);
-        Assert.Single((await admin.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/GB-NIR/2026"))!);
-        Assert.Single((await admin.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/RO/2026"))!);
+        Assert.Single((await admin.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/GB-NIR/2026", cancellationToken: TestContext.Current.CancellationToken))!);
+        Assert.Single((await admin.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/RO/2026", cancellationToken: TestContext.Current.CancellationToken))!);
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public sealed class BankHolidaysIntegrationTests
         Assert.Equal(HttpStatusCode.OK, seed.StatusCode);
 
         Assert.Equal(HttpStatusCode.BadRequest,
-            (await client.GetAsync("/api/bank-holidays/RO/0")).StatusCode);
+            (await client.GetAsync("/api/bank-holidays/RO/0", TestContext.Current.CancellationToken)).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest,
             (await PutJson(client, "/api/bank-holidays/RO/2026",
                 new[] { new { date = "2025-12-31", name = "Wrong year" } }, csrf)).StatusCode);
@@ -89,10 +89,10 @@ public sealed class BankHolidaysIntegrationTests
         var nullPayload = new HttpRequestMessage(HttpMethod.Put, "/api/bank-holidays/RO/2026");
         nullPayload.Headers.Add("X-CSRF-TOKEN", csrf);
         nullPayload.Content = JsonContent.Create<List<object>?>(null);
-        Assert.Equal(HttpStatusCode.BadRequest, (await client.SendAsync(nullPayload)).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.SendAsync(nullPayload, TestContext.Current.CancellationToken)).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest,
             (await PutJson(client, "/api/bank-holidays/RO/2026", new object?[] { null }, csrf)).StatusCode);
-        var holidays = await client.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/RO/2026");
+        var holidays = await client.GetFromJsonAsync<JsonElement[]>("/api/bank-holidays/RO/2026", cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal("2026-05-01", Assert.Single(holidays!).GetProperty("date").GetString());
     }
 

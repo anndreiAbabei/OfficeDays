@@ -1,8 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using OfficeDays.E2ETests.Infrastructure;
 using OfficeDays.E2ETests.Infrastructure.Extensions;
 
 namespace OfficeDays.E2ETests.Pages;
 
+[ExcludeFromCodeCoverage]
 public abstract class BasePage(IPage page) : IScenarioPage
 {
     protected IPage Page { get; } = page;
@@ -14,11 +16,15 @@ public abstract class BasePage(IPage page) : IScenarioPage
     }
 }
 
+[ExcludeFromCodeCoverage]
 public abstract class AuthenticatedPage(IPage page) : BasePage(page)
 {
+    public ILocator LogoutButton => Page.Locator("#log-out-btn");
+    public ILocator Footer => Page.Locator("footer.app-footer");
+    
     public async Task<LoginPage> SignOut()
     {
-        await Page.Locator("#log-out-btn").ClickAsync();
+        await LogoutButton.ClickAsync();
         
         return await Page.Expects<LoginPage>();
     }

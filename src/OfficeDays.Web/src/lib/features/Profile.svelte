@@ -50,8 +50,8 @@
           <option value={day}>{day[0].toUpperCase() + day.slice(1)}</option>
         {/each}
       </select>
+      <span id="team-day-help" class="muted">Your team's weekly office day. Highlighted in your calendar.</span>
     </label>
-    <p id="team-day-help" class="muted">Your team’s weekly office day. Highlighted in your calendar.</p>
     <button type="submit" disabled={busy}>
       {busy ? 'Saving…' : 'Save profile'}
     </button>
@@ -64,6 +64,15 @@
     max-width: 44rem; 
     align-items: end; 
   }
+  
+  .profile-form button {
+    grid-column: 2;
+  }
+  
+  #team-day-help {
+    font-weight: initial;
+  }
+  
   @media (min-width: 651px) {
     .profile-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }

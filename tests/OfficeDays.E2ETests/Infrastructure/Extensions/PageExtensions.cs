@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace OfficeDays.E2ETests.Infrastructure.Extensions;
 
+[ExcludeFromCodeCoverage]
 public static class PageExtensions
 {
     extension(IPage page)

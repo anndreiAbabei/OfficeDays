@@ -13,10 +13,10 @@ public sealed class HolidayJurisdictionsIntegrationTests
         await using var factory = new OfficeDaysFactory();
         using var anonymous = factory.CreateClient();
 
-        var initial = await anonymous.GetFromJsonAsync<JsonElement[]>("/api/holiday-jurisdictions");
+        var initial = await anonymous.GetFromJsonAsync<JsonElement[]>("/api/holiday-jurisdictions", cancellationToken: TestContext.Current.CancellationToken);
         Assert.Contains(initial!, item => item.GetProperty("code").GetString() == "RO");
         Assert.Equal(HttpStatusCode.OK,
-            (await anonymous.GetAsync("/api/bank-holidays/RO/2026")).StatusCode);
+            (await anonymous.GetAsync("/api/bank-holidays/RO/2026", TestContext.Current.CancellationToken)).StatusCode);
 
         using var normal = factory.CreateClient();
         await CreateUser(normal, "jurisdictionnormal");
@@ -43,7 +43,7 @@ public sealed class HolidayJurisdictionsIntegrationTests
 
         await CreateUser(anonymous, "northernirelanduser", "GB-NIR");
         await Login(anonymous, "northernirelanduser", "Normal-user-password!");
-        var profile = await anonymous.GetFromJsonAsync<JsonElement>("/api/auth/me");
+        var profile = await anonymous.GetFromJsonAsync<JsonElement>("/api/auth/me", cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal("GB-NIR", profile.GetProperty("countryCode").GetString());
         Assert.Equal(HttpStatusCode.Conflict,
             (await Delete(admin, "/api/holiday-jurisdictions/GB-NIR", adminCsrf)).StatusCode);

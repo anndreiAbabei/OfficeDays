@@ -31,7 +31,7 @@ public sealed class PlanDateRequestValidatorTests
         var sut = new PlanDateRequestValidator(db, currentUser, dates);
 
         // act
-        var result = await sut.ValidateAsync(request);
+        var result = await sut.ValidateAsync(request, TestContext.Current.CancellationToken);
 
         // assert
         Assert.Equal(expectedIsValid, result.IsValid);
@@ -49,9 +49,9 @@ public sealed class PlanDateRequestValidatorTests
     {
         // arrange
         await using var connection = new SqliteConnection("Data Source=:memory:");
-        await connection.OpenAsync();
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
         await using var db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlite(connection).Options);
-        await db.Database.EnsureCreatedAsync();
+        await db.Database.EnsureCreatedAsync(TestContext.Current.CancellationToken);
         var currentUser = Substitute.For<ICurrentUser>();
         currentUser.Id.Returns(Guid.NewGuid());
         var dates = Substitute.For<IUserDateService>();
@@ -59,7 +59,7 @@ public sealed class PlanDateRequestValidatorTests
         var sut = new PlanDateRequestValidator(db, currentUser, dates);
 
         // act
-        var result = await sut.ValidateAsync(request);
+        var result = await sut.ValidateAsync(request, TestContext.Current.CancellationToken);
 
         // assert
         Assert.True(result.IsValid);

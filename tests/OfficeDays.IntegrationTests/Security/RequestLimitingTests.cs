@@ -19,13 +19,13 @@ public sealed class RequestLimitingTests
         const HttpStatusCode expectedStatus = HttpStatusCode.TooManyRequests;
 
         // Act
-        await client.PostAsJsonAsync("/api/auth/login", new { username = "Missing", password = "wrong" });
-        var response = await client.PostAsJsonAsync("/api/auth/login", new { username = " missing ", password = "wrong" });
+        await client.PostAsJsonAsync("/api/auth/login", new { username = "Missing", password = "wrong" }, cancellationToken: TestContext.Current.CancellationToken);
+        var response = await client.PostAsJsonAsync("/api/auth/login", new { username = " missing ", password = "wrong" }, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedStatus, response.StatusCode);
         Assert.NotNull(response.Headers.RetryAfter?.Delta);
-        Assert.Contains("try again", await response.Content.ReadAsStringAsync());
+        Assert.Contains("try again", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -37,18 +37,18 @@ public sealed class RequestLimitingTests
                                                                                                           configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["RateLimiting:Source:Permits"] = "1" })));
         using var client = app.CreateClient();
         const HttpStatusCode expectedStatus = HttpStatusCode.TooManyRequests;
-        await client.GetAsync("/api/auth/csrf");
+        await client.GetAsync("/api/auth/csrf", TestContext.Current.CancellationToken);
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/auth/csrf");
         request.Headers.Add("X-Forwarded-For", "1.2.3.4");
         request.Headers.Add("X-Forwarded-Proto", "https");
 
         // Act
-        var response = await client.SendAsync(request);
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedStatus, response.StatusCode);
         const HttpStatusCode expectedHealthStatus = HttpStatusCode.OK;
-        Assert.Equal(expectedHealthStatus, (await client.GetAsync("/health/live")).StatusCode);
+        Assert.Equal(expectedHealthStatus, (await client.GetAsync("/health/live", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public sealed class RequestLimitingTests
         const HttpStatusCode expectedStatus = HttpStatusCode.RequestEntityTooLarge;
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/auth/login", new { username = "test", password = new string('a', 65_536) });
+        var response = await client.PostAsJsonAsync("/api/auth/login", new { username = "test", password = new string('a', 65_536) }, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedStatus, response.StatusCode);
@@ -79,13 +79,13 @@ public sealed class RequestLimitingTests
         await Login(first, "first", "Normal-user-password!");
         await CreateUser(second, "second");
         await Login(second, "second", "Normal-user-password!");
-        for (var i = 0; i < 4; i++) await first.GetAsync("/api/auth/me");
+        for (var i = 0; i < 4; i++) await first.GetAsync("/api/auth/me", TestContext.Current.CancellationToken);
         const HttpStatusCode expectedLimited = HttpStatusCode.TooManyRequests;
         const HttpStatusCode expectedAllowed = HttpStatusCode.OK;
 
         // Act / Assert
-        Assert.Equal(expectedLimited, (await first.GetAsync("/api/auth/me")).StatusCode);
-        Assert.Equal(expectedAllowed, (await second.GetAsync("/api/auth/me")).StatusCode);
+        Assert.Equal(expectedLimited, (await first.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(expectedAllowed, (await second.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
     }
     [Fact]
     public async Task Should_EnforceTokenAndSharedUserLimits_WhenBearerTokensAreRotated()
@@ -113,15 +113,15 @@ public sealed class RequestLimitingTests
 
         // Act / Assert
         for (var i = 0; i < 2; i++)
-            Assert.Equal(expectedAllowed, (await first.GetAsync("/api/auth/me")).StatusCode);
-        Assert.Equal(expectedLimited, (await first.GetAsync("/api/auth/me")).StatusCode);
+            Assert.Equal(expectedAllowed, (await first.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(expectedLimited, (await first.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
         for (var i = 0; i < 2; i++)
-            Assert.Equal(expectedAllowed, (await second.GetAsync("/api/auth/me")).StatusCode);
+            Assert.Equal(expectedAllowed, (await second.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
         // ASP.NET retries a failed acquisition through AcquireAsync, even with QueueLimit = 0.
         // The rejected token request therefore consumes two permits from the earlier user limiter:
         // three setup requests + four successful bearer requests + two rejected-attempt permits = nine.
-        Assert.Equal(expectedAllowed, (await browser.GetAsync("/api/auth/me")).StatusCode);
-        Assert.Equal(expectedLimited, (await browser.GetAsync("/api/auth/me")).StatusCode);
+        Assert.Equal(expectedAllowed, (await browser.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(expectedLimited, (await browser.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Theory]
@@ -137,8 +137,8 @@ public sealed class RequestLimitingTests
         const HttpStatusCode expectedStatus = HttpStatusCode.TooManyRequests;
 
         // Act
-        await client.PostAsJsonAsync(path, new { username = "one", password = "wrong" });
-        var response = await client.PostAsJsonAsync(path, new { username = "two", password = "wrong" });
+        await client.PostAsJsonAsync(path, new { username = "one", password = "wrong" }, cancellationToken: TestContext.Current.CancellationToken);
+        var response = await client.PostAsJsonAsync(path, new { username = "two", password = "wrong" }, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedStatus, response.StatusCode);
@@ -163,7 +163,7 @@ public sealed class RequestLimitingTests
             context.Connection.RemoteIpAddress = IPAddress.Parse("10.0.0.1");
             context.Request.Path = "/api/auth/csrf";
             context.Request.Headers["X-Forwarded-For"] = "192.0.2.1";
-        });
+        }, TestContext.Current.CancellationToken);
 
         // Act
         var response = await app.Server.SendAsync(context =>
@@ -171,7 +171,7 @@ public sealed class RequestLimitingTests
             context.Connection.RemoteIpAddress = IPAddress.Parse("10.0.0.1");
             context.Request.Path = "/api/auth/csrf";
             context.Request.Headers["X-Forwarded-For"] = "192.0.2.2";
-        });
+        }, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedStatus, response.Response.StatusCode);
@@ -190,9 +190,9 @@ public sealed class RequestLimitingTests
         const HttpStatusCode expectedLimited = HttpStatusCode.TooManyRequests;
 
         // Act / Assert
-        Assert.Equal(expectedAllowed, (await client.GetAsync("/api/reports")).StatusCode);
-        Assert.Equal(expectedLimited, (await client.GetAsync("/api/reports")).StatusCode);
-        Assert.Equal(expectedAllowed, (await client.GetAsync("/api/auth/me")).StatusCode);
+        Assert.Equal(expectedAllowed, (await client.GetAsync("/api/reports", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(expectedLimited, (await client.GetAsync("/api/reports", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(expectedAllowed, (await client.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Theory]
@@ -211,7 +211,7 @@ public sealed class RequestLimitingTests
             context.Request.Path = "/api/auth/csrf";
             context.Request.Body = body;
             context.Request.ContentLength = null;
-        });
+        }, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedStatus, response.Response.StatusCode);
@@ -241,7 +241,7 @@ public sealed class RequestLimitingTests
             context.Request.ContentType = "application/json";
             context.Request.ContentLength = firstBody.Length;
             context.Request.Body = firstBody;
-        });
+        }, TestContext.Current.CancellationToken);
 
         // Act
         var response = await app.Server.SendAsync(context =>
@@ -253,7 +253,7 @@ public sealed class RequestLimitingTests
             context.Request.ContentType = "application/json";
             context.Request.ContentLength = secondBody.Length;
             context.Request.Body = secondBody;
-        });
+        }, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedStatus, response.Response.StatusCode);
