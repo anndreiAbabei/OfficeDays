@@ -19,30 +19,30 @@ public sealed class MigrationIntegrationTests
         var migrations = db.Database.GetMigrations().ToArray();
 
         Assert.NotEmpty(migrations);
-        Assert.Equal(migrations, (await db.Database.GetAppliedMigrationsAsync()).ToArray());
-        Assert.Empty(await db.Database.GetPendingMigrationsAsync());
+        Assert.Equal(migrations, (await db.Database.GetAppliedMigrationsAsync(cancellationToken: TestContext.Current.CancellationToken)).ToArray());
+        Assert.Empty(await db.Database.GetPendingMigrationsAsync(cancellationToken: TestContext.Current.CancellationToken));
         Assert.False(db.Database.HasPendingModelChanges());
 
         // Materialize every mapped table to check that the migrated schema supports the current model.
-        var admin = Assert.Single(await db.Users.AsNoTracking().ToListAsync());
+        var admin = Assert.Single(await db.Users.AsNoTracking().ToListAsync(cancellationToken: TestContext.Current.CancellationToken));
         Assert.Equal("Admin", admin.Username);
         Assert.True(admin.IsAdmin);
-        var jurisdiction = Assert.Single(await db.HolidayJurisdictions.AsNoTracking().ToListAsync());
+        var jurisdiction = Assert.Single(await db.HolidayJurisdictions.AsNoTracking().ToListAsync(cancellationToken: TestContext.Current.CancellationToken));
         Assert.Equal(jurisdiction.Id, admin.HolidayJurisdictionId);
-        Assert.Empty(await db.Attendances.AsNoTracking().ToListAsync());
-        Assert.Empty(await db.OfficePlans.AsNoTracking().ToListAsync());
-        Assert.Empty(await db.Vacations.AsNoTracking().ToListAsync());
-        Assert.Empty(await db.ApiTokens.AsNoTracking().ToListAsync());
-        Assert.Empty(await db.BankHolidays.AsNoTracking().ToListAsync());
+        Assert.Empty(await db.Attendances.AsNoTracking().ToListAsync(cancellationToken: TestContext.Current.CancellationToken));
+        Assert.Empty(await db.OfficePlans.AsNoTracking().ToListAsync(cancellationToken: TestContext.Current.CancellationToken));
+        Assert.Empty(await db.Vacations.AsNoTracking().ToListAsync(cancellationToken: TestContext.Current.CancellationToken));
+        Assert.Empty(await db.ApiTokens.AsNoTracking().ToListAsync(cancellationToken: TestContext.Current.CancellationToken));
+        Assert.Empty(await db.BankHolidays.AsNoTracking().ToListAsync(cancellationToken: TestContext.Current.CancellationToken));
 
         await scope.ServiceProvider.GetRequiredService<DatabaseInitializer>().InitializeAsync(CancellationToken.None);
 
-        Assert.Equal(migrations, (await db.Database.GetAppliedMigrationsAsync()).ToArray());
-        var existingAdmin = Assert.Single(await db.Users.AsNoTracking().ToListAsync());
+        Assert.Equal(migrations, (await db.Database.GetAppliedMigrationsAsync(cancellationToken: TestContext.Current.CancellationToken)).ToArray());
+        var existingAdmin = Assert.Single(await db.Users.AsNoTracking().ToListAsync(cancellationToken: TestContext.Current.CancellationToken));
         Assert.Equal(admin.Id, existingAdmin.Id);
         Assert.Equal(admin.PasswordHash, existingAdmin.PasswordHash);
         Assert.Equal(jurisdiction.Id,
-            Assert.Single(await db.HolidayJurisdictions.AsNoTracking().ToListAsync()).Id);
+            Assert.Single(await db.HolidayJurisdictions.AsNoTracking().ToListAsync(cancellationToken: TestContext.Current.CancellationToken)).Id);
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public sealed class MigrationIntegrationTests
         {
             await using var db = new AppDbContext(options);
             var migrator = db.Database.GetService<IMigrator>();
-            await migrator.MigrateAsync("20260915195041_VacationDateRangeConstraint");
+            await migrator.MigrateAsync("20260915195041_VacationDateRangeConstraint", TestContext.Current.CancellationToken);
 
             var userId = Guid.NewGuid();
             var holidayId = Guid.NewGuid();
@@ -77,8 +77,8 @@ public sealed class MigrationIntegrationTests
                 VALUES ({0}, {1}, '2026-09-15', '2026-09-15 09:00:00+00:00');
                 """, attendanceId, userId);
 
-            await migrator.MigrateAsync();
-            var existingAttendance = await db.Attendances.AsNoTracking().SingleAsync();
+            await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
+            var existingAttendance = await db.Attendances.AsNoTracking().SingleAsync(cancellationToken: TestContext.Current.CancellationToken);
             Assert.Equal(attendanceId, existingAttendance.Id);
             Assert.Equal(userId, existingAttendance.UserId);
             Assert.Equal(new DateOnly(2026, 9, 15), existingAttendance.Date);
@@ -89,18 +89,18 @@ public sealed class MigrationIntegrationTests
                 Id = Guid.NewGuid(), UserId = userId, Date = new DateOnly(2026, 9, 16),
                 CreatedAt = DateTimeOffset.UtcNow
             });
-            await db.SaveChangesAsync();
-            Assert.False((await db.Attendances.AsNoTracking().SingleAsync(x => x.Date == new DateOnly(2026, 9, 16))).IsManual);
-            await migrator.MigrateAsync();
-            Assert.False((await db.Attendances.AsNoTracking().SingleAsync(x => x.Date == new DateOnly(2026, 9, 16))).IsManual);
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+            Assert.False((await db.Attendances.AsNoTracking().SingleAsync(x => x.Date == new DateOnly(2026, 9, 16), cancellationToken: TestContext.Current.CancellationToken)).IsManual);
+            await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
+            Assert.False((await db.Attendances.AsNoTracking().SingleAsync(x => x.Date == new DateOnly(2026, 9, 16), cancellationToken: TestContext.Current.CancellationToken)).IsManual);
 
 
-            Assert.Equal(50, (await db.UserAttendanceRequirements.SingleAsync()).RequirementValue);
-            Assert.Null((await db.Users.SingleAsync()).Email);
-            var jurisdiction = await db.HolidayJurisdictions.SingleAsync();
+            Assert.Equal(50, (await db.UserAttendanceRequirements.SingleAsync(cancellationToken: TestContext.Current.CancellationToken)).RequirementValue);
+            Assert.Null((await db.Users.SingleAsync(cancellationToken: TestContext.Current.CancellationToken)).Email);
+            var jurisdiction = await db.HolidayJurisdictions.SingleAsync(cancellationToken: TestContext.Current.CancellationToken);
             Assert.Equal("RO", jurisdiction.Code);
-            Assert.Equal(jurisdiction.Id, (await db.Users.SingleAsync()).HolidayJurisdictionId);
-            Assert.Equal(jurisdiction.Id, (await db.BankHolidays.SingleAsync()).HolidayJurisdictionId);
+            Assert.Equal(jurisdiction.Id, (await db.Users.SingleAsync(cancellationToken: TestContext.Current.CancellationToken)).HolidayJurisdictionId);
+            Assert.Equal(jurisdiction.Id, (await db.BankHolidays.SingleAsync(cancellationToken: TestContext.Current.CancellationToken)).HolidayJurisdictionId);
         }
         finally
         {

@@ -20,16 +20,16 @@ public sealed class UiIntegrationTests
     {
         await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
-        var response = await client.GetAsync(route);
+        var response = await client.GetAsync(route, TestContext.Current.CancellationToken);
         response.EnsureSuccessStatusCode();
         Assert.True(response.Headers.CacheControl!.NoStore);
         Assert.Equal("text/html", response.Content.Headers.ContentType!.MediaType);
-        var html = await response.Content.ReadAsStringAsync();
+        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         var matches = Regex.Matches(html, "(?:\\./|/)_app/immutable/[^\"'\\s)]+\\.js");
         Assert.NotEmpty(matches);
         foreach (Match match in matches)
         {
-            var asset = await client.GetAsync("/" + match.Value.TrimStart('.', '/'));
+            var asset = await client.GetAsync("/" + match.Value.TrimStart('.', '/'), TestContext.Current.CancellationToken);
             asset.EnsureSuccessStatusCode();
             Assert.Equal("text/javascript", asset.Content.Headers.ContentType!.MediaType);
             Assert.True(asset.Headers.CacheControl!.Public);
@@ -47,9 +47,9 @@ public sealed class UiIntegrationTests
         Assert.Contains(content.Assets, asset => asset.Path.EndsWith(".css"));
         foreach (var asset in content.Assets)
         {
-            var response = await client.GetAsync(asset.Path);
+            var response = await client.GetAsync(asset.Path, TestContext.Current.CancellationToken);
             response.EnsureSuccessStatusCode();
-            Assert.Equal(asset.Bytes, await response.Content.ReadAsByteArrayAsync());
+            Assert.Equal(asset.Bytes, await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken));
             Assert.Equal(asset.ContentType, response.Content.Headers.ContentType!.MediaType);
             Assert.Equal(asset.Immutable, response.Headers.CacheControl!.Public);
             Assert.Equal(!asset.Immutable, response.Headers.CacheControl.NoStore);
@@ -65,17 +65,17 @@ public sealed class UiIntegrationTests
         var asset = content.Assets.First(item => item.Path.EndsWith(".js") && item.Bytes.Length > 1000);
         using var request = new HttpRequestMessage(HttpMethod.Get, asset.Path);
         request.Headers.AcceptEncoding.ParseAdd("gzip");
-        var response = await client.SendAsync(request);
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
         Assert.Contains("gzip", response.Content.Headers.ContentEncoding);
         Assert.Contains("Accept-Encoding", response.Headers.Vary);
         await using var compressed = new System.IO.Compression.GZipStream(
-                                                                          await response.Content.ReadAsStreamAsync(), System.IO.Compression.CompressionMode.Decompress);
+                                                                          await response.Content.ReadAsStreamAsync(TestContext.Current.CancellationToken), System.IO.Compression.CompressionMode.Decompress);
         using var decoded = new MemoryStream();
-        await compressed.CopyToAsync(decoded);
+        await compressed.CopyToAsync(decoded, TestContext.Current.CancellationToken);
         Assert.Equal(asset.Bytes, decoded.ToArray());
         using var apiRequest = new HttpRequestMessage(HttpMethod.Get, "/api/version");
         apiRequest.Headers.AcceptEncoding.ParseAdd("gzip");
-        var apiResponse = await client.SendAsync(apiRequest);
+        var apiResponse = await client.SendAsync(apiRequest, TestContext.Current.CancellationToken);
         Assert.Empty(apiResponse.Content.Headers.ContentEncoding);
     }
 
@@ -89,6 +89,6 @@ public sealed class UiIntegrationTests
     {
         await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
-        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync(route)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync(route, TestContext.Current.CancellationToken)).StatusCode);
     }
 }

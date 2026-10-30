@@ -32,7 +32,7 @@ public sealed class GetLivenessEndpointTests
         var endpoint = Assert.IsType<RouteEndpoint>(Assert.Single(((IEndpointRouteBuilder)app).DataSources.SelectMany(source => source.Endpoints)));
         await endpoint.RequestDelegate!(context);
         body.Position = 0;
-        using var result = await JsonDocument.ParseAsync(body);
+        using var result = await JsonDocument.ParseAsync(body, cancellationToken: TestContext.Current.CancellationToken);
 
         // assert
         Assert.Equal("live", endpoint.RoutePattern.RawText);

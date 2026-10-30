@@ -34,7 +34,7 @@ public sealed class ReportsIntegrationTests
         using (var scope = factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var jurisdiction = (await db.Users.SingleAsync(x => x.Id == userId)).HolidayJurisdictionId;
+            var jurisdiction = (await db.Users.SingleAsync(x => x.Id == userId, cancellationToken: TestContext.Current.CancellationToken)).HolidayJurisdictionId;
             var monday = Enumerable.Range(1, 7).Select(day => new DateOnly(2099, 6, day)).First(day => day.DayOfWeek == DayOfWeek.Monday);
             db.BankHolidays.Add(new BankHoliday { Id = Guid.NewGuid(), HolidayJurisdictionId = jurisdiction, Date = monday, Name = "Test holiday" });
             db.Vacations.Add(new Vacation { Id = Guid.NewGuid(), UserId = userId, From = monday, To = monday.AddDays(1) });
@@ -45,10 +45,10 @@ public sealed class ReportsIntegrationTests
             db.UserAttendanceRequirements.AddRange(
                 new UserAttendanceRequirement { Id = Guid.NewGuid(), UserId = userId, StartingFrom = new DateOnly(2099, 7, 1), RequirementValue = 100 },
                 new UserAttendanceRequirement { Id = Guid.NewGuid(), UserId = userId, StartingFrom = new DateOnly(2099, 12, 1), RequirementValue = 60 });
-            await db.SaveChangesAsync();
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
         await Login(client, "reportuser", "Normal-user-password!");
-        var response = await client.GetAsync("/api/reports");
+        var response = await client.GetAsync("/api/reports", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.True(response.Headers.CacheControl?.NoStore);
         var report = await Read(response);
@@ -72,11 +72,11 @@ public sealed class ReportsIntegrationTests
         Assert.Equal(3, report.GetProperty("summary").GetProperty("completedMonths").GetInt32());
         foreach (var row in rows)
         {
-            var status = await client.GetFromJsonAsync<JsonElement>($"/api/status?year=2099&month={row.GetProperty("month").GetInt32()}");
+            var status = await client.GetFromJsonAsync<JsonElement>($"/api/status?year=2099&month={row.GetProperty("month").GetInt32()}", cancellationToken: TestContext.Current.CancellationToken);
             Assert.Equal(status.GetProperty("eligibleWorkingDays").GetInt32(), row.GetProperty("eligibleWorkingDays").GetInt32());
             Assert.Equal(status.GetProperty("requiredOfficeDays").GetInt32(), row.GetProperty("requiredOfficeDays").GetInt32());
         }
-        var other = await client.GetFromJsonAsync<JsonElement>($"/api/reports?year=2099&userId={otherId}");
+        var other = await client.GetFromJsonAsync<JsonElement>($"/api/reports?year=2099&userId={otherId}", cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal("reportuser", other.GetProperty("username").GetString());
     }
 
@@ -88,20 +88,20 @@ public sealed class ReportsIntegrationTests
         await Register(client, factory, "refreshuser");
         await Login(client, "refreshuser", "Normal-user-password!");
         var csrf = await Csrf(client);
-        var before = await client.GetFromJsonAsync<JsonElement>("/api/reports?year=2099&startMonth=6&endMonth=6");
+        var before = await client.GetFromJsonAsync<JsonElement>("/api/reports?year=2099&startMonth=6&endMonth=6", cancellationToken: TestContext.Current.CancellationToken);
         Assert.Single(before.GetProperty("months").EnumerateArray());
         var day = Enumerable.Range(1, 7).Select(d => new DateOnly(2099, 6, d)).First(d => d.DayOfWeek == DayOfWeek.Monday);
         (await PutJson(client, $"/api/attendance/{day:yyyy-MM-dd}", new { }, csrf)).EnsureSuccessStatusCode();
         (await PostJson(client, "/api/users/me/requirements", new { startingFrom = "2099-06-01", requirementMode = "Percentage", requirementValue = 0 }, csrf)).EnsureSuccessStatusCode();
-        var after = await client.GetFromJsonAsync<JsonElement>("/api/reports?year=2099&startMonth=6&endMonth=6");
+        var after = await client.GetFromJsonAsync<JsonElement>("/api/reports?year=2099&startMonth=6&endMonth=6", cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(0, before.GetProperty("summary").GetProperty("officeDays").GetInt32());
         Assert.Equal(1, after.GetProperty("summary").GetProperty("officeDays").GetInt32());
         Assert.Equal(0, after.GetProperty("months")[0].GetProperty("requiredOfficeDays").GetInt32());
         Assert.Equal("targetMet", after.GetProperty("months")[0].GetProperty("result").GetString());
-        var empty = await client.GetFromJsonAsync<JsonElement>("/api/reports?year=2099&endMonth=5");
+        var empty = await client.GetFromJsonAsync<JsonElement>("/api/reports?year=2099&endMonth=5", cancellationToken: TestContext.Current.CancellationToken);
         Assert.Empty(empty.GetProperty("months").EnumerateArray());
         Assert.Equal(JsonValueKind.Null, empty.GetProperty("summary").GetProperty("attendancePercentage").ValueKind);
-        var older = await client.GetFromJsonAsync<JsonElement>("/api/reports?year=2098");
+        var older = await client.GetFromJsonAsync<JsonElement>("/api/reports?year=2098", cancellationToken: TestContext.Current.CancellationToken);
         Assert.Empty(older.GetProperty("months").EnumerateArray());
     }
 
@@ -110,14 +110,14 @@ public sealed class ReportsIntegrationTests
     {
         await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
-        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/reports")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/reports", TestContext.Current.CancellationToken)).StatusCode);
         await Register(client, factory, "validationuser");
         await Login(client, "validationuser", "Normal-user-password!");
         foreach (var query in new[] { "year=0", "year=9999", "year=invalid", "startMonth=0", "endMonth=13", "startMonth=8&endMonth=7" })
-            Assert.Equal(HttpStatusCode.BadRequest, (await client.GetAsync($"/api/reports?{query}")).StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest, (await client.GetAsync($"/api/reports?{query}", TestContext.Current.CancellationToken)).StatusCode);
         var expectedUnauthorized = HttpStatusCode.Unauthorized;
         await DeleteUser(factory, "validationuser");
-        Assert.Equal(expectedUnauthorized, (await client.GetAsync("/api/reports")).StatusCode);
+        Assert.Equal(expectedUnauthorized, (await client.GetAsync("/api/reports", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -131,7 +131,7 @@ public sealed class ReportsIntegrationTests
         await CreateUser(client, "snapshotuser");
         await Login(client, "snapshotuser", "Normal-user-password!");
         capture.Enabled = true;
-        (await client.GetAsync("/api/reports")).EnsureSuccessStatusCode();
+        (await client.GetAsync("/api/reports", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         // Authentication performs one existence query before the five report queries.
         const int expectedQueryCount = 6;
         Assert.Equal(expectedQueryCount, capture.Transactions.Count);

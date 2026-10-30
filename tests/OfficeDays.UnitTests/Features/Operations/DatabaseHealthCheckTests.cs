@@ -16,18 +16,18 @@ public sealed class DatabaseHealthCheckTests
     {
         // arrange
         await using var connection = new SqliteConnection("Data Source=:memory:");
-        await connection.OpenAsync();
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
         var services = new ServiceCollection();
         services.AddDbContext<AppDbContext>(options => options.UseSqlite(connection));
         await using var provider = services.BuildServiceProvider();
         var sut = new DatabaseHealthCheck(provider.GetRequiredService<IServiceScopeFactory>());
         await using (var scope = provider.CreateAsyncScope())
         {
-            await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.EnsureCreatedAsync();
+            await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.EnsureCreatedAsync(TestContext.Current.CancellationToken);
         }
 
         // act
-        var result = await sut.CheckHealthAsync(new HealthCheckContext());
+        var result = await sut.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
 
         // assert
         Assert.Equal(HealthStatus.Healthy, result.Status);
@@ -40,14 +40,14 @@ public sealed class DatabaseHealthCheckTests
     {
         // arrange
         await using var connection = new SqliteConnection("Data Source=:memory:");
-        await connection.OpenAsync();
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
         var services = new ServiceCollection();
         services.AddDbContext<AppDbContext>(options => options.UseSqlite(connection));
         await using var provider = services.BuildServiceProvider();
         var sut = new DatabaseHealthCheck(provider.GetRequiredService<IServiceScopeFactory>());
 
         // act
-        var result = await Assert.ThrowsAsync<SqliteException>(() => sut.CheckHealthAsync(new HealthCheckContext()));
+        var result = await Assert.ThrowsAsync<SqliteException>(() => sut.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken));
 
         // assert
         Assert.Equal(1, result.SqliteErrorCode);
@@ -59,7 +59,7 @@ public sealed class DatabaseHealthCheckTests
     {
         // arrange
         await using var connection = new SqliteConnection("Data Source=:memory:");
-        await connection.OpenAsync();
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
         var services = new ServiceCollection();
         services.AddDbContext<AppDbContext>(options => options.UseSqlite(connection));
         await using var provider = services.BuildServiceProvider();

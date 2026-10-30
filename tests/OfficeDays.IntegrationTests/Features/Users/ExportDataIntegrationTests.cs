@@ -29,8 +29,8 @@ public sealed class ExportDataIntegrationTests
         await Login(client, "versionedexport", "Normal-user-password!");
 
         // Act
-        var version = await client.GetFromJsonAsync<GetVersionResponse>("/api/version");
-        var export = await client.GetFromJsonAsync<PersonalDataExport>("/api/users/me/export");
+        var version = await client.GetFromJsonAsync<GetVersionResponse>("/api/version", cancellationToken: TestContext.Current.CancellationToken);
+        var export = await client.GetFromJsonAsync<PersonalDataExport>("/api/users/me/export", cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(version);
@@ -56,7 +56,7 @@ public sealed class ExportDataIntegrationTests
         }
 
         // Act
-        var response = await client.GetAsync("/api/users/me/export");
+        var response = await client.GetAsync("/api/users/me/export", TestContext.Current.CancellationToken);
 
         // Assert: deleted-account cookies are rejected before the export handler runs.
         Assert.Equal(expectedStatusCode, response.StatusCode);
@@ -74,7 +74,7 @@ public sealed class ExportDataIntegrationTests
         await Login(client, "empty", "Normal-user-password!");
 
         // Act
-        var export = await client.GetFromJsonAsync<PersonalDataExport>("/api/users/me/export");
+        var export = await client.GetFromJsonAsync<PersonalDataExport>("/api/users/me/export", cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(export);
@@ -118,7 +118,7 @@ public sealed class ExportDataIntegrationTests
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var users = await db.Users
                                 .Where(user => user.Username == "exporter" || user.Username == "other")
-                                .ToListAsync();
+                                .ToListAsync(cancellationToken: TestContext.Current.CancellationToken);
             var owner = users.Single(x => x.Username == "exporter");
             expectedOwnerId = owner.Id;
             db.Entry(owner).Property(x => x.IsAdmin).CurrentValue = isAdmin;
@@ -184,7 +184,7 @@ public sealed class ExportDataIntegrationTests
                 Name = "Unrelated calendar"
             };
             db.HolidayJurisdictions.Add(otherCalendar);
-            await db.SaveChangesAsync();
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
             db.BankHolidays.Add(new BankHoliday
             {
                 Id = Guid.NewGuid(),
@@ -192,18 +192,18 @@ public sealed class ExportDataIntegrationTests
                 Date = new DateOnly(2099, 1, 1),
                 Name = "Unrelated holiday"
             });
-            await db.SaveChangesAsync();
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
         await Login(client, "exporter", "Normal-user-password!");
-        var originalReport = await client.GetFromJsonAsync<JsonElement>("/api/reports?year=2099&startMonth=1&endMonth=12");
+        var originalReport = await client.GetFromJsonAsync<JsonElement>("/api/reports?year=2099&startMonth=1&endMonth=12", cancellationToken: TestContext.Current.CancellationToken);
         var expectedReportJson = originalReport.GetRawText();
         using var services = factory.Services.CreateScope();
         var calculator = services.ServiceProvider.GetRequiredService<IReportCalculator>();
 
         // Act
-        var response = await client.GetAsync("/api/users/me/export?userId=ignored");
+        var response = await client.GetAsync("/api/users/me/export?userId=ignored", TestContext.Current.CancellationToken);
         response.EnsureSuccessStatusCode();
-        var raw = await response.Content.ReadAsStringAsync();
+        var raw = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         var export = JsonSerializer.Deserialize<PersonalDataExport>(raw, jsonOptions)
                      ?? throw new InvalidOperationException("The export response must contain personal data.");
 

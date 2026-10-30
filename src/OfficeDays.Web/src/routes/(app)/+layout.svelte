@@ -50,7 +50,7 @@
         {$user.username} · {$user.countryName} ({$user.countryCode}) · {$user.timeZoneId}
       </p>
     </div>
-    <button class="secondary small" disabled={busy} onclick={logout}>
+    <button class="secondary small" disabled={busy} onclick={logout} id="log-out-btn">
       Sign out
     </button>
   </header>

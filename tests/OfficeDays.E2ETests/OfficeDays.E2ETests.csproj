@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <StartupObject>OfficeDays.E2ETests.RecordingProgram</StartupObject>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Playwright" Version="1.64.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1" PrivateAssets="all" />
+    <PackageReference Include="xunit.v3" Version="4.0.2" />
+    <Using Include="Xunit" />
+    <Using Include="Microsoft.Playwright" />
+    <Using Include="Microsoft.Playwright.Assertions" Static="true" />
+  </ItemGroup>
+</Project>

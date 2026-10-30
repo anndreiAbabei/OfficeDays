@@ -27,16 +27,16 @@ public sealed class AttendanceRequirementModesIntegrationTests
         var body = new { username = "weekly", password = "Normal-user-password!", timeZoneId = "UTC", countryCode = "RO", requirementMode = expectedMode, requirementValue = expectedValue };
 
         // Act
-        var registration = await client.PostAsJsonAsync("/api/users", body);
+        var registration = await client.PostAsJsonAsync("/api/users", body, cancellationToken: TestContext.Current.CancellationToken);
         registration.EnsureSuccessStatusCode();
-        var login = await client.PostAsJsonAsync("/api/auth/login", new { body.username, body.password });
+        var login = await client.PostAsJsonAsync("/api/auth/login", new { body.username, body.password }, cancellationToken: TestContext.Current.CancellationToken);
         login.EnsureSuccessStatusCode();
         var csrf = await Csrf(client);
         var profile = await PutJson(client, "/api/users/me", new { email = "weekly@example.com" }, csrf);
         profile.EnsureSuccessStatusCode();
-        var current = await client.GetFromJsonAsync<JsonElement>("/api/auth/me");
-        var history = await client.GetFromJsonAsync<JsonElement>(Path);
-        var exportResponse = await client.GetAsync("/api/users/me/export");
+        var current = await client.GetFromJsonAsync<JsonElement>("/api/auth/me", cancellationToken: TestContext.Current.CancellationToken);
+        var history = await client.GetFromJsonAsync<JsonElement>(Path, cancellationToken: TestContext.Current.CancellationToken);
+        var exportResponse = await client.GetAsync("/api/users/me/export", TestContext.Current.CancellationToken);
         exportResponse.EnsureSuccessStatusCode();
         var export = await Read(exportResponse);
 
@@ -52,7 +52,7 @@ public sealed class AttendanceRequirementModesIntegrationTests
         }
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var row = await db.UserAttendanceRequirements.SingleAsync(x => x.UserId == current.GetProperty("id").GetGuid());
+        var row = await db.UserAttendanceRequirements.SingleAsync(x => x.UserId == current.GetProperty("id").GetGuid(), cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(AttendanceRequirementMode.DaysPerWeek, row.RequirementMode);
         Assert.Equal(expectedValue, row.RequirementValue);
     }
@@ -75,10 +75,10 @@ public sealed class AttendanceRequirementModesIntegrationTests
         // Act / Assert
         foreach (var (month, percentage, mode, value) in new[] { (9, 60, "DaysPerWeek", 3), (10, 40, "Percentage", 40) })
         {
-            var status = await client.GetFromJsonAsync<JsonElement>($"/api/status?year=2099&month={month}");
+            var status = await client.GetFromJsonAsync<JsonElement>($"/api/status?year=2099&month={month}", cancellationToken: TestContext.Current.CancellationToken);
             var expectedDays = (int)Math.Ceiling(status.GetProperty("eligibleWorkingDays").GetInt32() * percentage / 100m);
             Assert.Equal(expectedDays, status.GetProperty("requiredOfficeDays").GetInt32());
-            var reportResponse = await client.GetAsync($"/api/reports?year=2099&startMonth={month}&endMonth={month}");
+            var reportResponse = await client.GetAsync($"/api/reports?year=2099&startMonth={month}&endMonth={month}", TestContext.Current.CancellationToken);
             reportResponse.EnsureSuccessStatusCode();
             var reportMonth = (await Read(reportResponse)).GetProperty("months").EnumerateArray().Single();
             Assert.False(reportMonth.TryGetProperty("requiredOfficePercentage", out _));
@@ -111,7 +111,7 @@ public sealed class AttendanceRequirementModesIntegrationTests
         await CreateUser(client, "invalid-mode");
         await Login(client, "invalid-mode", "Normal-user-password!");
         var csrf = await Csrf(client);
-        var initial = await client.GetStringAsync(Path);
+        var initial = await client.GetStringAsync(Path, TestContext.Current.CancellationToken);
         var baselineId = JsonDocument.Parse(initial).RootElement.GetProperty("items")[0].GetProperty("id").GetGuid();
         var body = JsonSerializer.Deserialize<Dictionary<string, object>>(json) ?? throw new InvalidOperationException("Invalid test payload.");
         body["startingFrom"] = "2099-10-01";
@@ -125,7 +125,7 @@ public sealed class AttendanceRequirementModesIntegrationTests
         // Assert
         Assert.Equal(expectedStatus, create.StatusCode);
         Assert.Equal(expectedStatus, update.StatusCode);
-        Assert.Equal(initial, await client.GetStringAsync(Path));
+        Assert.Equal(initial, await client.GetStringAsync(Path, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -133,10 +133,10 @@ public sealed class AttendanceRequirementModesIntegrationTests
     {
         // Arrange
         await using var connection = new SqliteConnection("Data Source=:memory:");
-        await connection.OpenAsync();
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
         await using var db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlite(connection).Options);
         var migrator = db.GetService<IMigrator>();
-        await migrator.MigrateAsync("20261016072600_AddOfficeRequirementHistory");
+        await migrator.MigrateAsync("20261016072600_AddOfficeRequirementHistory", TestContext.Current.CancellationToken);
         var userId = Guid.NewGuid();
         var id = Guid.NewGuid();
         var expectedDate = new DateOnly(2026, 11, 1);
@@ -146,15 +146,15 @@ public sealed class AttendanceRequirementModesIntegrationTests
         await db.Database.ExecuteSqlInterpolatedAsync($"""
             INSERT INTO Users (Id, Username, NormalizedUsername, PasswordHash, TimeZoneId, HolidayJurisdictionId, IsAdmin, CreatedAt, Preferences)
             VALUES ({userId}, 'migration', 'MIGRATION', 'hash', 'UTC', 1, 0, {expectedCreatedAt}, {preferences});
-            """);
+            """, cancellationToken: TestContext.Current.CancellationToken);
         await db.Database.ExecuteSqlInterpolatedAsync($"""
             INSERT INTO UserRequiredOfficePercentages (Id, UserId, StartingFrom, RequiredOfficePercentage, CreatedAt)
             VALUES ({id}, {userId}, {expectedDate}, {expectedValue}, {expectedCreatedAt});
-            """);
+            """, cancellationToken: TestContext.Current.CancellationToken);
 
         // Act
-        await migrator.MigrateAsync();
-        var row = await db.UserAttendanceRequirements.AsNoTracking().SingleAsync();
+        await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var row = await db.UserAttendanceRequirements.AsNoTracking().SingleAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(id, row.Id);
@@ -164,20 +164,20 @@ public sealed class AttendanceRequirementModesIntegrationTests
         Assert.Equal(expectedValue, row.RequirementValue);
         Assert.Equal(AttendanceRequirementMode.Percentage, row.RequirementMode);
         Assert.False(db.Database.HasPendingModelChanges());
-        await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("UPDATE UserAttendanceRequirements SET RequirementMode = 'DaysPerWeek', RequirementValue = 6"));
-        await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("UPDATE UserAttendanceRequirements SET RequirementMode = 'Unknown'"));
-        await db.Database.ExecuteSqlRawAsync("UPDATE UserAttendanceRequirements SET RequirementMode = 'DaysPerWeek', RequirementValue = 3");
+        await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("UPDATE UserAttendanceRequirements SET RequirementMode = 'DaysPerWeek', RequirementValue = 6", cancellationToken: TestContext.Current.CancellationToken));
+        await Assert.ThrowsAsync<SqliteException>(() => db.Database.ExecuteSqlRawAsync("UPDATE UserAttendanceRequirements SET RequirementMode = 'Unknown'", cancellationToken: TestContext.Current.CancellationToken));
+        await db.Database.ExecuteSqlRawAsync("UPDATE UserAttendanceRequirements SET RequirementMode = 'DaysPerWeek', RequirementValue = 3", cancellationToken: TestContext.Current.CancellationToken);
         // Renaming the columns in either direction must preserve the configured weekly value.
-        await migrator.MigrateAsync("20261021173735_AddAttendanceRequirementModes");
-        await migrator.MigrateAsync();
-        var renamed = await db.UserAttendanceRequirements.AsNoTracking().SingleAsync();
+        await migrator.MigrateAsync("20261021173735_AddAttendanceRequirementModes", TestContext.Current.CancellationToken);
+        await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var renamed = await db.UserAttendanceRequirements.AsNoTracking().SingleAsync(cancellationToken: TestContext.Current.CancellationToken);
         const int expectedWeeklyValue = 3;
         Assert.Equal(id, renamed.Id);
         Assert.Equal(expectedWeeklyValue, renamed.RequirementValue);
         Assert.Equal(AttendanceRequirementMode.DaysPerWeek, renamed.RequirementMode);
-        await migrator.MigrateAsync("20261016072600_AddOfficeRequirementHistory");
-        await migrator.MigrateAsync();
-        var restored = await db.UserAttendanceRequirements.AsNoTracking().SingleAsync();
+        await migrator.MigrateAsync("20261016072600_AddOfficeRequirementHistory", TestContext.Current.CancellationToken);
+        await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var restored = await db.UserAttendanceRequirements.AsNoTracking().SingleAsync(cancellationToken: TestContext.Current.CancellationToken);
         const int expectedDowngradedPercentage = 60;
         Assert.Equal(id, restored.Id);
         Assert.Equal(expectedDowngradedPercentage, restored.RequirementValue);

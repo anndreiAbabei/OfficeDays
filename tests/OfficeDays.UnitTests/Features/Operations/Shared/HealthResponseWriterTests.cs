@@ -24,7 +24,7 @@ public sealed class HealthResponseWriterTests
         // act
         await HealthResponseWriter.Write(context, report);
         body.Position = 0;
-        using var result = await JsonDocument.ParseAsync(body);
+        using var result = await JsonDocument.ParseAsync(body, cancellationToken: TestContext.Current.CancellationToken);
 
         // assert
         Assert.Equal("application/json; charset=utf-8", context.Response.ContentType);
@@ -45,7 +45,7 @@ public sealed class HealthResponseWriterTests
         // act
         await HealthResponseWriter.Write(context, report);
         body.Position = 0;
-        using var result = await JsonDocument.ParseAsync(body);
+        using var result = await JsonDocument.ParseAsync(body, cancellationToken: TestContext.Current.CancellationToken);
 
         // assert
         Assert.Equal("Healthy", result.RootElement.GetProperty("status").GetString());

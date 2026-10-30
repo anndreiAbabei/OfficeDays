@@ -5,6 +5,11 @@ using OfficeDays.Data;
 using OfficeDays.Endpoints;
 using OfficeDays.Extensions;
 using OfficeDays.Middleware;
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+             .WriteTo.Console()
+             .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddApplicationServices();
@@ -12,6 +17,7 @@ builder.Services.AddFeatures();
 
 var app = builder.Build();
 
+app.UseSerilogRequestLogging();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseForwardedHeaders();
 app.UseExceptionHandler();
@@ -21,7 +27,7 @@ if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"
 
 // Compress only public build assets, never cookie-authenticated API responses.
 app.UseWhen(context => context.Request.Path.StartsWithSegments("/_app"),
-    assets => assets.UseResponseCompression());
+            assets => assets.UseResponseCompression());
 app.UseBearerTokenHttpsProtection();
 app.UseRouting();
 app.UseMiddleware<RequestLimitingMiddleware>();

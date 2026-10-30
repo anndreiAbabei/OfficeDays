@@ -102,7 +102,8 @@ public sealed class CreateUserHandler : IRequestHandler<CreateUserRequest>
         }
 
         _logger.LogUserCreated(user.Username, user.Id);
+        var response = user.ToViewModel();
         
-        return Results.Created($"/api/users/{user.Id}", user.ToViewModel());
+        return Results.Created($"/api/users/{user.Id}", response);
     }
 }

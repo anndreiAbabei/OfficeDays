@@ -268,3 +268,22 @@ Deletion removes live application records, not copies already present in operato
 Restoring an old database can restore deleted accounts and tokens. Keep an access-restricted deletion register outside the database's backup lifecycle, recording only the deleted account IDs and deletion times, and reconcile it with successful deletions before any restore. Retain entries until every backup that could contain those accounts has expired. If a complete register is unavailable, use only a backup taken after the deletions; do not reopen an older restored database to users.
 
 Restore with the app stopped and public access blocked. In one SQLite transaction with foreign keys enabled, remove registered deleted user IDs (their dependent records cascade), and revoke all remaining API tokens. Replace the restored data-protection keys to invalidate all old browser cookies. Verify the deleted IDs and their personal rows are absent and an administrator remains before restarting and reopening access. Never restore old keys or tokens later. This is an operator-run procedure, not an automated deletion-register or restore service.
+
+### C# browser tests and recording
+
+The independent [OfficeDays.E2ETests guide](tests/OfficeDays.E2ETests/README.md) covers the
+xUnit/Playwright setup, clean application/database lifecycle, recording C# scenarios, and
+failure screenshots/traces. The `C# E2E` GitHub Actions workflow runs these tests on pull requests
+and supports manual runs. Existing TypeScript browser tests remain unchanged.
+
+## Running tests
+
+Use .NET 10 and Node.js 24. The repository selects Microsoft.Testing.Platform
+through `global.json`. Run backend unit and integration tests with:
+
+```sh
+dotnet test --project tests/OfficeDays.UnitTests
+dotnet test --project tests/OfficeDays.IntegrationTests
+```
+
+For browser tests and their build prerequisites, see [the browser test guide](tests/OfficeDays.E2ETests/README.md).

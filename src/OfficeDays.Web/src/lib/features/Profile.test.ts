@@ -31,14 +31,15 @@ it('keeps entered values and exposes a failed save for retry', async () => {
   expect(screen.getByLabelText('Email address')).toHaveValue('old@example.com');
 });
 
-it('loads, changes and clears the team day through the profile save', async () => {
+it('Should_LoadChangeAndClearTeamDay_WhenProfileIsSaved', async (): Promise<void> => {
+  // Arrange
   resetCsrf();
   const fetcher = vi.fn(async (path: string, options?: RequestInit) =>
     new Response(JSON.stringify(path.endsWith('csrf') ? { token: 'csrf' } : { ...user, ...JSON.parse(String(options?.body)) })));
   vi.stubGlobal('fetch', fetcher);
   const onsave = vi.fn();
   render(Profile, { currentUser: { ...user, teamDay: 'thursday' }, onsave });
-  const select = screen.getByLabelText('Team day');
+  const select = screen.getByRole('combobox', { name: /^Team day/ });
   expect(select).toHaveValue('thursday');
   expect(screen.getAllByRole('option')).toHaveLength(6);
   await fireEvent.change(select, { target: { value: 'monday' } });

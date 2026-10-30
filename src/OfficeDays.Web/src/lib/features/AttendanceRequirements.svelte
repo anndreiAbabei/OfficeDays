@@ -8,23 +8,30 @@
 
   type Requirement = { id: string; startingFrom: string; requirementMode: AttendanceRequirementMode; requirementValue: number; isBaseline: boolean };
   type History = { today: string; items: Requirement[] };
-  
+
+  const path = '/api/users/me/requirements';
   let { onsave }: { onsave: (user: User) => void } = $props();
   let history = $state<History | null>(null);
-  let loading = $state(true); let busy = $state(false);
-  let error = $state(''); let message = $state('');
-  let editing = $state<Requirement | null>(null); let formOpen = $state(false);
-  let month = $state(''); let requirementValue = $state<number | undefined>(50);
+  let loading = $state(true);
+  let busy = $state(false);
+  let error = $state('');
+  let message = $state('');
+  let editing = $state<Requirement | null>(null);
+  let formOpen = $state(false);
+  let month = $state('');
+  let requirementValue = $state<number | undefined>(50);
   let requirementMode = $state<AttendanceRequirementMode>('Percentage');
   let deleting = $state<Requirement | null>(null);
-  const path = '/api/users/me/requirements';
   let currentMonth = $derived(history ? `${history.today.slice(0, 7)}-01` : '');
   let past = $derived(history?.items.filter(x => x.startingFrom <= currentMonth).sort((a, b) => b.startingFrom.localeCompare(a.startingFrom)) ?? []);
   let upcoming = $derived(history?.items.filter(x => x.startingFrom > currentMonth).sort((a, b) => a.startingFrom.localeCompare(b.startingFrom)) ?? []);
 
   function label(row: Requirement): string {
-    if (row.isBaseline) return 'Initial requirement';
+    if (row.isBaseline) 
+      return 'Initial requirement';
+    
     const [year, month] = row.startingFrom.split('-').map(Number);
+    
     return `${new Intl.DateTimeFormat('en', { month: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(2000, month - 1, 1)))} ${year}`;
   }
   
@@ -36,16 +43,30 @@
 
   async function load(): Promise<void> {
     loading = true; error = '';
-    try { history = await request<History>(path); }
-    catch (failure) { error = errorMessage(failure); }
-    finally { loading = false; }
+    try { 
+      history = await request<History>(path); 
+    }
+    catch (failure) { 
+      error = errorMessage(failure); 
+    }
+    finally { 
+      loading = false; 
+    }
   }
   onMount(load);
 
   function open(row: Requirement | null): void {
-    editing = row; formOpen = true; deleting = null; error = ''; message = '';
-    month = row && !row.isBaseline ? row.startingFrom.slice(0, 7) : history!.today.slice(0, 7);
+    editing = row; 
+    formOpen = true; 
+    deleting = null; 
+    error = ''; 
+    message = '';
+    month = row && !row.isBaseline 
+            ? row.startingFrom.slice(0, 7) 
+            : history!.today.slice(0, 7);
+    
     const selected = row ?? past[0];
+    
     requirementMode = selected?.requirementMode ?? "Percentage";
     requirementValue = selected?.requirementValue ?? 50;
   }
@@ -68,7 +89,11 @@
     
     try {
       await mutate(editing ? `${path}/${editing.id}` : path, editing ? 'PUT' : 'POST', {
-        startingFrom: editing?.isBaseline ? editing.startingFrom : `${month}-01`, requirementMode, requirementValue
+        startingFrom: editing?.isBaseline 
+                  ? editing.startingFrom 
+                  : `${month}-01`, 
+        requirementMode, 
+        requirementValue
       });
       
       saved = true; 
@@ -125,12 +150,12 @@
       Retry loading requirements
     </button>
   {:else}
-    <h3>Current and past requirements</h3>
+    <h3 class="current-attendances">Current and past requirements</h3>
     {#each past as row, index (row.id)}
       {@render entry(row, index === 0 ? 'Current' : 'Previous')}
     {/each}
     
-    <h3>Upcoming changes</h3>
+    <h3 class="upcoming-attendances">Upcoming changes</h3>
     {#each upcoming as row (row.id)}
       {@render entry(row, 'Scheduled')}
     {:else}
