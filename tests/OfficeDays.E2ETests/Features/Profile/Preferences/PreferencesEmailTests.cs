@@ -63,7 +63,7 @@ public sealed class PreferencesEmailTests(ApplicationFixture application, ITestO
             var login = await page.GoTo<LoginPage>();
             var dashboard = await login.SignIn(user);
             var profile = await dashboard.GoToProfile();
-            await profile.SetEmail("none@local_mail.test");
+            await profile.SetEmail("none@local-mail.test");
 
             // act
             await profile.SetEmail(expectedEmail);

@@ -34,5 +34,12 @@ public sealed class ProfilePage(IPage page) : AuthenticatedPage(page), IScenario
             await Save();
     }
     
-    public async Task Save() => await SaveButton.ClickAsync();
+    public async Task Save()
+    {
+        var response = await Page.RunAndWaitForResponseAsync(
+            async () => await SaveButton.ClickAsync(),
+            response => response.Request.Method == "PUT" && new Uri(response.Url).AbsolutePath == "/api/users/me");
+        Assert.True(response.Ok, "Saving the profile should succeed.");
+        await Expect(Page.GetByRole(AriaRole.Status)).ToHaveTextAsync("Profile saved.");
+    }
 }
