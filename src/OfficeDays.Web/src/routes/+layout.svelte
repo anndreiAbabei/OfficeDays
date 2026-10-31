@@ -4,11 +4,17 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { request } from '$lib/api';
+  import { readGuestData } from '$lib/features/guest/storage';
   import { loadSession, sessionReady, sessionError } from '$lib/session';
   import type { Snippet } from 'svelte';
   import type { AppVersion } from "$lib/types";
   
   let { children }: { children: Snippet } = $props();
+  let hasGuestData = $state(false);
+  async function openGuest(): Promise<void> {
+    sessionError.set('');
+    await goto('/guest');
+  }
   let version = $state('Loading version…');
   let author = $state('Andrei');
   let gitHubUrl = $state('#');
@@ -20,6 +26,12 @@
         await goto(`/${location.hash.slice(1)}`, { replaceState: true });
       
       await loadSession();
+      try { 
+        hasGuestData = readGuestData() !== null; 
+      } 
+      catch { 
+        hasGuestData = true; 
+      }
     })();
     void request<AppVersion>('/api/version')
             .then(data => {
@@ -42,6 +54,9 @@
         <button onclick={loadSession}>
           Retry connection
         </button>
+        {#if hasGuestData}
+          <button class="secondary" onclick={openGuest}>Open saved guest data</button>
+        {/if}
       </section>
     {:else if $sessionReady || page.url.pathname === '/register' || page.url.pathname === '/login'}
       {@render children()}

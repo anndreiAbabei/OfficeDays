@@ -26,4 +26,8 @@
     <ProjectReference Include="..\..\src\OfficeDays\OfficeDays.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="../Fixtures/attendance-calculations.json" Link="attendance-calculations.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

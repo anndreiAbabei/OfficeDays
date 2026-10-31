@@ -1,12 +1,22 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
-  import { request, errorMessage } from '$lib/api';
+  import { errorMessage } from '$lib/api';
+  import { useDataSource } from './dataSource';
   import { localDate, months } from '$lib/dates';
   import Feedback from '$lib/components/Feedback.svelte';
   import { downloadReport, resultLabels, type AttendanceReport } from './reports';
+  const { request } = useDataSource();
 
-  let { timeZone }: { timeZone: string } = $props();
-  let year = $state<number | undefined>(untrack(() => localDate(timeZone).year));
+  let { timeZone, initialYear, onyearselection }: { 
+    timeZone: string; 
+    initialYear?: number; 
+    onyearselection?: (year: number) => void 
+  } = $props();
+  let year = $state<number | undefined>(untrack(() => initialYear ?? localDate(timeZone).year));
+  $effect(() => { 
+    if (year && Number.isInteger(year) && year >= 1 && year <= 9998) 
+      onyearselection?.(year); 
+  });
   let startMonth = $state(1); 
   let endMonth = $state(12);
   let report = $state<AttendanceReport | null>(null);

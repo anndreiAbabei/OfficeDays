@@ -2,10 +2,12 @@
   import ItemList from '$lib/components/ItemList.svelte';
   import { untrack } from 'svelte';
   import { onMount } from 'svelte';
-  import { request, mutate, errorMessage } from '$lib/api';
+  import { errorMessage } from '$lib/api';
+  import { useDataSource } from './dataSource';
   import { displayDate, isoDate, localDate, periodQuery } from '$lib/dates';
   import type { Attendance, Period } from '$lib/types';
   import Feedback from '$lib/components/Feedback.svelte';
+  const { request, mutate } = useDataSource();
   
   let { period, timeZone, onchange }: { period: Period; timeZone: string; onchange: () => void } = $props();
   const today = untrack(() => localDate(timeZone));

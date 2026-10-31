@@ -3,13 +3,16 @@
   import { page } from '$app/state';
   import { user, sessionReady, signedOut } from '$lib/session';
   import { mutate, errorMessage } from '$lib/api';
+  import { readGuestData } from '$lib/features/guest/storage';
   import Feedback from '$lib/components/Feedback.svelte';
   import type { Snippet } from 'svelte';
   import type { User } from "$lib/types";
   
   let { children }: { children: Snippet } = $props();
+  let wasSignedIn = false;
   let busy = $state(false);
   let error = $state('');
+  
   function getPages(user: User): { href: string, label: string }[] {
     return [
       { href: '/',                label: 'Dashboard' },
@@ -22,7 +25,19 @@
     ];
   }
   
-  $effect(() => { if ($sessionReady && !$user) void goto('/login', { replaceState: true }); });
+  $effect(() => {
+    if ($user) { wasSignedIn = true; return; }
+    if (!$sessionReady) return;
+    // Expired account sessions must not silently become guest sessions.
+    if (wasSignedIn) { void goto('/login', { replaceState: true }); return; }
+    if (page.url.pathname !== '/') { void goto('/login', { replaceState: true }); return; }
+    try {
+      if (readGuestData()) 
+        void goto('/guest', { replaceState: true });
+    } catch (failure) { 
+      error = errorMessage(failure); 
+    }
+  });
   
   async function logout(): Promise<void> {
     busy = true; 
@@ -65,6 +80,16 @@
       <Feedback {error} />{@render children()}
     </div>
   </div>
+{:else if $sessionReady && page.url.pathname === '/'}
+  <section class="card">
+    <h1>Office Days</h1>
+    <p>Track your office attendance, plan your days, and see your monthly progress.</p>
+    <Feedback {error} />
+    <div class="app-nav">
+      <a href="/login">Login</a>
+      <a href="/guest" data-sveltekit-preload-code="off" data-sveltekit-preload-data="off">Continue as guest</a>
+    </div>
+  </section>
 {/if}
 
 <style>

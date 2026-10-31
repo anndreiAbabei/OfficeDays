@@ -2,10 +2,12 @@
   import ItemList from '$lib/components/ItemList.svelte';
   import { untrack } from 'svelte';
   import { onMount } from 'svelte';
-  import { request, mutate, errorMessage } from '$lib/api';
+  import { errorMessage } from '$lib/api';
+  import { useDataSource } from './dataSource';
   import { displayDate, isoDate, periodQuery } from '$lib/dates';
   import type { Vacation, Period } from '$lib/types';
   import Feedback from '$lib/components/Feedback.svelte';
+  const { request, mutate } = useDataSource();
   
   let { period, onchange }: { period: Period; onchange: () => void } = $props();
   let from = $state(untrack(() => isoDate(period.year, period.month))); 
