@@ -56,6 +56,7 @@
       {busy ? 'Saving…' : 'Save profile'}
     </button>
   </form>
+  
   <Feedback {error} {message} />
 </section>
 

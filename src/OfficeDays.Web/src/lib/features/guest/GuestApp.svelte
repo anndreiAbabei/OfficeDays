@@ -161,19 +161,21 @@
       <Reports timeZone={data.timeZoneId} initialYear={reportYear} onyearselection={(year): void => { reportYear = year; }} />
     {/key}
   {:else}
-    <section class="card">
+    <section class="card guest-profile">
       <h2>Guest profile</h2>
       <p>{data.countryName} · {data.timeZoneId}</p>
-      <label>
-        Team day
-        <select bind:value={teamDay}>
-          <option value="">None</option>
-          {#each weekdays as day}
-            <option value={day}>{day}</option>
-          {/each}
-        </select>
-      </label>
-      <button onclick={saveTeamDay}>Save team day</button>
+      <div>
+        <label>
+          Team day
+          <select bind:value={teamDay}>
+            <option value="">None</option>
+            {#each weekdays as day}
+              <option value={day}>{day}</option>
+            {/each}
+          </select>
+        </label>
+        <button onclick={saveTeamDay}>Save team day</button>
+      </div>
     </section>
     
     <AttendanceRequirements onsave={(): void => { data = currentData(); }} />
@@ -197,7 +199,25 @@
     outline: 2px solid var(--green); 
   }
   
-  header { 
-    margin-bottom: 1rem; 
+  .card { 
+    margin: 1rem 0; 
+  }
+
+  .guest-profile > div {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1em;
+  }
+  
+  .guest-profile > div > label {
+    grid-column: 1;
+    max-width: 25em;
+  }
+  
+  .guest-profile > div > button {
+    grid-column: 2;
+    height: 1em;
+    justify-self: end;
+    align-self: end;
   }
 </style>

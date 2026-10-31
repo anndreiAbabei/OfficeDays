@@ -134,5 +134,15 @@
   
   <Feedback {error} />
   
-  <a href="/login">Sign in instead</a>
+  <a href="/login" class="sign-in">Sign in instead</a>
 </section>
+
+<style>
+  .card > h1 {
+    margin-bottom: 1em;
+  }
+  
+  form.stack {
+    margin-block: 2em;
+  }
+</style>
