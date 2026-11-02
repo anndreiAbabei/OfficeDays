@@ -14,21 +14,18 @@ public sealed class GetStatusHandler : IRequestHandler<GetStatusRequest>
     private readonly ICurrentUser _currentUser;
     private readonly AppDbContext _db;
     private readonly IUserDateService _dates;
-    private readonly IOfficeRequirementReader _requirements;
     
     public GetStatusHandler(ICurrentUser currentUser,
                             AppDbContext db,
                             IUserDateService dates,
                             ILogger<GetStatusHandler> logger,
-                            IAttendanceCalculator attendanceCalculator,
-                            IOfficeRequirementReader requirements)
+                            IAttendanceCalculator attendanceCalculator)
     {
         _attendanceCalculator = attendanceCalculator;
         _logger = logger;
         _currentUser = currentUser;
         _db = db;
         _dates = dates;
-        _requirements = requirements;
     }
     
     public async ValueTask<IResult> Handle(GetStatusRequest input, CancellationToken cancellationToken)
@@ -44,18 +41,18 @@ public sealed class GetStatusHandler : IRequestHandler<GetStatusRequest>
             return Results.NotFound();
         }
 
+        var today = _dates.Today(user);
         CalculationPeriod period;
         if (!year.HasValue && !month.HasValue)
         {
-            var currentDate = _dates.Today(user);
-            period = CalculationPeriod.ForMonth(currentDate.Year, currentDate.Month);
+            period = CalculationPeriod.ForMonth(today.Year, today.Month);
         }
         else
             period = CalculationPeriod.ForMonth(year!.Value, month!.Value);
 
-        var holidayDates = await _db.BankHolidays
+        var holidays = await _db.BankHolidays
                                     .Where(x => x.HolidayJurisdictionId == user.HolidayJurisdictionId && x.Date >= period.Start && x.Date <= period.End)
-                                    .Select(x => x.Date)
+                                    .Select(x => new { x.Date, x.Name })
                                     .ToListAsync(cancellationToken);
         var vacationRows = await _db.Vacations
                                     .Where(x => x.UserId == user.Id && x.From <= period.End && x.To >= period.Start)
@@ -66,20 +63,20 @@ public sealed class GetStatusHandler : IRequestHandler<GetStatusRequest>
                                    .Select(x => x.Date)
                                    .ToListAsync(cancellationToken);
         var vacations = vacationRows.Select(x => (x.From, x.To));
-        var requirementProc = await _requirements.ForDate(user.Id, period.Start, cancellationToken);
-        var result = _attendanceCalculator.Calculate(period, holidayDates, vacations, officeDates, requirementProc);
+        var requirement = await _db.UserAttendanceRequirements.AsNoTracking()
+                                   .Where(x => x.UserId == user.Id && x.StartingFrom <= period.Start)
+                                   .OrderByDescending(x => x.StartingFrom)
+                                   .FirstAsync(cancellationToken);
+        var result = _attendanceCalculator.Calculate(period, holidays.Select(x => x.Date), vacations, officeDates, requirement.EffectivePercentage);
         var plans = await _db.OfficePlans
                              .Where(x => x.UserId == user.Id && x.Date >= period.Start && x.Date <= period.End)
                              .Select(x => x.Date)
                              .ToListAsync(cancellationToken);
-        var today = _dates.Today(user);
         var days = PlanningCalculator.Calculate(period, today, plans, officeDates, 
-                                                holidayDates.Select(date => (date, "")), 
+                                                holidays.Select(x => (x.Date, x.Name)),
                                                 vacationRows.Select(x => (x.From, x.To)));
-        var response = result.ToViewModel() with 
-        { 
-            UpcomingPlannedDays = PlanningCalculator.UpcomingCount(days, today)
-        };
+        var summary = GetStatusSummaryCalculator.Calculate(days, today, result, requirement);
+        var response = result.ToViewModel(summary, PlanningCalculator.UpcomingCount(days, today));
         
         return Results.Ok(response);
     }

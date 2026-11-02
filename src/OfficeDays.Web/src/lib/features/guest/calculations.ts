@@ -1,5 +1,6 @@
 import { isoDate, localDate } from '$lib/dates';
-import type { Period, PlanningMonth, Status } from '$lib/types';
+import type { Period, PlanningMonth } from '$lib/types';
+import type { AttendanceStatus } from '../attendanceSummary';
 import type { AttendanceReport, ReportMonth } from '../reports';
 import type { GuestData, GuestRequirement } from './storage';
 
@@ -74,13 +75,16 @@ export function planning(data: GuestData, period: Period, now: Date): PlanningMo
                              .length 
   };
 }
-export function status(data: GuestData, period: Period, now: Date): Status {
+export function status(data: GuestData, period: Period, now: Date): AttendanceStatus {
   const calendar = planning(data, period, now);
   const eligibleWorkingDays = calendar.days.filter((d): boolean => d.isEligible).length;
   const requirement = requirementAt(data, isoDate(period.year, period.month));
   const percent = requirement.requirementValue * (requirement.requirementMode === 'DaysPerWeek' ? 20 : 1);
   const requiredOfficeDays = Math.ceil(eligibleWorkingDays * percent / 100);
   const officeDays = calendar.days.filter((d): boolean => d.isEligible && d.isAttended && d.date <= calendar.today).length;
+  const weekdays = calendar.days.filter((day): boolean => ![0, 6].includes(new Date(`${day.date}T00:00:00Z`).getUTCDay()));
+  const remainingOfficeDays = Math.max(0, requiredOfficeDays - officeDays);
+  const remainingEligibleDays = calendar.days.filter((day): boolean => day.date >= calendar.today && day.isEligible && !day.isAttended).length;
   
   return { 
     period: isoDate(period.year, period.month).slice(0, 7), 
@@ -88,9 +92,24 @@ export function status(data: GuestData, period: Period, now: Date): Status {
     requiredOfficeDays, 
     officeDays,
     maximumWfhDays: eligibleWorkingDays - requiredOfficeDays, 
-    remainingOfficeDays: Math.max(0, requiredOfficeDays - officeDays),
+    remainingOfficeDays,
     progressPercentage: requiredOfficeDays === 0 ? 100 : Math.min(100, percentage(officeDays, requiredOfficeDays)), 
-    upcomingPlannedDays: calendar.upcomingPlannedDays
+    upcomingPlannedDays: calendar.upcomingPlannedDays,
+    summary: {
+      today: calendar.today,
+      totalDays: calendar.days.length,
+      workingDays: weekdays.length,
+      bankHolidayWorkingDays: weekdays.filter((day): boolean => day.holidays.length > 0).length,
+      vacationWorkingDays: weekdays.filter((day): boolean => day.isVacation && day.holidays.length === 0).length,
+      requirementMode: requirement.requirementMode,
+      requirementValue: requirement.requirementValue,
+      requiredOfficeDaysWithoutAbsences: Math.ceil(weekdays.length * percent / 100),
+      plannedDays: calendar.days.filter((day): boolean => day.isPlanned && day.isEligible).length,
+      remainingEligibleDays,
+      outstandingOfficeDays: Math.max(0, remainingOfficeDays - remainingEligibleDays),
+      bankHolidays: calendar.days.flatMap((day): { date: string; name: string }[] => day.holidays.map((name): { date: string; name: string } => ({ date: day.date, name }))),
+      vacationDates: calendar.days.filter((day): boolean => day.isVacation).map((day): string => day.date)
+    }
   };
 }
 export function report(data: GuestData, year: number, startMonth: number, endMonth: number, now: Date): AttendanceReport {

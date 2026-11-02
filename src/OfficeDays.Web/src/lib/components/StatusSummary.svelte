@@ -1,7 +1,11 @@
 <script lang="ts">
   import type { Status } from '$lib/types';
+  import type { AttendanceSummary } from '$lib/features/attendanceSummary';
+  import AttendanceCalculation from '$lib/features/AttendanceCalculation.svelte';
   
-  let { status = null, loading = false, plannedCount = null }: { status?: Status | null; loading?: boolean; plannedCount?: number | null } = $props();
+  let { status = null, loading = false, plannedCount = null }: { status?: (Status & { summary?: AttendanceSummary }) | null; loading?: boolean; plannedCount?: number | null } = $props();
+  const detailsId = $props.id();
+  let expanded = $state(false);
   let upcomingPlanned = $derived(plannedCount ?? status?.upcomingPlannedDays);
   let daysToPlan = $derived(status && upcomingPlanned !== undefined 
           ? Math.max(0, status.remainingOfficeDays - upcomingPlanned) 
@@ -56,6 +60,16 @@
   <p class="muted">
     {status ? `${status.eligibleWorkingDays} eligible working days · ${status.requiredOfficeDays} work from office days · ${status.maximumWfhDays} max WFH days` : 'Loading monthly summary…'}
   </p>
+  <button class="secondary calculation-toggle" disabled={loading || !status?.summary}
+    aria-expanded={expanded} aria-controls={detailsId} onclick={(): void => { expanded = !expanded; }}>
+    {expanded ? 'Hide calculation' : 'How this is calculated'}
+    <span aria-hidden="true">{expanded ? '−' : '+'}</span>
+  </button>
+  <div id={detailsId} hidden={!expanded}>
+    {#if expanded && status?.summary}
+      <AttendanceCalculation status={{ ...status, summary: status.summary }} upcomingPlanned={upcomingPlanned ?? 0} />
+    {/if}
+  </div>
 </section>
 
 <style>
@@ -112,6 +126,7 @@
   .progress-card { 
     margin: 1rem 0; 
   }
+  .calculation-toggle { display: flex; align-items: center; justify-content: space-between; gap: 1rem; max-width: 100%; }
   .progress { 
     height: .65rem; 
     margin: .7rem 0; 

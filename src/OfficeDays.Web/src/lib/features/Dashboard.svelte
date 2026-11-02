@@ -3,7 +3,8 @@
   import { errorMessage } from '$lib/api';
   import { useDataSource } from './dataSource';
   import { periodQuery } from '$lib/dates';
-  import type { Status, Period, TeamDay } from '$lib/types';
+  import type { Period, TeamDay } from '$lib/types';
+  import type { AttendanceStatus } from './attendanceSummary';
   import StatusSummary from '$lib/components/StatusSummary.svelte';
   import Feedback from '$lib/components/Feedback.svelte';
   import PlanningCalendar from './PlanningCalendar.svelte';
@@ -12,7 +13,7 @@
   const { request } = useDataSource();
   
   let { period, timeZone, teamDay = null }: { period: Period; timeZone: string; teamDay?: TeamDay | null } = $props();
-  let status = $state<Status | null>(null); let loading = $state(true); let error = $state('');
+  let status = $state<AttendanceStatus | null>(null); let loading = $state(true); let error = $state('');
   let revision = 0;
   let calendarRevision = $state(0);
   let plannedCount = $state<number | null>(null);
@@ -29,7 +30,7 @@
     error = '';
     
     try { 
-      const result = await request<Status>(`/api/status?${periodQuery(period)}`); 
+      const result = await request<AttendanceStatus>(`/api/status?${periodQuery(period)}`);
       if (current === revision) 
         status = result; 
     } catch (failure) { 

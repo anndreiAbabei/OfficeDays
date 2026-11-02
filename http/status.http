@@ -5,6 +5,18 @@
 # Status uses the requirement effective in the selected month.
 # DaysPerWeek mode converts to an equivalent percentage (days * 20).
 # Required office days round up: ceil(eligible working days * percentage / 100).
+# Responses retain the existing totals and add a summary object:
+# today (user timezone), totalDays, workingDays, bankHolidayWorkingDays,
+# vacationWorkingDays, requirementMode, requirementValue,
+# requiredOfficeDaysWithoutAbsences, plannedDays, remainingEligibleDays,
+# outstandingOfficeDays, bankHolidays [{date, name}], vacationDates [date].
+# Holiday/vacation lists include every matching date in the requested month,
+# including weekends. Weekday deductions count overlaps once: bank holidays first,
+# then vacation weekdays that are not bank holidays.
+# plannedDays counts all eligible plans in the month; upcomingPlannedDays excludes
+# past and attended dates. Plans never count as attendance.
+# remainingEligibleDays includes today when eligible and not already attended.
+# outstandingOfficeDays = max(0, remainingOfficeDays - remainingEligibleDays).
 ### Current user's current-month status
 GET {{baseUrl}}/api/status
 Authorization: Bearer {{apiToken}}
@@ -14,4 +26,3 @@ Accept: application/json
 GET {{baseUrl}}/api/status?year=2026&month=9
 Authorization: Bearer {{apiToken}}
 Accept: application/json
-
