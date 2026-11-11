@@ -104,6 +104,67 @@ describe('guest data', (): void => {
   });
 });
 describe('guest calculations', (): void => {
+  it('Should_ExplainAllCalendarDeductions_WhenAbsencesOverlap', (): void => {
+    // Arrange
+    const data = fixture();
+    data.holidays['2026'] = [{ date: '2026-06-01', name: 'Weekday holiday' }, { date: '2026-06-06', name: 'Weekend holiday' }];
+    data.vacations = [{ id: 'v', createdAt: now.toISOString(), from: '2026-05-31', to: '2026-06-03' },
+      { id: 'overlap', createdAt: now.toISOString(), from: '2026-06-02', to: '2026-06-03' }];
+    const expectedSummary = { today: '2026-06-15', totalDays: 30, workingDays: 22, bankHolidayWorkingDays: 1,
+      vacationWorkingDays: 2, requirementMode: 'Percentage', requirementValue: 50, requiredOfficeDaysWithoutAbsences: 11,
+      plannedDays: 0, remainingEligibleDays: 12, outstandingOfficeDays: 0, bankHolidays: data.holidays['2026'],
+      vacationDates: ['2026-06-01', '2026-06-02', '2026-06-03'] };
+    // Act
+    const result = status(data, { year: 2026, month: 6 }, now);
+    // Assert
+    expect(result.summary).toEqual(expectedSummary);
+  });
+  it.each([
+    ['2026-06-30T12:00:00Z', 1, 10],
+    ['2026-07-01T12:00:00Z', 0, 11],
+    ['2026-05-31T12:00:00Z', 22, 0]
+  ])('Should_ExplainUnavoidableShortfall_WhenTodayIs%s', (instant, expectedAvailable, expectedOutstanding): void => {
+    // Arrange
+    const data = fixture();
+    // Act
+    const result = status(data, { year: 2026, month: 6 }, new Date(instant));
+    // Assert
+    expect(result.summary.remainingEligibleDays).toBe(expectedAvailable);
+    expect(result.summary.outstandingOfficeDays).toBe(expectedOutstanding);
+  });
+  it('Should_UseSelectedRequirementAndSeparatePlansFromAttendance_WhenSummarizingGuestMonth', (): void => {
+    // Arrange
+    const data = fixture();
+    data.requirements.push({ id: 'weekly', createdAt: now.toISOString(), startingFrom: '2026-07-01', requirementMode: 'DaysPerWeek', requirementValue: 3 });
+    data.plans = ['2026-07-01', '2026-07-02', '2026-07-04', '2026-07-31'].map((date): GuestData['plans'][number] => ({ id: date, date, createdAt: now.toISOString() }));
+    data.attendance = [{ id: 'a', date: '2026-07-01', createdAt: now.toISOString(), isManual: true }];
+    const expectedPlanned = 3;
+    const expectedUpcoming = 1;
+    const expectedOffice = 1;
+    const expectedBaseline = 14;
+    const expectedMode = 'DaysPerWeek';
+    // Act
+    const result = status(data, { year: 2026, month: 7 }, new Date('2026-07-30T12:00:00Z'));
+    // Assert
+    expect(result.summary.requirementMode).toBe(expectedMode);
+    expect(result.summary.requiredOfficeDaysWithoutAbsences).toBe(expectedBaseline);
+    expect(result.summary.plannedDays).toBe(expectedPlanned);
+    expect(result.upcomingPlannedDays).toBe(expectedUpcoming);
+    expect(result.officeDays).toBe(expectedOffice);
+  });
+  it('Should_UseUserDateAndExcludeAttendedTodayFromCapacity_WhenTimezoneCrossesYearBoundary', (): void => {
+    // Arrange
+    const data = fixture();
+    data.timeZoneId = 'Pacific/Auckland';
+    data.attendance = [{ id: 'a', date: '2027-01-01', createdAt: now.toISOString(), isManual: true }];
+    const expectedDate = '2027-01-01';
+    const expectedAvailable = 20;
+    // Act
+    const result = status(data, { year: 2027, month: 1 }, new Date('2026-12-31T12:00:00Z'));
+    // Assert
+    expect(result.summary.today).toBe(expectedDate);
+    expect(result.summary.remainingEligibleDays).toBe(expectedAvailable);
+  });
   it('Should_CountEligibleDaysAndRoundOnce_WhenHolidaysAndVacationsOverlap', (): void => {
     // Arrange
     const data = fixture();

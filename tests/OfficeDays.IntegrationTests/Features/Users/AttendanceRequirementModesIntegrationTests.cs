@@ -78,6 +78,11 @@ public sealed class AttendanceRequirementModesIntegrationTests
             var status = await client.GetFromJsonAsync<JsonElement>($"/api/status?year=2099&month={month}", cancellationToken: TestContext.Current.CancellationToken);
             var expectedDays = (int)Math.Ceiling(status.GetProperty("eligibleWorkingDays").GetInt32() * percentage / 100m);
             Assert.Equal(expectedDays, status.GetProperty("requiredOfficeDays").GetInt32());
+            var summary = status.GetProperty("summary");
+            Assert.Equal(mode, summary.GetProperty("requirementMode").GetString());
+            Assert.Equal(value, summary.GetProperty("requirementValue").GetInt32());
+            var expectedWithoutAbsences = (int)Math.Ceiling(summary.GetProperty("workingDays").GetInt32() * percentage / 100m);
+            Assert.Equal(expectedWithoutAbsences, summary.GetProperty("requiredOfficeDaysWithoutAbsences").GetInt32());
             var reportResponse = await client.GetAsync($"/api/reports?year=2099&startMonth={month}&endMonth={month}", TestContext.Current.CancellationToken);
             reportResponse.EnsureSuccessStatusCode();
             var reportMonth = (await Read(reportResponse)).GetProperty("months").EnumerateArray().Single();
