@@ -279,7 +279,8 @@ and supports manual runs. Existing TypeScript browser tests remain unchanged.
 
 ## Running tests
 
-Use .NET 10 and Node.js 24. The repository selects Microsoft.Testing.Platform
+Use the .NET SDK matching `TargetFramework` in `Directory.Build.props` (currently .NET 11)
+and Node.js 24. The repository selects Microsoft.Testing.Platform
 through `global.json`. Run backend unit and integration tests with:
 
 ```sh

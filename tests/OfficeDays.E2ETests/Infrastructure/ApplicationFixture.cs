@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Text.Json;
 
 namespace OfficeDays.E2ETests.Infrastructure;
@@ -25,14 +26,24 @@ public sealed class ApplicationFixture : IApplicationFixture, IAsyncLifetime
     private readonly TaskCompletionSource<string> _address = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private Process? _process;
+    private IApiClient? _apiClient;
 
     public string BaseUrl { get; private set; } = string.Empty;
-    public string RepositoryRoot { get; } = FindRepositoryRoot();
+    public string RepositoryRoot { get; }
     public string ArtifactsDirectory { get; private set; } = string.Empty;
 
     public BrowserFixture Browser { get; } = new BrowserFixture();
-    public IApiClient Api => field ??= new ApiClient(BaseUrl);
+    public IApiClient Api => _apiClient ??= new ApiClient(BaseUrl);
     public CancellationToken CancellationToken => TestContext.Current.CancellationToken;
+
+    public ApplicationFixture() : this(FindRepositoryRoot())
+    {
+    }
+
+    internal ApplicationFixture(string repositoryRoot)
+    {
+        RepositoryRoot = repositoryRoot;
+    }
 
     public async ValueTask InitializeAsync()
     {
@@ -42,11 +53,15 @@ public sealed class ApplicationFixture : IApplicationFixture, IAsyncLifetime
         try
         {
             var configuration = Environment.GetEnvironmentVariable("E2E_CONFIGURATION") ?? "Debug";
+            var targetFramework = typeof(ApplicationFixture).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
+                .Single(attribute => attribute.Key == "TargetFramework").Value
+                ?? throw new InvalidOperationException("The E2E assembly is missing its target framework metadata.");
             var appDirectory = Path.Combine(RepositoryRoot, "src", "OfficeDays");
-            var assembly = Path.Combine(appDirectory, "bin", configuration, "net10.0", "OfficeDays.dll");
+            var assembly = Path.Combine(appDirectory, "bin", configuration, targetFramework, "OfficeDays.dll");
+            var frontend = Path.Combine(appDirectory, "wwwroot", "index.html");
 
-            if (!File.Exists(assembly) || !File.Exists(Path.Combine(appDirectory, "wwwroot", "index.html")))
-                throw new InvalidOperationException("Build the frontend and backend first. See tests/OfficeDays.E2ETests/README.md.");
+            if (!File.Exists(assembly) || !File.Exists(frontend))
+                throw new InvalidOperationException($"Build the frontend and backend first. Expected backend: '{assembly}'; frontend: '{frontend}'. See tests/OfficeDays.E2ETests/README.md.");
 
             var start = new ProcessStartInfo("dotnet")
             {
@@ -91,6 +106,7 @@ public sealed class ApplicationFixture : IApplicationFixture, IAsyncLifetime
         }
     }
 
+    [SuppressMessage("ReSharper", "MethodSupportsCancellation", Justification = "Should not cancel in Dispose")]
     public async ValueTask DisposeAsync()
     {
         try
@@ -103,17 +119,18 @@ public sealed class ApplicationFixture : IApplicationFixture, IAsyncLifetime
             {
                 if (!_process.HasExited)
                     _process.Kill(entireProcessTree: true);
-                await _process.WaitForExitAsync(CancellationToken);
+                await _process.WaitForExitAsync();
                 _process.Dispose();
                 _process = null;
             }
             if (Directory.Exists(ArtifactsDirectory))
-                await File.WriteAllLinesAsync(Path.Combine(ArtifactsDirectory, "api.log"), _logs, CancellationToken);
+                await File.WriteAllLinesAsync(Path.Combine(ArtifactsDirectory, "api.log"), _logs);
             if (Directory.Exists(_temporaryDirectory))
                 Directory.Delete(_temporaryDirectory, recursive: true);
         }
 
-        Api.Dispose();
+        _apiClient?.Dispose();
+        _apiClient = null;
         _cancellationTokenSource.Dispose();
     }
 
