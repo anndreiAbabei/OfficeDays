@@ -1,3 +1,4 @@
+using System.Globalization;
 using OfficeDays.Domain;
 using OfficeDays.Features.Users.UpdateRequirement;
 
@@ -15,7 +16,7 @@ public sealed class UpdateRequirementMappingTests
         {
             Id = Guid.NewGuid(), 
             UserId = Guid.NewGuid(), 
-            StartingFrom = DateOnly.Parse(startingFrom), 
+            StartingFrom = DateOnly.Parse(startingFrom, CultureInfo.InvariantCulture), 
             RequirementValue = 65,
             CreatedAt = new DateTimeOffset(2026, 10, 1, 9, 0, 0, TimeSpan.Zero)
         };

@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using static OfficeDays.IntegrationTests.Support.ApiTestHelpers;
 
 namespace OfficeDays.IntegrationTests.Features.Authentication;

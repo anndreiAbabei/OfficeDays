@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using OfficeDays.Domain;
 using OfficeDays.Services;
 
@@ -5,17 +7,15 @@ namespace OfficeDays.UnitTests.Features.Reports;
 
 public sealed class ReportCalculatorTests
 {
+    
+    private readonly ReportCalculator _calculator = new ReportCalculator(new AttendanceCalculator());
+    
     private static User User(DateTimeOffset? registered = null, string zone = "UTC") => new User
     {
         Id = Guid.NewGuid(), Username = "tester", NormalizedUsername = "TESTER", PasswordHash = "hash",
         TimeZoneId = zone, CreatedAt = registered ?? new DateTimeOffset(2026, 6, 15, 0, 0, 0, TimeSpan.Zero)
     };
     private static readonly DateTimeOffset _now = new DateTimeOffset(2026, 10, 16, 9, 0, 0, TimeSpan.Zero);
-    private static UserAttendanceRequirement Requirement(string date, int percentage) => new UserAttendanceRequirement
-    {
-        StartingFrom = DateOnly.Parse(date), RequirementValue = percentage
-    };
-    private readonly ReportCalculator _calculator = new ReportCalculator(new AttendanceCalculator());
 
     [Fact]
     public void Should_ClipAndClassifyMonths_WhenRangeSpansRegistrationAndFuture()
@@ -152,5 +152,15 @@ public sealed class ReportCalculatorTests
         Assert.All(future.Months, x => Assert.Equal(expectedFutureState, x.State));
         Assert.Equal(expectedCompletedMonths, future.CompletedMonths);
         Assert.Null(future.AttendancePercentage);
+    }
+    
+    [ExcludeFromCodeCoverage]
+    private static UserAttendanceRequirement Requirement(string date, int percentage)
+    {
+        return new UserAttendanceRequirement
+        {
+            StartingFrom = DateOnly.Parse(date, CultureInfo.InvariantCulture),
+            RequirementValue = percentage
+        };
     }
 }
