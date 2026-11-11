@@ -57,14 +57,16 @@
   <div class="progress" role="progressbar" aria-label="Office attendance progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow={status ? progress : undefined}>
     <div style:width={`${progress}%`}></div>
   </div>
-  <p class="muted">
-    {status ? `${status.eligibleWorkingDays} eligible working days · ${status.requiredOfficeDays} work from office days · ${status.maximumWfhDays} max WFH days` : 'Loading monthly summary…'}
-  </p>
-  <button class="secondary calculation-toggle" disabled={loading || !status?.summary}
-    aria-expanded={expanded} aria-controls={detailsId} onclick={(): void => { expanded = !expanded; }}>
-    {expanded ? 'Hide calculation' : 'How this is calculated'}
-    <span aria-hidden="true">{expanded ? '−' : '+'}</span>
-  </button>
+  <div class="explanation">
+    <p class="muted">
+      {status ? `${status.eligibleWorkingDays} eligible working days · ${status.requiredOfficeDays} work from office days · ${status.maximumWfhDays} max WFH days` : 'Loading monthly summary…'}
+    </p>
+    <button class="secondary calculation-toggle" disabled={loading || !status?.summary}
+      aria-expanded={expanded} aria-controls={detailsId} onclick={(): void => { expanded = !expanded; }}>
+      {expanded ? 'Hide calculation' : 'How this is calculated'}
+      <span aria-hidden="true">{expanded ? '−' : '+'}</span>
+    </button>
+  </div>
   <div id={detailsId} hidden={!expanded}>
     {#if expanded && status?.summary}
       <AttendanceCalculation status={{ ...status, summary: status.summary }} upcomingPlanned={upcomingPlanned ?? 0} />
@@ -126,7 +128,18 @@
   .progress-card { 
     margin: 1rem 0; 
   }
-  .calculation-toggle { display: flex; align-items: center; justify-content: space-between; gap: 1rem; max-width: 100%; }
+  .explanation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .calculation-toggle { 
+    display: flex;
+    align-items: center; 
+    justify-content: space-between; 
+    gap: 1rem; 
+    max-width: 100%; 
+  }
   .progress { 
     height: .65rem; 
     margin: .7rem 0; 
