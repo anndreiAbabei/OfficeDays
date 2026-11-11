@@ -28,6 +28,7 @@ public sealed class DeleteJurisdictionHandler : IRequestHandler<DeleteJurisdicti
         if (jurisdiction is null)
         {
             _logger.LogJurisdictionNotFound(normalizedCode);
+            
             return Results.NotFound();
         }
 

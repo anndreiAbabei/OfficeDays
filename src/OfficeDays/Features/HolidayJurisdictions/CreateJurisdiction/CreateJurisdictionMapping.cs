@@ -5,5 +5,8 @@ namespace OfficeDays.Features.HolidayJurisdictions.CreateJurisdiction;
 
 public static class CreateJurisdictionMapping
 {
-    public static CreateJurisdictionResponse ToViewModel(this HolidayJurisdiction jurisdiction) => new CreateJurisdictionResponse(jurisdiction.Code, jurisdiction.Name);
+    public static CreateJurisdictionResponse ToViewModel(this HolidayJurisdiction jurisdiction)
+    {
+        return new CreateJurisdictionResponse(jurisdiction.Code, jurisdiction.Name);
+    }
 }

@@ -34,9 +34,11 @@ public sealed class CreateRequirementRequestBodyValidator : AbstractValidator<Cr
         RuleFor(x => x.RequirementMode)
             .NotNull();
         RuleFor(x => x.RequirementValue)
-            .InclusiveBetween(0, 100).When(x => x.RequirementMode == AttendanceRequirementMode.Percentage);
+            .InclusiveBetween(0, 100)
+            .When(x => x.RequirementMode == AttendanceRequirementMode.Percentage);
         RuleFor(x => x.RequirementValue)
-            .InclusiveBetween(0, maxDaysPerWeek).When(x => x.RequirementMode == AttendanceRequirementMode.DaysPerWeek);
+            .InclusiveBetween(0, maxDaysPerWeek)
+            .When(x => x.RequirementMode == AttendanceRequirementMode.DaysPerWeek);
 
         RuleFor(x => x.StartingFrom)
             .Must(date => date.Day == 1)

@@ -34,7 +34,11 @@ public sealed partial class BearerTokenHttpsMiddleware
         await _next(context);
     }
 
-    private static bool HasBearerToken(HttpRequest request) => request.Headers.Authorization.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase);
+    private static bool HasBearerToken(HttpRequest request)
+    {
+        return request.Headers.Authorization.ToString()
+                      .StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase);
+    }
 
     private const int EventIdStart = 0500;
     [LoggerMessage(EventIdStart + 1, LogLevel.Warning, "Rejected an insecure bearer request to {Path} from {IpAddress}")]

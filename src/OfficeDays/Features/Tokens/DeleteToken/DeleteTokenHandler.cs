@@ -23,8 +23,9 @@ public sealed class DeleteTokenHandler : IRequestHandler<DeleteTokenRequest>
 
     public async ValueTask<IResult> Handle(DeleteTokenRequest input, CancellationToken cancellationToken)
     {
-        var token = await _db.ApiTokens.SingleOrDefaultAsync(
-            x => x.Id == input.Id && x.UserId == _currentUser.Id, cancellationToken);
+        var token = await _db.ApiTokens.SingleOrDefaultAsync(x => x.Id == input.Id && 
+                                                                  x.UserId == _currentUser.Id, 
+                                                             cancellationToken);
 
         if (token is null)
         {

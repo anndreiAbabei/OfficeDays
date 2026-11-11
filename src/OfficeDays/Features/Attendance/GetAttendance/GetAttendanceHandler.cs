@@ -40,9 +40,9 @@ public sealed class GetAttendanceHandler : IRequestHandler<GetAttendanceRequest>
             period = CalculationPeriod.ForMonth(year.Value, month.Value);
 
         var query = _getAttendanceQuery(_dbContext,
-                                       userId,
-                                       period?.Start ?? DateOnly.MinValue,
-                                       period?.End ?? DateOnly.MaxValue);
+                                        userId,
+                                        period?.Start ?? DateOnly.MinValue,
+                                        period?.End ?? DateOnly.MaxValue);
         var rows = await query.ToListAsync(cancellationToken);
 
         _logger.LogGetEntries(userId, period);

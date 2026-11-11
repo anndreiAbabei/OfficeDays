@@ -25,6 +25,7 @@ public sealed class ReplaceBankHolidaysRequestValidator : AbstractValidator<Repl
             .Custom((input, context) =>
             {
                 var items = input as IList<BankHolidayItem> ?? [.. input];
+                
                 if (items.Any(item => item.Date.Year != context.InstanceToValidate.Year))
                     context.AddFailure("date", "Every holiday date must belong to the year in the URL.");
 

@@ -6,18 +6,33 @@ using OfficeDays.Security;
 
 namespace OfficeDays.Features.Planning.RemovePlan;
 
-public sealed class RemovePlanHandler(AppDbContext db, ICurrentUser currentUser, ILogger<RemovePlanHandler> logger) : IRequestHandler<RemovePlanRequest>
+public sealed class RemovePlanHandler : IRequestHandler<RemovePlanRequest>
 {
+    private readonly AppDbContext _db;
+    private readonly ICurrentUser _currentUser;
+    private readonly ILogger<RemovePlanHandler> _logger;
+    
+    public RemovePlanHandler(AppDbContext db, ICurrentUser currentUser, ILogger<RemovePlanHandler> logger)
+    {
+        _db = db;
+        _currentUser = currentUser;
+        _logger = logger;
+    }
+    
     public async ValueTask<IResult> Handle(RemovePlanRequest request, CancellationToken cancellationToken)
     {
-        if (!await db.Users.AnyAsync(x => x.Id == currentUser.Id, cancellationToken))
+        if (!await _db.Users.AnyAsync(x => x.Id == _currentUser.Id, cancellationToken))
+        {
+            _logger.LogUserNotFound(_currentUser.Id);
+            
             return Results.NotFound();
+        }
 
-        await db.OfficePlans
-                .Where(x => x.UserId == currentUser.Id && x.Date == request.Date)
+        await _db.OfficePlans
+                .Where(x => x.UserId == _currentUser.Id && x.Date == request.Date)
                 .ExecuteDeleteAsync(cancellationToken);
 
-        logger.LogPlanChanged(currentUser.Id, request.Date);
+        _logger.LogPlanChanged(_currentUser.Id, request.Date);
 
         return Results.NoContent();
     }

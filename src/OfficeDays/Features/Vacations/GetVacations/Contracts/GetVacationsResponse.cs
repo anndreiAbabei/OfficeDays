@@ -1,17 +1,10 @@
-using System.Collections;
+using OfficeDays.Infrastructure;
 
 namespace OfficeDays.Features.Vacations.GetVacations.Contracts;
 
 public sealed record GetVacationsItem(Guid Id, DateOnly From, DateOnly To, DateTimeOffset CreatedAt);
-public sealed record GetVacationsResponse : IEnumerable<GetVacationsItem>
+
+public sealed record GetVacationsResponse : CollectionResponse<GetVacationsItem>
 {
-    private readonly IEnumerable<GetVacationsItem> _items;
-
-    public GetVacationsResponse(IEnumerable<GetVacationsItem> items)
-    {
-        _items = items;
-    }
-
-    public IEnumerator<GetVacationsItem> GetEnumerator() => _items.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    public GetVacationsResponse(IEnumerable<GetVacationsItem> items) : base(items) {}
 }

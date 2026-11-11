@@ -42,6 +42,7 @@ public sealed class CreateUserHandler : IRequestHandler<CreateUserRequest>
         if (jurisdiction is null)
         {
             _logger.LogJurisdictionNotFound(countryCode);
+            
             return Results.ValidationProblem(new Dictionary<string, string[]> { ["countryCode"] = ["The selected holiday jurisdiction does not exist."] });
         }
 

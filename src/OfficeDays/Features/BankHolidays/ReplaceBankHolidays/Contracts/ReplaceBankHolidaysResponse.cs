@@ -1,18 +1,10 @@
-using System.Collections;
+using OfficeDays.Infrastructure;
 
 namespace OfficeDays.Features.BankHolidays.ReplaceBankHolidays.Contracts;
 
 public sealed record ReplaceBankHolidaysItem(string CountryCode, DateOnly Date, string Name);
 
-public sealed record ReplaceBankHolidaysResponse : IEnumerable<ReplaceBankHolidaysItem>
+public sealed record ReplaceBankHolidaysResponse : CollectionResponse<ReplaceBankHolidaysItem>
 {
-    private readonly IEnumerable<ReplaceBankHolidaysItem> _items;
-
-    public ReplaceBankHolidaysResponse(IEnumerable<ReplaceBankHolidaysItem> items)
-    {
-        _items = [.. items];
-    }
-
-    public IEnumerator<ReplaceBankHolidaysItem> GetEnumerator() => _items.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    public ReplaceBankHolidaysResponse(IEnumerable<ReplaceBankHolidaysItem> items) : base(items) {}
 }

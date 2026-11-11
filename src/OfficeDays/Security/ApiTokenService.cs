@@ -12,9 +12,16 @@ public sealed class ApiTokenService : IApiTokenService
     {
         Span<byte> bytes = stackalloc byte[32];
         RandomNumberGenerator.Fill(bytes);
+        var b64 = WebEncoders.Base64UrlEncode(bytes);
 
-        return string.Format(TokenFormat, WebEncoders.Base64UrlEncode(bytes));
+        return string.Format(TokenFormat, b64);
     }
 
-    public string Hash(string rawToken) => Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(rawToken)));
+    public string Hash(string rawToken)
+    {
+        var bytes = Encoding.UTF8.GetBytes(rawToken);
+        var hash = SHA256.HashData(bytes);
+        
+        return Convert.ToHexStringLower(hash);
+    }
 }

@@ -34,6 +34,7 @@ public sealed class GetPlanningHandler : IRequestHandler<GetPlanningRequest>
         if (user is null)
         {
             _logger.LogUserNotFound(_currentUser.Id);
+            
             return Results.NotFound();
         }
 
