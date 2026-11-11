@@ -26,7 +26,7 @@ public sealed class PreferencesTeamDayTests(ApplicationFixture application, ITes
             await Expect(profile.TeamDaySelect).ToHaveValueAsync(expectedTeamDay);
         });
     }
-    
+
     [Fact]
     public async Task Should_UpdateUserPreferences()
     {
@@ -50,8 +50,8 @@ public sealed class PreferencesTeamDayTests(ApplicationFixture application, ITes
             await Expect(profile.TeamDaySelect).ToHaveValueAsync(expectedTeamDay);
         });
     }
-    
-    
+
+
     [Fact]
     public async Task Should_SetUserPreferences_ToNone()
     {
@@ -70,7 +70,7 @@ public sealed class PreferencesTeamDayTests(ApplicationFixture application, ITes
             await profile.SignOut();
             await login.SignIn(user);
             await dashboard.GoToProfile();
-            
+
             await profile.SelectTeamDay(expectedTeamDay);
             await profile.SignOut();
             await login.SignIn(user);

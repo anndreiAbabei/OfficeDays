@@ -31,13 +31,13 @@ public sealed class DatabaseInitializer
         await using var scope = _scopeFactory.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.MigrateAsync(cancellationToken: cancellationToken);
-        
+
         _logger.LogDbMigrationUpToDate();
 
         if (await db.Users.AnyAsync(cancellationToken: cancellationToken))
         {
             _logger.LogSkipAdminCreateAlreadyExists();
-            
+
             return;
         }
 
@@ -45,14 +45,14 @@ public sealed class DatabaseInitializer
         var timeZoneId = _configuration["BootstrapAdmin:TimeZoneId"];
         var configuredCountryCode = _configuration["BootstrapAdmin:CountryCode"];
         var configuredCountryName = _configuration["BootstrapAdmin:CountryName"];
-        
+
         if (string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(timeZoneId) ||
             string.IsNullOrWhiteSpace(configuredCountryCode) || string.IsNullOrWhiteSpace(configuredCountryName))
         {
             _logger.LogBootstrapAdminInfoAreMissing();
             throw new InvalidOperationException("The database has no users. Set the BootstrapAdmin__Password, BootstrapAdmin__TimeZoneId, BootstrapAdmin__CountryCode, and BootstrapAdmin__CountryName environment variables to create the initial Admin account.");
         }
-        
+
         if (password.Length < 12)
             throw new InvalidOperationException("The BootstrapAdmin__Password environment variable must contain at least 12 characters.");
         if (!_userDateService.IsValidTimeZone(timeZoneId))
@@ -68,7 +68,7 @@ public sealed class DatabaseInitializer
         {
             jurisdiction = new HolidayJurisdiction
             {
-                Code = countryCode, 
+                Code = countryCode,
                 Name = configuredCountryName.Trim()
             };
             db.HolidayJurisdictions.Add(jurisdiction);
@@ -76,31 +76,31 @@ public sealed class DatabaseInitializer
 
         var user = new User
         {
-            Id = Guid.NewGuid(), 
+            Id = Guid.NewGuid(),
             AttendanceRequirements =
             [
                 new UserAttendanceRequirement
                 {
-                    Id = Guid.NewGuid(), 
+                    Id = Guid.NewGuid(),
                     StartingFrom = UserAttendanceRequirement.BaselineDate,
                     RequirementValue = 50,
                     CreatedAt = _timeProvider.GetUtcNow()
                 }
             ],
-            Username = "Admin", 
-            NormalizedUsername = "ADMIN", 
+            Username = "Admin",
+            NormalizedUsername = "ADMIN",
             PasswordHash = string.Empty,
-            TimeZoneId = timeZoneId, 
-            HolidayJurisdiction = jurisdiction, 
+            TimeZoneId = timeZoneId,
+            HolidayJurisdiction = jurisdiction,
             IsAdmin = true,
             CreatedAt = _timeProvider.GetUtcNow()
         };
-        
+
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
         user.PasswordHash = hasher.HashPassword(user, password);
         await db.Users.AddAsync(user, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        
+
         _logger.LogCreatedAdmin(user.Username, user.Id);
     }
 }
@@ -108,16 +108,16 @@ public sealed class DatabaseInitializer
 internal static partial class DatabaseInitializerLogger
 {
     private const int EventIdStart = 0200;
-    
+
     [LoggerMessage(EventIdStart + 1, LogLevel.Information, "Database migrations are up to date")]
     public static partial void LogDbMigrationUpToDate(this ILogger<DatabaseInitializer> logger);
-    
+
     [LoggerMessage(EventIdStart + 2, LogLevel.Debug, "Skipping bootstrap administrator creation because users already exist")]
     public static partial void LogSkipAdminCreateAlreadyExists(this ILogger<DatabaseInitializer> logger);
-    
+
     [LoggerMessage(EventIdStart + 3, LogLevel.Critical, "Bootstrap administrator environment variables are missing for an empty database")]
     public static partial void LogBootstrapAdminInfoAreMissing(this ILogger<DatabaseInitializer> logger);
-    
+
     [LoggerMessage(EventIdStart + 4, LogLevel.Information, "Created bootstrap administrator {Username} with user ID {UserId}")]
     public static partial void LogCreatedAdmin(this ILogger<DatabaseInitializer> logger, string username, Guid userId);
 }

@@ -14,10 +14,10 @@ public sealed class CreateRequirementHandler : IRequestHandler<CreateRequirement
     private readonly ICurrentUser _currentUser;
     private readonly TimeProvider _clock;
     private readonly ILogger<CreateRequirementHandler> _logger;
-    
-    public CreateRequirementHandler(AppDbContext db, 
-                                    ICurrentUser currentUser, 
-                                    TimeProvider clock, 
+
+    public CreateRequirementHandler(AppDbContext db,
+                                    ICurrentUser currentUser,
+                                    TimeProvider clock,
                                     ILogger<CreateRequirementHandler> logger)
     {
         _db = db;
@@ -25,46 +25,46 @@ public sealed class CreateRequirementHandler : IRequestHandler<CreateRequirement
         _clock = clock;
         _logger = logger;
     }
-    
+
     public async ValueTask<IResult> Handle(CreateRequirementRequest request, CancellationToken cancellationToken)
     {
         var userExists = await _db.Users.AnyAsync(x => x.Id == _currentUser.Id, cancellationToken);
-        
+
         if (!userExists)
         {
             _logger.LogUserNotFound(_currentUser.Id);
-            
+
             return Results.NotFound();
         }
-        
+
         var row = new UserAttendanceRequirement
         {
             Id = Guid.NewGuid(),
-            UserId = _currentUser.Id, 
+            UserId = _currentUser.Id,
             StartingFrom = request.Body.StartingFrom,
             RequirementMode = request.Body.RequirementMode ?? AttendanceRequirementMode.Percentage,
             RequirementValue = request.Body.RequirementValue.GetValueOrDefault(),
             CreatedAt = _clock.GetUtcNow()
         };
-        
+
         await _db.UserAttendanceRequirements.AddAsync(row, cancellationToken);
-        
+
         try
         {
             await _db.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException exception) 
+        catch (DbUpdateException exception)
             when (exception.IsUniqueViolation())
         {
             _logger.LogDuplicateRequirement(exception, _currentUser.Id, row.StartingFrom);
-            
+
             return Results.Problem(statusCode: StatusCodes.Status409Conflict,
-                                   title: "A requirement already exists for this month.", 
+                                   title: "A requirement already exists for this month.",
                                    detail: "Edit the existing requirement or choose another month.");
         }
 
         var result = row.ToViewModel();
-        
+
         return Results.Created($"/api/users/me/requirements/{row.Id}", result);
     }
 }

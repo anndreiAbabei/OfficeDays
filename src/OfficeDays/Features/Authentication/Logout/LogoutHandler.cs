@@ -11,7 +11,7 @@ public sealed class LogoutHandler : IRequestHandler<LogoutRequest>
     private readonly ICurrentUser _currentUser;
     private readonly IHttpContextAccessor _contextAccessor;
     private readonly ILogger<LogoutHandler> _logger;
-    
+
     public LogoutHandler(ICurrentUser currentUser,
                          IHttpContextAccessor contextAccessor,
                          ILogger<LogoutHandler> logger)
@@ -20,7 +20,7 @@ public sealed class LogoutHandler : IRequestHandler<LogoutRequest>
         _contextAccessor = contextAccessor;
         _logger = logger;
     }
-    
+
     public async ValueTask<IResult> Handle(LogoutRequest input, CancellationToken cancellationToken)
     {
         var context = _contextAccessor.HttpContext ?? throw new InvalidOperationException("No active HTTP request.");

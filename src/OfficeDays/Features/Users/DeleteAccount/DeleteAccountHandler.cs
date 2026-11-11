@@ -17,7 +17,7 @@ public sealed class DeleteAccountHandler : IRequestHandler<DeleteAccountRequest>
     private readonly IPasswordHasher<User> _hasher;
     private readonly IHttpContextAccessor _contextAccessor;
     private readonly ILogger<DeleteAccountHandler> _logger;
-    
+
     public DeleteAccountHandler(AppDbContext db,
                                 ICurrentUser currentUser,
                                 IPasswordHasher<User> hasher,
@@ -34,11 +34,11 @@ public sealed class DeleteAccountHandler : IRequestHandler<DeleteAccountRequest>
     public async ValueTask<IResult> Handle(DeleteAccountRequest input, CancellationToken cancellationToken)
     {
         var context = _contextAccessor.HttpContext ?? throw new InvalidOperationException("No active HTTP request.");
-       
+
         // SQLite's immediate transaction serializes the last-admin check with deletion.
         await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
         var user = await _db.Users.SingleOrDefaultAsync(x => x.Id == _currentUser.Id, cancellationToken);
-        
+
         if (user is null)
         {
             _logger.LogUserNotFound(_currentUser.Id);
@@ -49,17 +49,17 @@ public sealed class DeleteAccountHandler : IRequestHandler<DeleteAccountRequest>
         if (passCheckResult == PasswordVerificationResult.Failed)
         {
             _logger.LogPasswordRejected(user.Id);
-            
-            return Results.Problem(statusCode: StatusCodes.Status400BadRequest, 
-                                   title: "Incorrect password", 
+
+            return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
+                                   title: "Incorrect password",
                                    detail: "Your current password is incorrect. Your account has not been deleted.");
         }
 
         if (user.IsAdmin && !await _db.Users.AnyAsync(x => x.IsAdmin && x.Id != user.Id, cancellationToken))
         {
             _logger.LogLastAdministrator(user.Id);
-            
-            return Results.Problem(statusCode: StatusCodes.Status409Conflict, 
+
+            return Results.Problem(statusCode: StatusCodes.Status409Conflict,
                                    title: "Last administrator",
                                    detail: "You are the last administrator. Ask the server operator to assign another administrator before deleting your account.");
         }
@@ -69,7 +69,7 @@ public sealed class DeleteAccountHandler : IRequestHandler<DeleteAccountRequest>
         await _db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        
+
         return Results.NoContent();
     }
 }

@@ -10,13 +10,13 @@ public sealed class GetBankHolidaysHandler : IRequestHandler<GetBankHolidaysRequ
 {
     private readonly ILogger<GetBankHolidaysHandler> _logger;
     private readonly AppDbContext _db;
-    
+
     public GetBankHolidaysHandler(AppDbContext db, ILogger<GetBankHolidaysHandler> logger)
     {
         _logger = logger;
         _db = db;
     }
-    
+
     public async ValueTask<IResult> Handle(GetBankHolidaysRequest input, CancellationToken cancellationToken)
     {
         var countryCode = input.CountryCode;
@@ -25,7 +25,7 @@ public sealed class GetBankHolidaysHandler : IRequestHandler<GetBankHolidaysRequ
 
         var jurisdiction = await _db.HolidayJurisdictions.AsNoTracking()
                                    .SingleOrDefaultAsync(x => x.Code == normalizedCode, cancellationToken);
-        
+
         if (jurisdiction is null)
         {
             _logger.LogJurisdictionNotFound(normalizedCode);
@@ -41,7 +41,7 @@ public sealed class GetBankHolidaysHandler : IRequestHandler<GetBankHolidaysRequ
                                        x.Date >= start && x.Date <= end)
                            .OrderBy(x => x.Date)
                            .ToListAsync(cancellationToken);
-        
+
         return Results.Ok(rows.ToViewModel());
     }
 }

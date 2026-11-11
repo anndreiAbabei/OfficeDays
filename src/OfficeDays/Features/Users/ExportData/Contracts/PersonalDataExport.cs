@@ -4,29 +4,29 @@ namespace OfficeDays.Features.Users.ExportData.Contracts;
 
 public sealed record PersonalDataExport
 (
-    string Format, 
+    string Format,
     int FormatVersion,
     DateTimeOffset ExportedAt,
     ExportApplication Application,
-    ExportReportContext ReportContext, 
-    ExportProfile Profile, 
+    ExportReportContext ReportContext,
+    ExportProfile Profile,
     ExportPreferences Preferences,
-    ExportRequirement[] RequirementHistory, 
+    ExportRequirement[] RequirementHistory,
     ExportAttendance[] Attendance,
-    ExportPlan[] Plans, 
-    ExportVacation[] Vacations, 
+    ExportPlan[] Plans,
+    ExportVacation[] Vacations,
     ExportHolidayCalendar HolidayCalendar
 );
 
 public sealed record ExportApplication(string Name, string Version);
 public sealed record ExportReportContext(int CalculationVersion, DateOnly LocalDate, DateOnly RegistrationLocalDate);
-public sealed record ExportProfile(Guid Id, 
-                                   string Username, 
-                                   string NormalizedUsername, 
-                                   string? Email, 
+public sealed record ExportProfile(Guid Id,
+                                   string Username,
+                                   string NormalizedUsername,
+                                   string? Email,
                                    string TimeZoneId,
-                                   int HolidayJurisdictionId, 
-                                   bool IsAdmin, 
+                                   int HolidayJurisdictionId,
+                                   bool IsAdmin,
                                    DateTimeOffset CreatedAt);
 public sealed record ExportPreferences(string? TeamDay);
 public sealed record ExportRequirement(Guid Id, Guid UserId, DateOnly StartingFrom, int RequirementValue, DateTimeOffset CreatedAt)

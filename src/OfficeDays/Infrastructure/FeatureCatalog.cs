@@ -20,7 +20,7 @@ public sealed class FeatureCatalog
     public static FeatureCatalog Discover(IEnumerable<Type> types)
     {
         var endpointType = typeof(IEndpoint);
-        
+
         var concreteTypes = types.Distinct()
                                  .Where(type => type.IsClass && !type.IsAbstract && !type.ContainsGenericParameters)
                                  .OrderBy(type => type.FullName, StringComparer.Ordinal)
@@ -51,12 +51,12 @@ public sealed class FeatureCatalog
         var requests = concreteTypes.Where(type => typeof(IRequest).IsAssignableFrom(type))
                                     .Concat(handlers.Select(handler => handler.RequestType))
                                     .Distinct();
-        
+
         foreach (var request in requests)
         {
             var matches = handlers.Where(handler => handler.RequestType == request)
                                   .ToArray();
-            
+
             if (matches.Length != 1)
                 throw new InvalidOperationException($"Request '{request.FullName}' must have exactly one handler; found {matches.Length}: {string.Join(", ", matches.Select(match => match.HandlerType.FullName))}.");
         }
@@ -69,9 +69,9 @@ public sealed class FeatureCatalog
         foreach (var handler in Handlers)
         {
             var contract = typeof(IRequestHandler<>).MakeGenericType(handler.RequestType);
-            
+
             var count = services.Count(descriptor => !descriptor.IsKeyedService && descriptor.ServiceType == contract);
-            
+
             if (count != 1)
                 throw new InvalidOperationException($"Request '{handler.RequestType.FullName}' requires exactly one registered handler; found {count}.");
         }

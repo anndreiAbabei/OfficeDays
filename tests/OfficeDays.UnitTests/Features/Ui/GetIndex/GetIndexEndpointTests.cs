@@ -25,7 +25,7 @@ public sealed class GetIndexEndpointTests
         Assert.Equal(2, endpoints.Length);
         Assert.Contains(endpoints, endpoint => endpoint.RoutePattern.RawText == "/index.html");
         Assert.Contains(endpoints, endpoint => endpoint.RoutePattern.RawText == "{*path:nonfile}" && endpoint.Order == int.MaxValue);
-        Assert.All(endpoints, endpoint => Assert.Equal(new[] { "GET", "HEAD" }, endpoint.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods));
+        Assert.All(endpoints, endpoint => Assert.Equal(["GET", "HEAD"], endpoint.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods));
     }
 
     [Theory]
@@ -41,10 +41,14 @@ public sealed class GetIndexEndpointTests
         var sut = new GetIndexEndpoint(new UiContent(fixture.Environment));
         sut.MapEndpoint(app);
         var endpoint = ((IEndpointRouteBuilder)app).DataSources.SelectMany(source => source.Endpoints).Cast<RouteEndpoint>().Single(endpoint => endpoint.RoutePattern.RawText == route);
-        var context = new DefaultHttpContext { RequestServices = app.Services };
-        context.Request.Path = path;
-        context.Request.Method = "GET";
-        using var body = new MemoryStream();
+        var context = new DefaultHttpContext { RequestServices = app.Services,
+            Request =
+            {
+                Path = path,
+                Method = "GET"
+            }
+        };
+        await using var body = new MemoryStream();
         context.Response.Body = body;
 
         // act
@@ -72,9 +76,13 @@ public sealed class GetIndexEndpointTests
         var sut = new GetIndexEndpoint(new UiContent(fixture.Environment));
         sut.MapEndpoint(app);
         var endpoint = ((IEndpointRouteBuilder)app).DataSources.SelectMany(source => source.Endpoints).Cast<RouteEndpoint>().Single(endpoint => endpoint.Order == int.MaxValue);
-        var context = new DefaultHttpContext { RequestServices = app.Services };
-        context.Request.Path = path;
-        using var body = new MemoryStream();
+        var context = new DefaultHttpContext { RequestServices = app.Services,
+            Request =
+            {
+                Path = path
+            }
+        };
+        await using var body = new MemoryStream();
         context.Response.Body = body;
 
         // act

@@ -16,7 +16,7 @@ public sealed class UpdateRequirementRequestValidatorTests
             Body = new UpdateRequirementRequestBody
             {
                 RequirementMode = AttendanceRequirementMode.Percentage,
-                StartingFrom = new DateOnly(2026, 10, 01), 
+                StartingFrom = new DateOnly(2026, 10, 01),
                 RequirementValue = 50
             }
         };

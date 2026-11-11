@@ -12,7 +12,7 @@ public sealed class RevokeTokenHandler : IRequestHandler<RevokeTokenRequest>
     private readonly AppDbContext _dbContext;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<RevokeTokenHandler> _logger;
-    
+
     public RevokeTokenHandler(ICurrentUser currentUser,
                               AppDbContext dbContext,
                               TimeProvider timeProvider,
@@ -23,28 +23,28 @@ public sealed class RevokeTokenHandler : IRequestHandler<RevokeTokenRequest>
         _timeProvider = timeProvider;
         _logger = logger;
     }
-    
+
     public async ValueTask<IResult> Handle(RevokeTokenRequest input, CancellationToken cancellationToken)
     {
         var id = input.Id;
         var userId = _currentUser.Id;
         var token = await _dbContext.ApiTokens.SingleOrDefaultAsync(x => x.Id == id && x.UserId == userId, cancellationToken);
-        
+
         if (token is null)
         {
             _logger.LogTokenNotFound(id, userId);
-            
+
             return Results.NotFound();
         }
-        
+
         if (token.RevokedAt is null)
         {
             token.RevokedAt = _timeProvider.GetUtcNow();
             await _dbContext.SaveChangesAsync(cancellationToken);
-            
+
             _logger.LogTokenRevoked(userId, token.Id);
         }
-        
+
         return Results.NoContent();
     }
 }

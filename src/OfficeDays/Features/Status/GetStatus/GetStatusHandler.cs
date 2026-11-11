@@ -15,7 +15,7 @@ public sealed class GetStatusHandler : IRequestHandler<GetStatusRequest>
     private readonly AppDbContext _db;
     private readonly IUserDateService _dates;
     private readonly IOfficeRequirementReader _requirements;
-    
+
     public GetStatusHandler(ICurrentUser currentUser,
                             AppDbContext db,
                             IUserDateService dates,
@@ -30,14 +30,14 @@ public sealed class GetStatusHandler : IRequestHandler<GetStatusRequest>
         _dates = dates;
         _requirements = requirements;
     }
-    
+
     public async ValueTask<IResult> Handle(GetStatusRequest input, CancellationToken cancellationToken)
     {
         var year = input.Year;
         var month = input.Month;
-        
+
         var user = await _db.Users.FindAsync([_currentUser.Id], cancellationToken);
-        
+
         if (user is null)
         {
             _logger.LogUserNotFound(_currentUser.Id);
@@ -73,14 +73,14 @@ public sealed class GetStatusHandler : IRequestHandler<GetStatusRequest>
                              .Select(x => x.Date)
                              .ToListAsync(cancellationToken);
         var today = _dates.Today(user);
-        var days = PlanningCalculator.Calculate(period, today, plans, officeDates, 
-                                                holidayDates.Select(date => (date, "")), 
+        var days = PlanningCalculator.Calculate(period, today, plans, officeDates,
+                                                holidayDates.Select(date => (date, "")),
                                                 vacationRows.Select(x => (x.From, x.To)));
-        var response = result.ToViewModel() with 
-        { 
+        var response = result.ToViewModel() with
+        {
             UpcomingPlannedDays = PlanningCalculator.UpcomingCount(days, today)
         };
-        
+
         return Results.Ok(response);
     }
 }

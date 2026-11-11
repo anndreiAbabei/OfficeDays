@@ -80,8 +80,10 @@ public sealed class SecurityLoggingIntegrationTests
         });
     }
 
+    [ExcludeFromCodeCoverage]
     private sealed record LogEntry(int EventId, LogLevel Level, string Message, Exception? Exception);
 
+    [ExcludeFromCodeCoverage]
     private sealed class CapturingLoggerProvider : ILoggerProvider
     {
         public ConcurrentQueue<LogEntry> Entries { get; } = new ConcurrentQueue<LogEntry>();

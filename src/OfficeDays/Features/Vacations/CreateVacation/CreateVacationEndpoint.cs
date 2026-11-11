@@ -7,7 +7,7 @@ namespace OfficeDays.Features.Vacations.CreateVacation;
 public sealed class CreateVacationEndpoint(IRequestExecutor executor) : IVacationsEndpoint
 {
     private readonly IRequestExecutor _executor = executor;
-    
+
     public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
         endpoints.MapPost("/", _executor.Execute<CreateVacationRequest>)

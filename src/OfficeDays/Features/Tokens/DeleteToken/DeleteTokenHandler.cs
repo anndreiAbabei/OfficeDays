@@ -11,7 +11,7 @@ public sealed class DeleteTokenHandler : IRequestHandler<DeleteTokenRequest>
     private readonly ICurrentUser _currentUser;
     private readonly AppDbContext _db;
     private readonly ILogger<DeleteTokenHandler> _logger;
-    
+
     public DeleteTokenHandler(ICurrentUser currentUser,
                               AppDbContext db,
                               ILogger<DeleteTokenHandler> logger)
@@ -20,7 +20,7 @@ public sealed class DeleteTokenHandler : IRequestHandler<DeleteTokenRequest>
         _db = db;
         _logger = logger;
     }
-    
+
     public async ValueTask<IResult> Handle(DeleteTokenRequest input, CancellationToken cancellationToken)
     {
         var token = await _db.ApiTokens.SingleOrDefaultAsync(
@@ -35,13 +35,13 @@ public sealed class DeleteTokenHandler : IRequestHandler<DeleteTokenRequest>
         if (token.RevokedAt is null)
         {
             _logger.LogTokenNotRevoked(token.Id, _currentUser.Id);
-            
+
             return Results.Conflict(new { detail = "Revoke the token before deleting it permanently." });
         }
 
         _db.ApiTokens.Remove(token);
         await _db.SaveChangesAsync(cancellationToken);
-        
+
         return Results.NoContent();
     }
 }

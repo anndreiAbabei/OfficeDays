@@ -35,13 +35,13 @@ public sealed class GetAttendanceHandler : IRequestHandler<GetAttendanceRequest>
         var month = request.Month;
 
         CalculationPeriod? period = null;
-        
+
         if (year.HasValue && month.HasValue)
             period = CalculationPeriod.ForMonth(year.Value, month.Value);
 
-        var query = _getAttendanceQuery(_dbContext, 
-                                       userId, 
-                                       period?.Start ?? DateOnly.MinValue, 
+        var query = _getAttendanceQuery(_dbContext,
+                                       userId,
+                                       period?.Start ?? DateOnly.MinValue,
                                        period?.End ?? DateOnly.MaxValue);
         var rows = await query.ToListAsync(cancellationToken);
 

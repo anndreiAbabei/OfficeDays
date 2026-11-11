@@ -11,7 +11,7 @@ public sealed class RecordDateResponseTests
         var expectedDate = new DateOnly(2020, 01, 13);
         var expectedCreatedTime = DateTime.Now;
         const bool expectedIsManual = true;
-        
+
         // act
         var sut = new RecordDateResponse(expectedDate, expectedCreatedTime, expectedIsManual);
 

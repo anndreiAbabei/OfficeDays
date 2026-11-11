@@ -10,7 +10,7 @@ public interface IApplicationFixture
     string BaseUrl { get; }
     string RepositoryRoot { get; }
     string ArtifactsDirectory { get; }
-    
+
     BrowserFixture Browser { get; }
     IApiClient Api { get; }
     CancellationToken CancellationToken { get; }
@@ -29,7 +29,7 @@ public sealed class ApplicationFixture : IApplicationFixture, IAsyncLifetime
     public string BaseUrl { get; private set; } = string.Empty;
     public string RepositoryRoot { get; } = FindRepositoryRoot();
     public string ArtifactsDirectory { get; private set; } = string.Empty;
-    
+
     public BrowserFixture Browser { get; } = new BrowserFixture();
     public IApiClient Api => field ??= new ApiClient(BaseUrl);
     public CancellationToken CancellationToken => TestContext.Current.CancellationToken;
@@ -44,7 +44,7 @@ public sealed class ApplicationFixture : IApplicationFixture, IAsyncLifetime
             var configuration = Environment.GetEnvironmentVariable("E2E_CONFIGURATION") ?? "Debug";
             var appDirectory = Path.Combine(RepositoryRoot, "src", "OfficeDays");
             var assembly = Path.Combine(appDirectory, "bin", configuration, "net10.0", "OfficeDays.dll");
-            
+
             if (!File.Exists(assembly) || !File.Exists(Path.Combine(appDirectory, "wwwroot", "index.html")))
                 throw new InvalidOperationException("Build the frontend and backend first. See tests/OfficeDays.E2ETests/README.md.");
 
@@ -81,7 +81,7 @@ public sealed class ApplicationFixture : IApplicationFixture, IAsyncLifetime
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
             BaseUrl = await _address.Task.WaitAsync(TimeSpan.FromSeconds(60), CancellationToken);
-            
+
             await Api.EnsureLive(CancellationToken);
         }
         catch
@@ -112,7 +112,7 @@ public sealed class ApplicationFixture : IApplicationFixture, IAsyncLifetime
             if (Directory.Exists(_temporaryDirectory))
                 Directory.Delete(_temporaryDirectory, recursive: true);
         }
-        
+
         Api.Dispose();
         _cancellationTokenSource.Dispose();
     }

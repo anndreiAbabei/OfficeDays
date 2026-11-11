@@ -10,6 +10,6 @@ public sealed class GetLivenessEndpoint : IHealthEndpoint
         Predicate = _ => false,
         ResponseWriter = HealthResponseWriter.Write
     };
-    
+
     public void MapEndpoint(IEndpointRouteBuilder endpoints) => endpoints.MapHealthChecks("live", _options);
 }

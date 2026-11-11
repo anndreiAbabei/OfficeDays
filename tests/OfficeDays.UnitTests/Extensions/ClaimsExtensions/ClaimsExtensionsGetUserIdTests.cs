@@ -10,7 +10,7 @@ public sealed class ClaimsExtensionsGetUserIdTests
     {
         // arrange
         var expectedId = Guid.NewGuid();
-        IEnumerable<Claim> claims = 
+        IEnumerable<Claim> claims =
         [
             new Claim(ClaimTypes.NameIdentifier, expectedId.ToString())
         ];
@@ -19,7 +19,7 @@ public sealed class ClaimsExtensionsGetUserIdTests
             new ClaimsIdentity(claims)
         ];
         var sut = new ClaimsPrincipal(identity);
-        
+
         // act
         var result = sut.GetUserId();
 
@@ -33,7 +33,7 @@ public sealed class ClaimsExtensionsGetUserIdTests
         // arrange
         var sut = new ClaimsPrincipal([new ClaimsIdentity()]);
         const string expectedMessage = "Authenticated principal has no user identifier.";
-        
+
         // act
         Action action = () => sut.GetUserId();
 

@@ -10,15 +10,15 @@ public sealed class RemovePlanHandler(AppDbContext db, ICurrentUser currentUser,
 {
     public async ValueTask<IResult> Handle(RemovePlanRequest request, CancellationToken cancellationToken)
     {
-        if (!await db.Users.AnyAsync(x => x.Id == currentUser.Id, cancellationToken)) 
+        if (!await db.Users.AnyAsync(x => x.Id == currentUser.Id, cancellationToken))
             return Results.NotFound();
-        
+
         await db.OfficePlans
                 .Where(x => x.UserId == currentUser.Id && x.Date == request.Date)
                 .ExecuteDeleteAsync(cancellationToken);
-        
+
         logger.LogPlanChanged(currentUser.Id, request.Date);
-        
+
         return Results.NoContent();
     }
 }

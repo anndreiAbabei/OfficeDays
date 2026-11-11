@@ -30,32 +30,32 @@ public static class ServiceRegistration
             throw new InvalidOperationException("Authentication:CookieExpireTimeSpan must be a positive TimeSpan.");
 
         builder.Services.AddSerilog();
-        
+
         builder.Services.AddResponseCompression(options =>
         {
             options.EnableForHttps = true;
             options.MimeTypes = ["text/javascript", "text/css", "application/json"];
         });
-        
+
         builder.Services.AddOptions<RequestLimits>()
                .Bind(builder.Configuration.GetSection("RateLimiting"))
-               .Validate(limits => limits.MaxBodyBytes is > 0 and <= 10_485_760 && 
-                                   new[] { 
-                                           limits.Source, 
-                                           limits.Api, 
-                                           limits.Token, 
-                                           limits.Login, 
+               .Validate(limits => limits.MaxBodyBytes is > 0 and <= 10_485_760 &&
+                                   new[] {
+                                           limits.Source,
+                                           limits.Api,
+                                           limits.Token,
+                                           limits.Login,
                                            limits.LoginAccount,
                                            limits.Registration,
-                                           limits.Recovery, 
-                                           limits.RecoveryAccount, 
+                                           limits.Recovery,
+                                           limits.RecoveryAccount,
                                            limits.Verification,
-                                           limits.Reports 
-                                       }.All(limit => limit.Permits > 0 && 
+                                           limits.Reports
+                                       }.All(limit => limit.Permits > 0 &&
                                                       limit.WindowSeconds is > 0 and <= 86_400),
                          "Rate limits must be positive; windows cannot exceed one day and bodies cannot exceed 10 MiB.")
             .ValidateOnStart();
-        
+
         builder.Services.AddSingleton<RequestRateLimiters>();
         builder.Services.AddRateLimiter(options =>
         {
@@ -64,11 +64,11 @@ public static class ServiceRegistration
         });
         builder.Services.AddOptions<RateLimiterOptions>().Configure<RequestRateLimiters>((options, limiters) =>
             options.GlobalLimiter = limiters.Api);
-        
+
         // Never enable ASPNETCORE_FORWARDEDHEADERS_ENABLED: it trusts every proxy.
         if (builder.Configuration.GetValue<bool>("FORWARDEDHEADERS_ENABLED"))
             throw new InvalidOperationException("Use ReverseProxy:KnownProxies instead of ASPNETCORE_FORWARDEDHEADERS_ENABLED.");
-       
+
         builder.Services.Configure<ForwardedHeadersOptions>(options =>
         {
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
@@ -87,7 +87,7 @@ public static class ServiceRegistration
         AddDatabase(builder);
         AddServices(builder);
         AddAuthorization(builder, cookieExpireTimeSpan);
-        
+
         return builder;
     }
 
@@ -101,7 +101,7 @@ public static class ServiceRegistration
     private static void AddKeyPath(WebApplicationBuilder kpBuilder)
     {
         var keysPath = kpBuilder.Configuration["DataProtection:KeysPath"];
-        
+
         if (string.IsNullOrWhiteSpace(keysPath))
             kpBuilder.Services.AddDataProtection();
         else
@@ -179,7 +179,7 @@ public static class ServiceRegistration
                                         .AnyAsync(user => user.Id == userId, context.HttpContext.RequestAborted))
                            {
                                context.RejectPrincipal();
-                               
+
                                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                            }
                        };

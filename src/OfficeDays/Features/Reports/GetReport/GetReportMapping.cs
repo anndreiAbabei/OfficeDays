@@ -7,29 +7,29 @@ public static class GetReportMapping
 {
     public static GetReportResponse ToViewModel(this AttendanceReport report)
     {
-        return new GetReportResponse(report.Year, 
-                                     report.StartMonth, 
-                                     report.EndMonth, 
-                                     report.Username, 
-                                     report.TimeZoneId, 
+        return new GetReportResponse(report.Year,
+                                     report.StartMonth,
+                                     report.EndMonth,
+                                     report.Username,
+                                     report.TimeZoneId,
                                      report.RegistrationMonth,
-                                     report.Today, 
+                                     report.Today,
                                      report.GeneratedAt,
-                                     new GetReportSummary(report.OfficeDays, 
-                                                          report.AttendancePercentage, 
-                                                          report.CompletedMonths, 
+                                     new GetReportSummary(report.OfficeDays,
+                                                          report.AttendancePercentage,
+                                                          report.CompletedMonths,
                                                           report.MonthsMeetingTarget),
                                      report.Months.Select(month => month.ToViewModel()));
     }
 
     public static GetReportMonth ToViewModel(this AttendanceReportMonth month)
     {
-        return new GetReportMonth(month.Month, 
-                                  month.EligibleWorkingDays, 
+        return new GetReportMonth(month.Month,
+                                  month.EligibleWorkingDays,
                                   month.RequirementValue,
-                                  month.RequiredOfficeDays, 
+                                  month.RequiredOfficeDays,
                                   month.OfficeDays,
-                                  month.AttendancePercentage, 
+                                  month.AttendancePercentage,
                                   month.State switch
                                   {
                                       ReportMonthState.NotStarted => "notStarted",

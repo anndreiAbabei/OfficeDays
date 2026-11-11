@@ -13,14 +13,14 @@ public sealed class RecordDateHandlerLoggingTests
         var expectedUserId = Guid.NewGuid();
         var expectedDate = DateOnly.FromDateTime(DateTime.Today);
         var logger = new FakeLogger<RecordDateHandler>();
-        
+
         // act
         logger.LogDuplicatedEntryRequest(expectedUserId, expectedDate);
 
         // assert
         logger.Assert(LogLevel.Debug, $"Ignored duplicate office attendance for user {expectedUserId} on {expectedDate}");
     }
-    
+
     [Fact]
     public void Should_LogEntryCreated()
     {
@@ -28,14 +28,14 @@ public sealed class RecordDateHandlerLoggingTests
         var expectedUserId = Guid.NewGuid();
         var expectedDate = DateOnly.FromDateTime(DateTime.Today);
         var logger = new FakeLogger<RecordDateHandler>();
-        
+
         // act
         logger.LogEntryCreated(expectedUserId, expectedDate);
 
         // assert
         logger.Assert(LogLevel.Information, $"Recorded office attendance for user {expectedUserId} on {expectedDate}");
     }
-    
+
     [Fact]
     public void Should_LogResolvedConcurrentUpdate()
     {
@@ -43,7 +43,7 @@ public sealed class RecordDateHandlerLoggingTests
         var expectedUserId = Guid.NewGuid();
         var expectedDate = DateOnly.FromDateTime(DateTime.Today);
         var logger = new FakeLogger<RecordDateHandler>();
-        
+
         // act
         logger.LogResolvedConcurrentUpdate(expectedUserId, expectedDate);
 

@@ -7,9 +7,9 @@ namespace OfficeDays.UnitTests.Features.Reports;
 
 public sealed class ReportCalculatorTests
 {
-    
+
     private readonly ReportCalculator _calculator = new ReportCalculator(new AttendanceCalculator());
-    
+
     private static User User(DateTimeOffset? registered = null, string zone = "UTC") => new User
     {
         Id = Guid.NewGuid(), Username = "tester", NormalizedUsername = "TESTER", PasswordHash = "hash",
@@ -153,7 +153,7 @@ public sealed class ReportCalculatorTests
         Assert.Equal(expectedCompletedMonths, future.CompletedMonths);
         Assert.Null(future.AttendancePercentage);
     }
-    
+
     [ExcludeFromCodeCoverage]
     private static UserAttendanceRequirement Requirement(string date, int percentage)
     {

@@ -13,7 +13,7 @@ public sealed class CreateTokenHandler : IRequestHandler<CreateTokenRequest>
     private readonly AppDbContext _db;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<CreateTokenHandler> _logger;
-    
+
     public CreateTokenHandler(ICurrentUser currentUser,
                               AppDbContext db,
                               TimeProvider timeProvider,
@@ -26,7 +26,7 @@ public sealed class CreateTokenHandler : IRequestHandler<CreateTokenRequest>
         _timeProvider = timeProvider;
         _logger = logger;
     }
-    
+
     public async ValueTask<IResult> Handle(CreateTokenRequest input, CancellationToken cancellationToken)
     {
         var request = input.Body;
@@ -40,12 +40,12 @@ public sealed class CreateTokenHandler : IRequestHandler<CreateTokenRequest>
             TokenHash = _apiTokenService.Hash(rawToken),
             CreatedAt = _timeProvider.GetUtcNow()
         };
-        
+
         await _db.ApiTokens.AddAsync(token, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
-        
+
         _logger.LogTokenCreated(token.UserId, token.Id, token.Name);
-        
+
         return Results.Created($"/api/tokens/{token.Id}", token.ToCreatedViewModel(rawToken));
     }
 }

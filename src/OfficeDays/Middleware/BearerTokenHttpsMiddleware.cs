@@ -22,12 +22,12 @@ public sealed partial class BearerTokenHttpsMiddleware
         if (_requireHttps && !context.Request.IsHttps && HasBearerToken(context.Request))
         {
             LogRejectInsecureBearer(_logger, context.Request.Path, context.Connection.RemoteIpAddress);
-            
+
             await Results.Problem(statusCode: StatusCodes.Status400BadRequest,
                                   title: "HTTPS required",
                                   detail: "Bearer API tokens are not accepted over an insecure connection.")
                          .ExecuteAsync(context);
-            
+
             return;
         }
 

@@ -7,12 +7,12 @@ namespace OfficeDays.Security;
 public sealed class ApiTokenService : IApiTokenService
 {
     private const string TokenFormat = "odt_{0}";
-    
+
     public string Generate()
     {
         Span<byte> bytes = stackalloc byte[32];
         RandomNumberGenerator.Fill(bytes);
-        
+
         return string.Format(TokenFormat, WebEncoders.Base64UrlEncode(bytes));
     }
 

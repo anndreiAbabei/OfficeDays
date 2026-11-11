@@ -7,12 +7,12 @@ public sealed record GetTokensItem(Guid Id, string Name, DateTimeOffset CreatedA
 public sealed record GetTokensResponse : IEnumerable<GetTokensItem>
 {
     private readonly IEnumerable<GetTokensItem> _items;
-    
+
     public GetTokensResponse(IEnumerable<GetTokensItem> items)
     {
         _items = items;
     }
-    
+
     public IEnumerator<GetTokensItem> GetEnumerator() => _items.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

@@ -19,7 +19,7 @@ public sealed class LoginHandler : IRequestHandler<LoginRequest>
     private readonly IUserService _userService;
     private readonly IOfficeRequirementReader _requirements;
     private readonly ILogger<LoginHandler> _logger;
-    
+
     public LoginHandler(AppDbContext db,
                         IPasswordHasher<User> hasher,
                         IHttpContextAccessor contextAccessor,
@@ -34,7 +34,7 @@ public sealed class LoginHandler : IRequestHandler<LoginRequest>
         _requirements = requirements;
         _logger = logger;
     }
-    
+
     public async ValueTask<IResult> Handle(LoginRequest input, CancellationToken cancellationToken)
     {
         var request = input.Body;

@@ -10,13 +10,13 @@ public sealed class UpdateJurisdictionHandler : IRequestHandler<UpdateJurisdicti
 {
     private readonly AppDbContext _dbContext;
     private readonly ILogger<UpdateJurisdictionHandler> _logger;
-    
+
     public UpdateJurisdictionHandler(AppDbContext dbContext, ILogger<UpdateJurisdictionHandler> logger)
     {
         _dbContext = dbContext;
         _logger = logger;
     }
-    
+
     public async ValueTask<IResult> Handle(UpdateJurisdictionRequest input, CancellationToken cancellationToken)
     {
         var code = input.Code;
@@ -24,7 +24,7 @@ public sealed class UpdateJurisdictionHandler : IRequestHandler<UpdateJurisdicti
         HolidayJurisdictionCodes.TryNormalize(code, out var normalizedCode);
 
         var jurisdiction = await _dbContext.HolidayJurisdictions.SingleOrDefaultAsync(x => x.Code == normalizedCode, cancellationToken);
-        
+
         if (jurisdiction is null)
         {
             _logger.LogJurisdictionNotFound(normalizedCode);
@@ -32,11 +32,11 @@ public sealed class UpdateJurisdictionHandler : IRequestHandler<UpdateJurisdicti
         }
 
         jurisdiction.Name = request.Name.Trim();
-        
+
         await _dbContext.SaveChangesAsync(cancellationToken);
-        
+
         _logger.LogJurisdictionUpdated(jurisdiction.Code);
-        
+
         return Results.Ok(jurisdiction.ToViewModel());
     }
 }

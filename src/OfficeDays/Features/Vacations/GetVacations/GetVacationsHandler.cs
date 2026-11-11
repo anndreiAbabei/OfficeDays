@@ -11,14 +11,14 @@ public sealed class GetVacationsHandler : IRequestHandler<GetVacationsRequest>
 {
     private readonly ICurrentUser _currentUser;
     private readonly AppDbContext _dbContext;
-    
+
     public GetVacationsHandler(ICurrentUser currentUser,
                                AppDbContext dbContext)
     {
         _currentUser = currentUser;
         _dbContext = dbContext;
     }
-    
+
     public async ValueTask<IResult> Handle(GetVacationsRequest input, CancellationToken cancellationToken)
     {
         var year = input.Year;
@@ -30,7 +30,7 @@ public sealed class GetVacationsHandler : IRequestHandler<GetVacationsRequest>
         if (year.HasValue && month.HasValue)
         {
             var period = CalculationPeriod.ForMonth(year.Value, month.Value);
-            
+
             query = query.Where(x => x.From <= period.End && x.To >= period.Start);
         }
 

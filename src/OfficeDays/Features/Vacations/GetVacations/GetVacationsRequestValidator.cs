@@ -16,7 +16,7 @@ public sealed class GetVacationsRequestValidator : AbstractValidator<GetVacation
             RuleFor(req => req.Month)
                 .NotNull();
         });
-        
+
         When(req => req.Month.HasValue, () =>
         {
             RuleFor(req => req.Month)

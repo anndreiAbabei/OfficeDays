@@ -6,12 +6,12 @@ public sealed record GetVacationsItem(Guid Id, DateOnly From, DateOnly To, DateT
 public sealed record GetVacationsResponse : IEnumerable<GetVacationsItem>
 {
     private readonly IEnumerable<GetVacationsItem> _items;
-    
+
     public GetVacationsResponse(IEnumerable<GetVacationsItem> items)
     {
         _items = items;
     }
-    
+
     public IEnumerator<GetVacationsItem> GetEnumerator() => _items.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

@@ -8,7 +8,7 @@ public static class GetRequirementsMapping
 {
     public static GetRequirementsResponse ToViewModel(this User user, IEnumerable<UserAttendanceRequirement> requirements, IUserDateService dates)
     {
-        return new GetRequirementsResponse(dates.Today(user), 
+        return new GetRequirementsResponse(dates.Today(user),
                                            requirements.Select(row => row.ToViewModel()));
     }
 

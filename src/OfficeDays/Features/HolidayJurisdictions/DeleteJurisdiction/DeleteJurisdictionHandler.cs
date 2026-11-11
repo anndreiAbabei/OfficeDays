@@ -11,20 +11,20 @@ public sealed class DeleteJurisdictionHandler : IRequestHandler<DeleteJurisdicti
 {
     private readonly AppDbContext _dbContext;
     private readonly ILogger<DeleteJurisdictionHandler> _logger;
-    
+
     public DeleteJurisdictionHandler(AppDbContext dbContext, ILogger<DeleteJurisdictionHandler> logger)
     {
         _dbContext = dbContext;
         _logger = logger;
     }
-    
+
     public async ValueTask<IResult> Handle(DeleteJurisdictionRequest input, CancellationToken cancellationToken)
     {
         var code = input.Code;
         HolidayJurisdictionCodes.TryNormalize(code, out var normalizedCode);
 
         var jurisdiction = await _dbContext.HolidayJurisdictions.SingleOrDefaultAsync(x => x.Code == normalizedCode, cancellationToken);
-        
+
         if (jurisdiction is null)
         {
             _logger.LogJurisdictionNotFound(normalizedCode);
@@ -42,16 +42,16 @@ public sealed class DeleteJurisdictionHandler : IRequestHandler<DeleteJurisdicti
                 Title = "Holiday jurisdiction is in use",
                 Detail = "Remove its bank holidays and user references before deleting it."
             };
-            
+
             return Results.Conflict(problem);
         }
 
         _dbContext.HolidayJurisdictions.Remove(jurisdiction);
-        
+
         await _dbContext.SaveChangesAsync(cancellationToken);
-        
+
         _logger.LogJurisdictionDeleted(jurisdiction.Code);
-        
+
         return Results.NoContent();
     }
 }

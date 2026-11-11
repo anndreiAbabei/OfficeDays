@@ -9,6 +9,6 @@ public sealed class ApiToken
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset? LastUsedAt { get; set; }
     public DateTimeOffset? RevokedAt { get; set; }
-    
+
     public User User { get; init; } = null!;
 }

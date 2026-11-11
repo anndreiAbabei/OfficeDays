@@ -13,7 +13,7 @@ public sealed class HolidayJurisdictionTests
         const string expectedName = "Test Jur";
         var expectedBankHolidays = new List<BankHoliday>();
         var expectedUsers = new List<User>();
-        
+
         // act
         var sut = new HolidayJurisdiction
         {
@@ -23,7 +23,7 @@ public sealed class HolidayJurisdictionTests
             BankHolidays = expectedBankHolidays,
             Users = expectedUsers,
         };
-        
+
         // assert
         Assert.Equal(expectedId, sut.Id);
         Assert.Equal(expectedCode, sut.Code);

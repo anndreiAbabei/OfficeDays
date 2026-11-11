@@ -11,7 +11,7 @@ public sealed class CalculationPeriodTests
         var expectedStart = DateOnly.FromDateTime(DateTime.Now);
         var expectedEnd = DateOnly.FromDateTime(DateTime.Now.AddMonths(1));
         const string expectedLabel = "Label";
-        
+
         // act
         var period = new CalculationPeriod(expectedStart, expectedEnd, expectedLabel);
 
@@ -28,7 +28,7 @@ public sealed class CalculationPeriodTests
         var expectedStart = DateOnly.FromDateTime(DateTime.Now);
         var expectedEnd = DateOnly.FromDateTime(DateTime.Now.AddMonths(1));
         const string expectedLabel = "Label";
-        
+
         // act
         var period = new CalculationPeriod(default, default, string.Empty)
         {
@@ -42,7 +42,7 @@ public sealed class CalculationPeriodTests
         Assert.Equal(expectedEnd, period.End);
         Assert.Equal(expectedLabel, period.Label);
     }
-    
+
     [Fact]
     public void Should_CreatePeriod_UsingForMonth()
     {

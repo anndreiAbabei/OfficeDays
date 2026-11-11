@@ -16,9 +16,9 @@ public static class EndpointAssert
             var routes = endpointBuilder.DataSources.SelectMany(ds => ds.Endpoints).OfType<RouteEndpoint>();
             var expectedMethod = executor.GetType().GetMethod(nameof(executor.Execute))?.MakeGenericMethod(typeof(TRequest));
             var methodStr = method.ToString();
-        
-            Assert.Contains(routes, ds => ds.RoutePattern.RawText == path && 
-                                          ds.Metadata.OfType<HttpMethodMetadata>().First().HttpMethods.Single().ToString().Equals(methodStr, StringComparison.OrdinalIgnoreCase) && 
+
+            Assert.Contains(routes, ds => ds.RoutePattern.RawText == path &&
+                                          ds.Metadata.OfType<HttpMethodMetadata>().First().HttpMethods.Single().ToString().Equals(methodStr, StringComparison.OrdinalIgnoreCase) &&
                                           ds.Metadata.OfType<MethodInfo>().First() == expectedMethod);
         }
     }
