@@ -22,7 +22,7 @@ public sealed class GetAttendanceRequestValidatorTests
         // assert
         Assert.True(result.IsValid);
     }
-    
+
     [Fact]
     public void Should_ReturnValidationSuccess_WhenBothYearAndMonthAreValid()
     {
@@ -40,7 +40,7 @@ public sealed class GetAttendanceRequestValidatorTests
         // assert
         Assert.True(result.IsValid);
     }
-    
+
     [Fact]
     public void Should_ReturnValidationFailure_WhenYearIsLessThan1()
     {
@@ -58,7 +58,7 @@ public sealed class GetAttendanceRequestValidatorTests
         // assert
         Assert.False(result.IsValid);
     }
-    
+
     [Fact]
     public void Should_ReturnValidationFailure_WhenYearIsBiggerThan9999()
     {
@@ -76,7 +76,7 @@ public sealed class GetAttendanceRequestValidatorTests
         // assert
         Assert.False(result.IsValid);
     }
-    
+
     [Fact]
     public void Should_ReturnValidationFailure_WhenYearIsValidButMonthIsNull()
     {
@@ -94,7 +94,7 @@ public sealed class GetAttendanceRequestValidatorTests
         // assert
         Assert.False(result.IsValid);
     }
-    
+
     [Fact]
     public void Should_ReturnValidationFailure_WhenMonthIsLessThan1()
     {
@@ -112,7 +112,7 @@ public sealed class GetAttendanceRequestValidatorTests
         // assert
         Assert.False(result.IsValid);
     }
-    
+
     [Fact]
     public void Should_ReturnValidationFailure_WhenMonthIsBiggerThan12()
     {
@@ -130,7 +130,7 @@ public sealed class GetAttendanceRequestValidatorTests
         // assert
         Assert.False(result.IsValid);
     }
-    
+
     [Fact]
     public void Should_ReturnValidationFailure_WhenMonthIsValidButYearIsNull()
     {

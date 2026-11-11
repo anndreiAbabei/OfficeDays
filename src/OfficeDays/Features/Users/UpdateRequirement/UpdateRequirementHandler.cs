@@ -26,42 +26,42 @@ public sealed class UpdateRequirementHandler : IRequestHandler<UpdateRequirement
         var row = await _db.UserAttendanceRequirements.SingleOrDefaultAsync(x => x.Id == request.Id &&
                                                                                  x.UserId == _currentUser.Id,
                                                                               cancellationToken);
-        
+
         if (row is null)
         {
             _logger.LogRequirementNotFound(request.Id, _currentUser.Id);
             return Results.NotFound();
         }
-        
+
         if (row.StartingFrom == UserAttendanceRequirement.BaselineDate != (request.Body.StartingFrom == UserAttendanceRequirement.BaselineDate))
         {
             _logger.LogBaselineChangeRejected(request.Id, _currentUser.Id);
-            
+
             return Results.ValidationProblem(new Dictionary<string, string[]>
             {
                 ["startingFrom"] = ["The initial requirement's starting month cannot be changed or assigned to another entry."]
             });
         }
-        
+
         row.StartingFrom = request.Body.StartingFrom;
         row.RequirementMode = request.Body.RequirementMode ?? AttendanceRequirementMode.Percentage;
         row.RequirementValue = request.Body.RequirementValue.GetValueOrDefault();
-        
+
         try
         {
             await _db.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException exception) 
+        catch (DbUpdateException exception)
             when (exception.IsUniqueViolation())
         {
             _logger.LogDuplicateRequirement(exception, _currentUser.Id, row.StartingFrom);
-            
+
             return Results.Problem(statusCode: StatusCodes.Status409Conflict,
-                                   title: "A requirement already exists for this month.", 
+                                   title: "A requirement already exists for this month.",
                                    detail: "Edit the existing requirement or choose another month.");
         }
         var result = row.ToViewModel();
-        
+
         return Results.Ok(result);
     }
 }

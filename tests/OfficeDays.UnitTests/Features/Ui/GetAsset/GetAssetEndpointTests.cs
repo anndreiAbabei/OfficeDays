@@ -19,9 +19,15 @@ public sealed class GetAssetEndpointTests
         var expectedBytes = fixture.AddFile(path, "console.log(1);");
         await using var app = WebApplication.CreateSlimBuilder().Build();
         var sut = new GetAssetEndpoint(new UiContent(fixture.Environment));
-        var context = new DefaultHttpContext { RequestServices = app.Services };
-        context.Request.Method = "GET";
-        using var body = new MemoryStream();
+        var context = new DefaultHttpContext
+        {
+            RequestServices = app.Services,
+            Request =
+            {
+                Method = "GET"
+            }
+        };
+        await using var body = new MemoryStream();
         context.Response.Body = body;
 
         // act
@@ -31,7 +37,7 @@ public sealed class GetAssetEndpointTests
 
         // assert
         Assert.Equal("/" + path, endpoint.RoutePattern.RawText);
-        Assert.Equal(new[] { "GET", "HEAD" }, endpoint.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods);
+        Assert.Equal(["GET", "HEAD"], endpoint.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods);
         Assert.Equal(expectedCacheControl, context.Response.Headers.CacheControl);
         Assert.Equal("text/javascript", context.Response.ContentType);
         Assert.Equal(expectedBytes, body.ToArray());

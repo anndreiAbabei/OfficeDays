@@ -12,7 +12,7 @@ public sealed class GetAttendanceHandlerLoggingTesting
     {
         // arrange
         var expectedUserId = Guid.NewGuid();
-        var expectedPeriod = new CalculationPeriod(DateOnly.FromDateTime(DateTime.Today), 
+        var expectedPeriod = new CalculationPeriod(DateOnly.FromDateTime(DateTime.Today),
                                                    DateOnly.FromDateTime(DateTime.Today.AddDays(1)),
                                                    "test");
         var logger = new FakeLogger<GetAttendanceHandler>();

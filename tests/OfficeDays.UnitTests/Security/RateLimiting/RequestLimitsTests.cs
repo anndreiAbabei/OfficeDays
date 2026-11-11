@@ -30,15 +30,15 @@ public sealed class RequestLimitsTests
         Assert.Equal(expectedBodyBytes, limits.MaxBodyBytes);
         var limitsList = new[]
         {
-            limits.Source, 
+            limits.Source,
             limits.Api,
-            limits.Token, 
+            limits.Token,
             limits.Login,
-            limits.LoginAccount, 
-            limits.Registration, 
-            limits.Recovery, 
+            limits.LoginAccount,
+            limits.Registration,
+            limits.Recovery,
             limits.RecoveryAccount,
-            limits.Verification, 
+            limits.Verification,
             limits.Reports
         };
         Assert.Equal(expectedLimits, limitsList);

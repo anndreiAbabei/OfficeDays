@@ -11,8 +11,8 @@ public sealed class RequestLimitingMiddleware
     private readonly RequestDelegate _next;
     private readonly RequestLimits _limits;
     private readonly ILogger<RequestLimitingMiddleware> _logger;
-    
-    public RequestLimitingMiddleware(RequestDelegate next, 
+
+    public RequestLimitingMiddleware(RequestDelegate next,
                                      IOptions<RequestLimits> options,
                                      ILogger<RequestLimitingMiddleware> logger)
     {
@@ -26,7 +26,7 @@ public sealed class RequestLimitingMiddleware
         if (!context.Request.Path.StartsWithSegments("/api"))
         {
             await _next(context);
-            
+
             return;
         }
 
@@ -35,14 +35,14 @@ public sealed class RequestLimitingMiddleware
         if (!lease.IsAcquired)
         {
             await RequestLimitResponses.RejectAsync(context, lease);
-            
+
             return;
         }
 
         if (context.Request.ContentLength > _limits.MaxBodyBytes)
         {
             await RequestLimitResponses.RejectBodyAsync(context);
-            
+
             return;
         }
 
@@ -50,25 +50,25 @@ public sealed class RequestLimitingMiddleware
         using var body = new MemoryStream();
         var originalBody = context.Request.Body;
         var buffer = new byte[8192];
-        
+
         while (true)
         {
             var memory = buffer.AsMemory(0, Math.Min(buffer.Length, _limits.MaxBodyBytes + 1 - (int)body.Length));
             var count = await originalBody.ReadAsync(memory, context.RequestAborted);
-            
-            if (count == 0) 
+
+            if (count == 0)
                 break;
-            
+
             await body.WriteAsync(buffer.AsMemory(0, count), context.RequestAborted);
-            
+
             if (body.Length <= _limits.MaxBodyBytes)
                 continue;
-            
+
             await RequestLimitResponses.RejectBodyAsync(context);
-            
+
             return;
         }
-        
+
         body.Position = 0;
         context.Request.Body = body;
 

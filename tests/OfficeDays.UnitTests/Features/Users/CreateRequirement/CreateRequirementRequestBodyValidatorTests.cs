@@ -13,7 +13,7 @@ public sealed class CreateRequirementRequestBodyValidatorTests
         var request = new CreateRequirementRequestBody
         {
             RequirementMode = AttendanceRequirementMode.Percentage,
-            StartingFrom = new DateOnly(2026, 10, 1), 
+            StartingFrom = new DateOnly(2026, 10, 1),
             RequirementValue = 50
         };
         var sut = new CreateRequirementRequestBodyValidator();
@@ -32,7 +32,7 @@ public sealed class CreateRequirementRequestBodyValidatorTests
         var request = new CreateRequirementRequestBody
         {
             RequirementMode = AttendanceRequirementMode.Percentage,
-            StartingFrom = DateOnly.FromDateTime(DateTime.Now), 
+            StartingFrom = DateOnly.FromDateTime(DateTime.Now),
             RequirementValue = -1
         };
         var sut = new CreateRequirementRequestBodyValidator();
@@ -52,7 +52,7 @@ public sealed class CreateRequirementRequestBodyValidatorTests
         var request = new CreateRequirementRequestBody
         {
             RequirementMode = AttendanceRequirementMode.Percentage,
-            StartingFrom = DateOnly.FromDateTime(DateTime.Now), 
+            StartingFrom = DateOnly.FromDateTime(DateTime.Now),
             RequirementValue = 101
         };
         var sut = new CreateRequirementRequestBodyValidator();
@@ -72,7 +72,7 @@ public sealed class CreateRequirementRequestBodyValidatorTests
         var request = new CreateRequirementRequestBody
         {
             RequirementMode = AttendanceRequirementMode.Percentage,
-            StartingFrom = new DateOnly(2026, 10, 2), 
+            StartingFrom = new DateOnly(2026, 10, 2),
             RequirementValue = 50
         };
         var sut = new CreateRequirementRequestBodyValidator();

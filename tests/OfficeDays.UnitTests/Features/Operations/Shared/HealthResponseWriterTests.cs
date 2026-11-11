@@ -16,7 +16,7 @@ public sealed class HealthResponseWriterTests
         // arrange
         var expectedStatus = status.ToString();
         var context = new DefaultHttpContext();
-        using var body = new MemoryStream();
+        await using var body = new MemoryStream();
         context.Response.Body = body;
         var entry = new HealthReportEntry(status, "private database details", TimeSpan.FromSeconds(1), new InvalidOperationException("secret"), new Dictionary<string, object> { ["secret"] = "value" });
         var report = new HealthReport(new Dictionary<string, HealthReportEntry> { ["database"] = entry }, TimeSpan.FromSeconds(1));
@@ -38,7 +38,7 @@ public sealed class HealthResponseWriterTests
     {
         // arrange
         var context = new DefaultHttpContext();
-        using var body = new MemoryStream();
+        await using var body = new MemoryStream();
         context.Response.Body = body;
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(), TimeSpan.Zero);
 

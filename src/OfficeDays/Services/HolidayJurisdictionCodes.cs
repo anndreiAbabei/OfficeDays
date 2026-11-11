@@ -7,13 +7,13 @@ public static class HolidayJurisdictionCodes
     public static bool TryNormalize(string? value, out string code)
     {
         code = value?.Trim().ToUpperInvariant() ?? string.Empty;
-        if (code == "UK") 
+        if (code == "UK")
             code = "GB";
-        
+
         if (code.StartsWith("UK-", StringComparison.Ordinal)) code = $"GB-{code[3..]}";
 
         var parts = code.Split('-');
-        
+
         if (parts.Length is < 1 or > 2 || parts[0].Length != 2 ||
             parts[0].Any(character => character is < 'A' or > 'Z'))
         {

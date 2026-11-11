@@ -8,20 +8,22 @@ public static class LoginMapping
 {
     extension(User user)
     {
-        public LoginResponse ToViewModel(UserAttendanceRequirement requirement) =>
-            new LoginResponse(user.Id, 
-                              user.Username, 
-                              user.TimeZoneId,
-                              user.HolidayJurisdiction.Code, 
-                              user.HolidayJurisdiction.Name, 
-                              user.IsAdmin, 
-                              user.Email, 
-                              requirement.RequirementValue,
-                              user.Preferences.TeamDay?.ToString().ToLowerInvariant())
+        public LoginResponse ToViewModel(UserAttendanceRequirement requirement)
         {
-            RequirementMode = requirement.RequirementMode
-        };
-        
+            return new LoginResponse(user.Id,
+                                     user.Username,
+                                     user.TimeZoneId,
+                                     user.HolidayJurisdiction.Code,
+                                     user.HolidayJurisdiction.Name,
+                                     user.IsAdmin,
+                                     user.Email,
+                                     requirement.RequirementValue,
+                                     user.Preferences.TeamDay?.ToString().ToLowerInvariant())
+            {
+                RequirementMode = requirement.RequirementMode
+            };
+        }
+
         public IEnumerable<Claim> ToClaims() =>
         [
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),

@@ -15,11 +15,11 @@ public sealed class ServiceRegistrationAddApplicationServicesTests
         {
             InitialData = [new KeyValuePair<string, string?>("Authentication:CookieExpireTimeSpan", "00:00:15")]
         };
-        
+
         _builder = WebApplication.CreateEmptyBuilder(options);
         _builder.Configuration.Sources.Add(config);
     }
-    
+
     [Fact]
     public void Should_ReturnSameBuilder()
     {
@@ -38,7 +38,7 @@ public sealed class ServiceRegistrationAddApplicationServicesTests
         var options = new WebApplicationOptions();
         var builder = WebApplication.CreateEmptyBuilder(options);
         const string expectedExceptionMessage = "Authentication:CookieExpireTimeSpan must be a positive TimeSpan.";
-        
+
         // act
         Action action = () => builder.AddApplicationServices();
 

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -64,6 +65,7 @@ public sealed class FeatureRegistrationIntegrationTests
         Assert.Contains("singleton", error.ToString(), StringComparison.OrdinalIgnoreCase);
     }
 
+    [ExcludeFromCodeCoverage]
     private sealed class ScopedDependencyEndpoint : IAttendanceEndpoint
     {
         public ScopedDependencyEndpoint(ICurrentUser currentUser) { }

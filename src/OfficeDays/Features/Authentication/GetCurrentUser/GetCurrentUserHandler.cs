@@ -13,7 +13,7 @@ public sealed class GetCurrentUserHandler : IRequestHandler<GetCurrentUserReques
     private readonly AppDbContext _dbContext;
     private readonly IOfficeRequirementReader _requirements;
     private readonly ILogger<GetCurrentUserHandler> _logger;
-    
+
     public GetCurrentUserHandler(ICurrentUser currentUser,
                                  AppDbContext dbContext,
                                  IOfficeRequirementReader requirements,
@@ -24,7 +24,7 @@ public sealed class GetCurrentUserHandler : IRequestHandler<GetCurrentUserReques
         _requirements = requirements;
         _logger = logger;
     }
-    
+
     public async ValueTask<IResult> Handle(GetCurrentUserRequest input, CancellationToken cancellationToken)
     {
         var user = await _dbContext.Users.Include(x => x.HolidayJurisdiction)
@@ -38,7 +38,7 @@ public sealed class GetCurrentUserHandler : IRequestHandler<GetCurrentUserReques
 
         var requirement = await _requirements.CurrentRequirement(user, cancellationToken);
         var model = user.ToViewModel(requirement);
-        
+
         return Results.Ok(model);
     }
 }

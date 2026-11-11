@@ -1,3 +1,4 @@
+using System.Globalization;
 using NSubstitute;
 using OfficeDays.Domain;
 using OfficeDays.Features.Users.GetRequirements;
@@ -13,7 +14,14 @@ public sealed class GetRequirementsMappingTests
     public void Should_MapToViewModel(string startingFrom, bool expectedIsBaseline)
     {
         // arrange
-        var sut = new UserAttendanceRequirement { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), StartingFrom = DateOnly.Parse(startingFrom), RequirementValue = 65, CreatedAt = new DateTimeOffset(2026, 10, 1, 9, 0, 0, TimeSpan.Zero) };
+        var sut = new UserAttendanceRequirement
+        {
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            StartingFrom = DateOnly.Parse(startingFrom, CultureInfo.InvariantCulture),
+            RequirementValue = 65,
+            CreatedAt = new DateTimeOffset(2026, 10, 1, 9, 0, 0, TimeSpan.Zero)
+        };
 
         // act
         var result = sut.ToViewModel();
@@ -98,9 +106,12 @@ public sealed class GetRequirementsMappingTests
         const AttendanceRequirementMode expectedMode = AttendanceRequirementMode.DaysPerWeek;
         var row = new UserAttendanceRequirement
         {
-            Id = Guid.NewGuid(), UserId = Guid.NewGuid(), StartingFrom = new DateOnly(2026, 11, 1),
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            StartingFrom = new DateOnly(2026, 11, 1),
             CreatedAt = new DateTimeOffset(2026, 10, 21, 12, 0, 0, TimeSpan.Zero),
-            RequirementMode = AttendanceRequirementMode.DaysPerWeek, RequirementValue = expectedValue
+            RequirementMode = AttendanceRequirementMode.DaysPerWeek,
+            RequirementValue = expectedValue
         };
 
         // Act

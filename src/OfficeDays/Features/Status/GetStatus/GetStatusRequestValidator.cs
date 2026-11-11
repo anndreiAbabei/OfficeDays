@@ -16,7 +16,7 @@ public sealed class GetStatusRequestValidator : AbstractValidator<GetStatusReque
             RuleFor(r => r.Month)
                 .NotNull();
         });
-        
+
         When(r => r.Month.HasValue, () =>
         {
             RuleFor(r => r.Month)

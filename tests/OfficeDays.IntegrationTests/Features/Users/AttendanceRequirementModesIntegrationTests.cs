@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -143,14 +142,14 @@ public sealed class AttendanceRequirementModesIntegrationTests
         var expectedCreatedAt = new DateTimeOffset(2026, 10, 21, 10, 0, 0, TimeSpan.Zero);
         const int expectedValue = 37;
         const string preferences = "{\"TeamDay\":null}";
-        await db.Database.ExecuteSqlInterpolatedAsync($"""
+        await db.Database.ExecuteSqlAsync($"""
             INSERT INTO Users (Id, Username, NormalizedUsername, PasswordHash, TimeZoneId, HolidayJurisdictionId, IsAdmin, CreatedAt, Preferences)
             VALUES ({userId}, 'migration', 'MIGRATION', 'hash', 'UTC', 1, 0, {expectedCreatedAt}, {preferences});
             """, cancellationToken: TestContext.Current.CancellationToken);
-        await db.Database.ExecuteSqlInterpolatedAsync($"""
-            INSERT INTO UserRequiredOfficePercentages (Id, UserId, StartingFrom, RequiredOfficePercentage, CreatedAt)
-            VALUES ({id}, {userId}, {expectedDate}, {expectedValue}, {expectedCreatedAt});
-            """, cancellationToken: TestContext.Current.CancellationToken);
+        await db.Database.ExecuteSqlAsync($"""
+                                           INSERT INTO UserRequiredOfficePercentages (Id, UserId, StartingFrom, RequiredOfficePercentage, CreatedAt)
+                                           VALUES ({id}, {userId}, {expectedDate}, {expectedValue}, {expectedCreatedAt});
+                                           """, cancellationToken: TestContext.Current.CancellationToken);
 
         // Act
         await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);

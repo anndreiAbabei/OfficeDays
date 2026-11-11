@@ -5,7 +5,8 @@ Tests exercise the built SPA and real API over HTTP, with a new SQLite database 
 
 ## Prepare and run
 
-Use .NET 10 and Node.js 24. From the repository root:
+Use the .NET SDK matching `TargetFramework` in `Directory.Build.props` (currently .NET 11)
+and Node.js 24. From the repository root:
 
 ```sh
 npm --prefix src/OfficeDays.Web ci
@@ -19,6 +20,9 @@ On Linux/CI, install browser system dependencies with `install --with-deps chrom
 Rebuild after editing application code. The fixture launches the already-built backend; it does
 not run builds or use an existing development server. For Release builds, set
 `E2E_CONFIGURATION=Release` and pass `--configuration Release` to the .NET commands.
+The backend output path uses the target framework embedded in the E2E assembly at build time.
+Missing build outputs report the expected backend and frontend paths; cleanup is safe even
+when startup fails before the API has an address.
 
 ## Record a scenario
 
@@ -49,7 +53,7 @@ features, use `seeder.CreateUserAsync()` to arrange a unique account.
 Use `Features/Authentication/LoginLogoutTests.cs` as the executable example:
 
 - Inherit `E2ETestBase`, forwarding `ApplicationFixture` and `ITestOutputHelper`.
-- Apply `[Collection(ApplicationCollection.Name)]` to **every** E2E test class.
+- Apply `[Collection(ApplicationCollection.Name)]` to **every** browser scenario test class.
 - Wrap the entire scenario, including arrangement/assertions, in `RunScenarioAsync`.
 - Use the supplied page and seeder. Each invocation creates a new browser context.
 - Name tests `Should_ExpectedResult_WhenCondition` and keep Arrange/Act/Assert sections.
@@ -84,7 +88,7 @@ Artifacts are under `artifacts/e2e/<run-id>/` (gitignored): API logs and, for fa
 Open a trace using the generated Playwright script after building:
 
 ```sh
-pwsh tests/OfficeDays.E2ETests/bin/Debug/net10.0/playwright.ps1 show-trace /absolute/path/to/trace.zip
+pwsh tests/OfficeDays.E2ETests/bin/Debug/net11.0/playwright.ps1 show-trace /absolute/path/to/trace.zip
 ```
 
 The `C# E2E` GitHub workflow runs on PRs/pushes to master and supports **Run workflow** manually.

@@ -14,13 +14,13 @@ public sealed class RecordTodayRequestTests
         // assert
         Assert.Null(sut.Body);
     }
-    
+
     [Fact]
     public void Should_SetBody()
     {
         // arrange
         var body = new RecordTodayRequestBody(true);
-        
+
         // act
         var sut = new RecordTodayRequest
         {

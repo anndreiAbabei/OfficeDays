@@ -25,7 +25,7 @@ public sealed class UserTests
         var expectedAttendances = new List<Attendance>();
         var expectedVacations = new List<Vacation>();
         var expectedApiTokens = new List<ApiToken>();
-        
+
         // act
         var sut = new User
         {

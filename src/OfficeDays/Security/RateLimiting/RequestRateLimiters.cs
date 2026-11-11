@@ -24,7 +24,7 @@ public sealed class RequestRateLimiters : IDisposable
                                                    CreateTokenLimiter(),
                                                    CreateReportsLimiter());
     }
-    
+
     private PartitionedRateLimiter<HttpContext> CreateSensitiveSource()
     {
         return Create("sensitive-source", context =>
@@ -32,7 +32,7 @@ public sealed class RequestRateLimiters : IDisposable
             var policy = context.GetEndpoint()?.Metadata
                                 .GetMetadata<SensitiveRequestLimit>()?
                                 .Policy;
-            
+
             return policy switch
             {
                 "login"        => CreateRequestLimiter(_limits.Login),
@@ -45,41 +45,41 @@ public sealed class RequestRateLimiters : IDisposable
 
             RequestLimiterCreateData CreateRequestLimiter(RequestLimit limit) => new RequestLimiterCreateData(policy + ":" + ClientSource(context), limit);
         });
-        
+
     }
-    
+
     private PartitionedRateLimiter<HttpContext> CreateAccountLimiter()
     {
         return Create("account", context =>
         {
-            if (context.Items[AccountKey] is not string account) 
+            if (context.Items[AccountKey] is not string account)
                 return null;
-            
+
             var policy = context.GetEndpoint()?.Metadata.GetMetadata<SensitiveRequestLimit>()?.Policy;
-            
+
             return new RequestLimiterCreateData(policy + ":" + account,
                                                 policy == "login"
                                                     ? _limits.LoginAccount
                                                     : _limits.RecoveryAccount);
         });
     }
-    
+
     private PartitionedRateLimiter<HttpContext> CreateApiLimiter()
     {
         return Create("api", context => new RequestLimiterCreateData(Identity(context), _limits.Api));
     }
-    
+
     private PartitionedRateLimiter<HttpContext> CreateTokenLimiter()
     {
         return Create("token", context => context.User.FindFirstValue("api_token_id") is { } token
-                                              ? new RequestLimiterCreateData(token, _limits.Token) 
+                                              ? new RequestLimiterCreateData(token, _limits.Token)
                                               : null);
     }
-    
+
     private PartitionedRateLimiter<HttpContext> CreateReportsLimiter()
     {
         return Create("reports", context => context.Request.Path.StartsWithSegments("/api/reports")
-                                                ? new RequestLimiterCreateData(Identity(context), _limits.Reports) 
+                                                ? new RequestLimiterCreateData(Identity(context), _limits.Reports)
                                                 : null);
     }
 
@@ -104,7 +104,7 @@ public sealed class RequestRateLimiters : IDisposable
                 return RateLimitPartition.GetNoLimiter("exempt");
 
             context.Items[PolicyKey] = policy;
-            
+
             return RateLimitPartition.GetFixedWindowLimiter(settings.Key, _ => new FixedWindowRateLimiterOptions
             {
                 PermitLimit = settings.Limit.Permits,

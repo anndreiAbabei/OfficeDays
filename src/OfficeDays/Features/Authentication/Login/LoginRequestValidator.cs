@@ -19,7 +19,7 @@ public sealed class LoginRequestBodyValidator : AbstractValidator<LoginRequestBo
     {
         RuleFor(v => v.Username)
             .NotEmpty();
-        
+
         RuleFor(v => v.Password)
             .NotEmpty();
     }

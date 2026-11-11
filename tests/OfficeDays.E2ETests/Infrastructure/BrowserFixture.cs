@@ -24,7 +24,7 @@ public sealed class BrowserFixture : IAsyncDisposable
             ReducedMotion = ReducedMotion.Reduce,
             ViewportSize = new ViewportSize { Width = 1440, Height = 1000 }
         };
-        
+
         return await _browser.NewContextAsync(ctxOptions);
     }
 
@@ -32,9 +32,9 @@ public sealed class BrowserFixture : IAsyncDisposable
     {
         if (_browser is not null)
             await _browser.CloseAsync();
-        
+
         _browser = null;
-        
+
         _playwright?.Dispose();
         _playwright = null;
     }

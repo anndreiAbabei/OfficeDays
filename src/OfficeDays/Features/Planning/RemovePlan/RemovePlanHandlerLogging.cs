@@ -6,4 +6,8 @@ public static partial class RemovePlanHandlerLogging
 
     [LoggerMessage(EventIdStart + 1, LogLevel.Information, "Office plan removed for user {UserId} on {Date}")]
     public static partial void LogPlanChanged(this ILogger<RemovePlanHandler> logger, Guid userId, DateOnly date);
+    
+    [LoggerMessage(EventIdStart + 2, LogLevel.Warning, "User {UserId} not found")]
+    public static partial void LogUserNotFound(this ILogger<RemovePlanHandler> logger, Guid userId);
+
 }

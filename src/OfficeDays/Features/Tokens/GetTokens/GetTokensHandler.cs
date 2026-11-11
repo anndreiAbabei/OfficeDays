@@ -10,25 +10,25 @@ public sealed class GetTokensHandler : IRequestHandler<GetTokensRequest>
 {
     private readonly ICurrentUser _currentUser;
     private readonly AppDbContext _dbContext;
-    
+
     public GetTokensHandler(ICurrentUser currentUser,
                             AppDbContext dbContext)
     {
         _currentUser = currentUser;
         _dbContext = dbContext;
     }
-    
+
     public async ValueTask<IResult> Handle(GetTokensRequest input, CancellationToken cancellationToken)
     {
         var rows = await _dbContext.ApiTokens
                                    .AsNoTracking()
                                    .Where(x => x.UserId == _currentUser.Id)
                                    .ToListAsync(cancellationToken);
-        
+
         // SQLite cannot order DateTimeOffset values; filter by user in SQL, then sort their tokens.
         var result = rows.OrderByDescending(x => x.CreatedAt)
                          .ToViewModel();
-        
+
         return Results.Ok(result);
     }
 }

@@ -77,7 +77,7 @@ public sealed class ApiTokenAuthenticationHandler : AuthenticationHandler<Authen
             new Claim("is_admin", token.User.IsAdmin ? "true" : "false")
         };
         var identity = new ClaimsIdentity(claims, SchemeName);
-        
+
         return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identity), SchemeName));
     }
 }

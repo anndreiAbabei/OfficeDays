@@ -10,7 +10,7 @@ namespace OfficeDays.UnitTests.Features.Attendance.RecordDate;
 
 public sealed class RecordDateRequestValidatorTests
 {
-    [Fact] 
+    [Fact]
     public async Task Should_ReturnSuccess_WhenNoEntryForThatDate()
     {
         // arrange
@@ -23,15 +23,15 @@ public sealed class RecordDateRequestValidatorTests
         {
             Date = expectedDate
         };
-    
+
         // act
         var result = await sut.ValidateAsync(request, TestContext.Current.CancellationToken);
-    
+
         // assert
         Assert.True(result.IsValid);
     }
-    
-    [Fact] 
+
+    [Fact]
     public async Task Should_ReturnFailure_WhenNoEntryUser_ButDateInTheFuture()
     {
         // arrange
@@ -44,15 +44,15 @@ public sealed class RecordDateRequestValidatorTests
         {
             Date = expectedDate
         };
-    
+
         // act
         var result = await sut.ValidateAsync(request, TestContext.Current.CancellationToken);
-    
+
         // assert
         Assert.False(result.IsValid);
     }
-    
-    [Fact] 
+
+    [Fact]
     public async Task Should_ReturnSuccess_WhenUserExistsAndLessThanToday()
     {
         // arrange
@@ -78,15 +78,15 @@ public sealed class RecordDateRequestValidatorTests
         {
             Date = expectedDate
         };
-    
+
         // act
         var result = await sut.ValidateAsync(request, TestContext.Current.CancellationToken);
-    
+
         // assert
         Assert.True(result.IsValid);
     }
-    
-    [Fact] 
+
+    [Fact]
     public async Task Should_ReturnFailure_WhenUserExistsAndGreaterThanToday()
     {
         // arrange
@@ -112,10 +112,10 @@ public sealed class RecordDateRequestValidatorTests
         {
             Date = expectedDate
         };
-    
+
         // act
         var result = await sut.ValidateAsync(request, TestContext.Current.CancellationToken);
-    
+
         // assert
         Assert.False(result.IsValid);
     }

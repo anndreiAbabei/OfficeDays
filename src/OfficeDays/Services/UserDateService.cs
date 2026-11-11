@@ -21,7 +21,7 @@ public sealed class UserDateService : IUserDateService
     {
         var timeZone = TimeZoneInfo.FindSystemTimeZoneById(user.TimeZoneId);
         var local = TimeZoneInfo.ConvertTime(_timeProvider.GetUtcNow(), timeZone);
-        
+
         return DateOnly.FromDateTime(local.DateTime);
     }
 

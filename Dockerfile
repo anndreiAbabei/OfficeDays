@@ -7,7 +7,7 @@ COPY src/OfficeDays.Web/ ./
 COPY tests/Fixtures/ /source/tests/Fixtures/
 RUN npm run check && npm run test && npm run build
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /source
 
 COPY Directory.Build.props global.json ./
@@ -22,7 +22,7 @@ COPY --from=frontend /source/src/OfficeDays.Web/build/ src/OfficeDays/wwwroot/
 RUN dotnet publish src/OfficeDays/OfficeDays.csproj -c Release --no-restore -o /output \
     -p:InformationalVersion="$(dotnet msbuild src/OfficeDays/OfficeDays.csproj -getProperty:Version)+build.$(date -u +%Y%m%d.%H%M%S)"
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS final
 WORKDIR /app
 RUN mkdir -p /app/data && chown -R app:app /app
 COPY --from=build --chown=app:app /output/ ./

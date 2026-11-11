@@ -11,7 +11,7 @@ public sealed class RecordTodayResponseTests
         var expectedDate = DateOnly.FromDateTime(DateTime.Now);
         var expectedCreated = DateTimeOffset.Now;
         const bool expectedIsManual = true;
-        
+
         // act
         var sut = new RecordTodayResponse(expectedDate, expectedCreated, expectedIsManual);
 

@@ -24,7 +24,7 @@ public sealed class GetReadinessEndpointTests
         await using var app = builder.Build();
         var sut = new GetReadinessEndpoint();
         var context = new DefaultHttpContext { RequestServices = app.Services };
-        using var body = new MemoryStream();
+        await using var body = new MemoryStream();
         context.Response.Body = body;
 
         // act

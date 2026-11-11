@@ -1,3 +1,4 @@
+using System.Globalization;
 using OfficeDays.Domain;
 using OfficeDays.Features.Users.UpdateRequirement;
 
@@ -13,9 +14,9 @@ public sealed class UpdateRequirementMappingTests
         // arrange
         var sut = new UserAttendanceRequirement
         {
-            Id = Guid.NewGuid(), 
-            UserId = Guid.NewGuid(), 
-            StartingFrom = DateOnly.Parse(startingFrom), 
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            StartingFrom = DateOnly.Parse(startingFrom, CultureInfo.InvariantCulture),
             RequirementValue = 65,
             CreatedAt = new DateTimeOffset(2026, 10, 1, 9, 0, 0, TimeSpan.Zero)
         };
@@ -40,7 +41,7 @@ public sealed class UpdateRequirementMappingTests
         var row = new UserAttendanceRequirement
         {
             Id = Guid.NewGuid(),
-            UserId = Guid.NewGuid(), 
+            UserId = Guid.NewGuid(),
             StartingFrom = new DateOnly(2026, 11, 1),
             CreatedAt = new DateTimeOffset(2026, 10, 21, 12, 0, 0, TimeSpan.Zero),
             RequirementMode = AttendanceRequirementMode.DaysPerWeek,

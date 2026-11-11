@@ -21,14 +21,14 @@ public sealed class RenameTokenHandler : IRequestHandler<RenameTokenRequest>
 
     public async ValueTask<IResult> Handle(RenameTokenRequest input, CancellationToken cancellationToken)
     {
-        var token = await _db.ApiTokens.SingleOrDefaultAsync(x => x.Id == input.Id && 
-                                                                  x.UserId == _currentUser.Id, 
+        var token = await _db.ApiTokens.SingleOrDefaultAsync(x => x.Id == input.Id &&
+                                                                  x.UserId == _currentUser.Id,
                                                              cancellationToken);
 
         if (token is null)
         {
             _logger.LogTokenNotFound(input.Id, _currentUser.Id);
-            
+
             return Results.NotFound();
         }
 

@@ -44,8 +44,8 @@ public sealed class OfficeDaysFactory : WebApplicationFactory<Program>
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        
-        if (disposing && File.Exists(_databasePath)) 
+
+        if (disposing && File.Exists(_databasePath))
             File.Delete(_databasePath);
     }
 }

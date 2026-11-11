@@ -17,7 +17,7 @@ public sealed class CreateUserHandler : IRequestHandler<CreateUserRequest>
     private readonly TimeProvider _timeProvider;
     private readonly IUserService _userService;
     private readonly ILogger<CreateUserHandler> _logger;
-    
+
     public CreateUserHandler(AppDbContext dbContext,
                              IPasswordHasher<User> hasher,
                              TimeProvider timeProvider,
@@ -30,7 +30,7 @@ public sealed class CreateUserHandler : IRequestHandler<CreateUserRequest>
         _userService = userService;
         _logger = logger;
     }
-    
+
     public async ValueTask<IResult> Handle(CreateUserRequest input, CancellationToken cancellationToken)
     {
         var request = input.Body;
@@ -42,15 +42,16 @@ public sealed class CreateUserHandler : IRequestHandler<CreateUserRequest>
         if (jurisdiction is null)
         {
             _logger.LogJurisdictionNotFound(countryCode);
+            
             return Results.ValidationProblem(new Dictionary<string, string[]> { ["countryCode"] = ["The selected holiday jurisdiction does not exist."] });
         }
-                
+
         if (await _dbContext.Users.AnyAsync(x => x.NormalizedUsername == normalized, cancellationToken))
         {
             _logger.LogDuplicateUsername(username);
             var problem = new ProblemDetails
             {
-                Status = StatusCodes.Status409Conflict, 
+                Status = StatusCodes.Status409Conflict,
                 Title = "Username already exists"
             };
             return Results.Conflict(problem);
@@ -65,7 +66,7 @@ public sealed class CreateUserHandler : IRequestHandler<CreateUserRequest>
             [
                 new UserAttendanceRequirement
                 {
-                    Id = Guid.NewGuid(), 
+                    Id = Guid.NewGuid(),
                     StartingFrom = UserAttendanceRequirement.BaselineDate,
                     RequirementMode = request.RequirementMode ?? AttendanceRequirementMode.Percentage,
                     RequirementValue = request.RequirementValue ?? 50,
@@ -81,29 +82,29 @@ public sealed class CreateUserHandler : IRequestHandler<CreateUserRequest>
             CreatedAt = _timeProvider.GetUtcNow()
         };
         user.PasswordHash = _hasher.HashPassword(user, request.Password);
-        
+
         await _dbContext.Users.AddAsync(user, cancellationToken);
-        
+
         try
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException exception) 
+        catch (DbUpdateException exception)
             when (exception.IsUniqueViolation())
         {
             _logger.LogDuplicateUsername(username);
             var problem = new ProblemDetails
             {
-                Status = StatusCodes.Status409Conflict, 
+                Status = StatusCodes.Status409Conflict,
                 Title = "Username already exists"
             };
-            
+
             return Results.Conflict(problem);
         }
 
         _logger.LogUserCreated(user.Username, user.Id);
         var response = user.ToViewModel();
-        
+
         return Results.Created($"/api/users/{user.Id}", response);
     }
 }

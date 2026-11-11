@@ -7,7 +7,7 @@ public interface IReportCalculator
     AttendanceReport Calculate(int year, int startMonth, int endMonth, User user, DateTimeOffset generatedAt,
                                IEnumerable<UserAttendanceRequirement> requirements,
                                IEnumerable<DateOnly> bankHolidays,
-                               IEnumerable<(DateOnly From, DateOnly To)> vacations, 
+                               IEnumerable<(DateOnly From, DateOnly To)> vacations,
                                IEnumerable<DateOnly> officeDates);
 }
 
@@ -18,7 +18,7 @@ public sealed class ReportCalculator(IAttendanceCalculator attendanceCalculator)
     public AttendanceReport Calculate(int year, int startMonth, int endMonth, User user, DateTimeOffset generatedAt,
                                        IEnumerable<UserAttendanceRequirement> requirements,
                                        IEnumerable<DateOnly> bankHolidays,
-                                       IEnumerable<(DateOnly From, DateOnly To)> vacations, 
+                                       IEnumerable<(DateOnly From, DateOnly To)> vacations,
                                        IEnumerable<DateOnly> officeDates)
     {
         var zone = TimeZoneInfo.FindSystemTimeZoneById(user.TimeZoneId);
@@ -48,8 +48,8 @@ public sealed class ReportCalculator(IAttendanceCalculator attendanceCalculator)
                 : ReportMonthState.BelowTarget;
 
             months.Add(new AttendanceReportMonth(month, status.EligibleWorkingDays, requirement.RequirementValue, status.RequiredOfficeDays,
-                                                 future ? null : status.OfficeDays, 
-                                                 future ? null : Percentage(status.OfficeDays, status.EligibleWorkingDays), 
+                                                 future ? null : status.OfficeDays,
+                                                 future ? null : Percentage(status.OfficeDays, status.EligibleWorkingDays),
                                                  state)
             {
                 RequirementMode = requirement.RequirementMode
@@ -59,11 +59,11 @@ public sealed class ReportCalculator(IAttendanceCalculator attendanceCalculator)
         var started = months.Where(x => x.State != ReportMonthState.NotStarted).ToArray();
         var completed = months.Where(x => x.State is ReportMonthState.TargetMet or ReportMonthState.BelowTarget).ToArray();
         var officeDays = started.Sum(x => x.OfficeDays ?? 0);
-        
-        return new AttendanceReport(year, startMonth, endMonth, user.Username, user.TimeZoneId, registrationMonth, today, 
-                                    generatedAt, months, officeDays, 
+
+        return new AttendanceReport(year, startMonth, endMonth, user.Username, user.TimeZoneId, registrationMonth, today,
+                                    generatedAt, months, officeDays,
                                     Percentage(officeDays, started.Sum(x => x.EligibleWorkingDays)),
-                                    completed.Length, 
+                                    completed.Length,
                                     completed.Count(x => x.State == ReportMonthState.TargetMet));
     }
 

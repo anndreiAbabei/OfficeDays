@@ -11,8 +11,9 @@ public sealed class GetTokensMappingTests
     public void Should_MapTokenStatus(bool revoked, string expectedStatus)
     {
         // arrange
-        var sut = new ApiToken { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), Name = "Desktop", TokenHash = "hash", CreatedAt = new DateTimeOffset(2026, 1, 2, 9, 0, 0, TimeSpan.Zero), LastUsedAt = new DateTimeOffset(2026, 2, 3, 10, 0, 0, TimeSpan.Zero) };
-        sut.RevokedAt = revoked ? new DateTimeOffset(2026, 10, 1, 9, 0, 0, TimeSpan.Zero) : null;
+        var sut = new ApiToken { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), Name = "Desktop", TokenHash = "hash", CreatedAt = new DateTimeOffset(2026, 1, 2, 9, 0, 0, TimeSpan.Zero), LastUsedAt = new DateTimeOffset(2026, 2, 3, 10, 0, 0, TimeSpan.Zero),
+            RevokedAt = revoked ? new DateTimeOffset(2026, 10, 1, 9, 0, 0, TimeSpan.Zero) : null
+        };
 
         // act
         var result = sut.ToViewModel();
@@ -52,8 +53,8 @@ public sealed class GetTokensMappingTests
         var result = sut.ToViewModel().ToArray();
 
         // assert
-        Assert.Equal(new[] { first.Id, second.Id }, result.Select(item => item.Id));
-        Assert.Equal(new[] { "Desktop", "Phone" }, result.Select(item => item.Name));
+        Assert.Equal([first.Id, second.Id], result.Select(item => item.Id));
+        Assert.Equal(["Desktop", "Phone"], result.Select(item => item.Name));
     }
 
     [Fact]
