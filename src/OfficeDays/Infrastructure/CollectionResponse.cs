@@ -8,7 +8,7 @@ public abstract record CollectionResponse<T> : IEnumerable<T>
 
     protected CollectionResponse(IEnumerable<T> items)
     {
-        _items = items;
+        _items = [..items];
     }
 
     public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();

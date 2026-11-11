@@ -7,9 +7,7 @@ public sealed record GetBankHolidayItem(string CountryCode, DateOnly Date, strin
 public sealed record GetBankHolidaysResponse : CollectionResponse<GetBankHolidayItem>
 {
     public GetBankHolidaysResponse(IEnumerable<GetBankHolidayItem> items) 
-        : base(items)
-    {
-    }
+        : base(items) {}
 }
 
 

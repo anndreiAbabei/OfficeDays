@@ -67,15 +67,15 @@ public sealed class ReplaceBankHolidaysResponseTests
     [Fact]
     public void Should_SnapshotItems_WhenSourceChanges()
     {
-        // arrange
-        var expectedItem = new ReplaceBankHolidaysItem("RO", DateOnly.FromDateTime(DateTime.Now), "New Year");
+        // Arrange
+        var expectedItem = new ReplaceBankHolidaysItem("RO", new DateOnly(2026, 1, 1), "New Year");
         var items = new List<ReplaceBankHolidaysItem> { expectedItem };
         var sut = new ReplaceBankHolidaysResponse(items);
 
-        // act
+        // Act
         items.Clear();
 
-        // assert
+        // Assert
         Assert.Equal(expectedItem, Assert.Single(sut));
     }
 }
