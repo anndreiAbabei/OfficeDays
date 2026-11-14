@@ -67,6 +67,7 @@
         countryCode, 
         countryName: country.name,
         timeZoneId, 
+        appearance: 'System',
         teamDay: null,
         attendance: [], 
         plans: [], 

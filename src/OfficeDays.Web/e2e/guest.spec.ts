@@ -171,3 +171,27 @@ test('Should_DownloadMissingHolidayYearOnlyOnRequest_WhenGuestNavigates', async 
   await expect(page.getByRole('button', { name: /Test holiday/ })).toBeVisible();
   expect(downloads).toBe(expectedDownloads);
 });
+
+test('Should_RememberGuestAppearance_WhenReopeningGuestMode', async ({ page, context }): Promise<void> => {
+  // Arrange
+  await setupGuest(page);
+  await context.addCookies([{ name: 'appearance', value: 'Light', url: page.url() }]);
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.getByRole('button', { name: 'Profile', exact: true }).click();
+  const select = page.getByLabel('Appearance');
+  await expect(select).toHaveValue('System');
+
+  // Act
+  await select.selectOption('Dark');
+  await page.getByRole('button', { name: 'Save appearance' }).click();
+  await page.reload();
+
+  // Assert
+  await expect(page.getByRole('navigation', { name: 'Guest navigation' })).toBeVisible();
+  await expect(page.locator('html')).toHaveCSS('color-scheme', 'dark');
+  await page.getByRole('button', { name: 'Profile', exact: true }).click();
+  await expect(select).toHaveValue('Dark');
+  await page.getByRole('link', { name: 'Sign in' }).click();
+  await expect(page.locator('html')).toHaveCSS('color-scheme', 'light');
+  expect((await context.cookies()).find(cookie => cookie.name === 'appearance')?.value).toBe('Light');
+});

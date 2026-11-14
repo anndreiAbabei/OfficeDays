@@ -2,6 +2,7 @@
   import { untrack } from 'svelte';
   import { mutate, errorMessage } from '$lib/api';
   import type { Appearance, TeamDay, User } from '$lib/types';
+  import AppearanceSelect from '$lib/components/AppearanceSelect.svelte';
   import Feedback from '$lib/components/Feedback.svelte';
   
   let { currentUser, onsave }: { currentUser: User; onsave: (user: User) => void } = $props();
@@ -53,14 +54,7 @@
       </select>
       <span id="team-day-help" class="muted">Your team's weekly office day. Highlighted in your calendar.</span>
     </label>
-    <label>
-      Appearance
-      <select bind:value={appearance}>
-        <option value="System">System</option>
-        <option value="Light">Light</option>
-        <option value="Dark">Dark</option>
-      </select>
-    </label>
+    <AppearanceSelect bind:value={appearance} />
     <button type="submit" disabled={busy}>
       {busy ? 'Saving…' : 'Save profile'}
     </button>

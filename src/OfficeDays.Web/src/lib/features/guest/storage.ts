@@ -1,5 +1,5 @@
 import type { AttendanceRequirementMode } from '$lib/attendanceRequirementMode';
-import type { TeamDay } from '$lib/types';
+import type { Appearance, TeamDay } from '$lib/types';
 
 export const guestStorageKey = 'officedays.guest.v1';
 export type GuestRequirement = { id: string; startingFrom: string; requirementMode: AttendanceRequirementMode; requirementValue: number; createdAt: string };
@@ -11,6 +11,7 @@ export type GuestData = {
   countryCode: string; 
   countryName: string; 
   timeZoneId: string; 
+  appearance: Appearance;
   teamDay: TeamDay | null;
   requirements: GuestRequirement[];
   attendance: { id: string; date: string; isManual: boolean; createdAt: string }[];
@@ -48,6 +49,7 @@ export function validateGuestData(value: unknown): value is GuestData {
   if (!record(value) || value.version !== 1 || typeof value.id !== 'string' || typeof value.createdAt !== 'string'
     || !validDate(value.registrationMonth) || !value.registrationMonth.endsWith('-01')
     || typeof value.countryCode !== 'string' || !value.countryCode || typeof value.countryName !== 'string'
+    || (value.appearance !== 'System' && value.appearance !== 'Dark' && value.appearance !== 'Light')
     || typeof value.timeZoneId !== 'string'
     || ![null, 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'].includes(value.teamDay as string | null)) 
     return false;
@@ -82,6 +84,10 @@ export function readGuestData(storage: Storage = localStorage): GuestData | null
     throw new Error('Saved guest data could not be read. It has been preserved; do not clear browser data.'); 
   }
   
+  // Guest profiles created before appearance preferences used the system theme.
+  if (record(value) && value.version === 1 && !Object.hasOwn(value, 'appearance'))
+    value.appearance = 'System';
+
   if (!validateGuestData(value)) 
     throw new Error('Saved guest data is invalid or uses an unsupported version. It has been preserved.');
   

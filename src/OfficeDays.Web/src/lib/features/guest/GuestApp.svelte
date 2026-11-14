@@ -2,7 +2,8 @@
   import { untrack } from 'svelte';
   import { errorMessage } from '$lib/api';
   import { localDate, months } from '$lib/dates';
-  import type { Period, TeamDay } from '$lib/types';
+  import type { Appearance, Period, TeamDay } from '$lib/types';
+  import AppearanceSelect from '$lib/components/AppearanceSelect.svelte';
   import PeriodPicker from '$lib/components/PeriodPicker.svelte';
   import Feedback from '$lib/components/Feedback.svelte';
   import Dashboard from '../Dashboard.svelte';
@@ -24,6 +25,15 @@
   let busy = $state(false);
   let error = $state('');
   let teamDay = $state<TeamDay | ''>(untrack((): TeamDay | '' => initial?.teamDay ?? ''));
+  let appearance = $derived<Appearance>(data?.appearance ?? 'System');
+
+  $effect(() => {
+    const root = document.documentElement;
+    root.dataset.guestAppearance = data?.appearance ?? 'System';
+    
+    return (): void => { delete root.dataset.guestAppearance; };
+  });
+
   const weekdays: TeamDay[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
   
   provideDataSource(createGuestSource());
@@ -78,6 +88,18 @@
     }
   }
   
+  function saveAppearance(): void {
+    error = '';
+    try {
+      const current = currentData();
+      current.appearance = appearance;
+      saveGuestData(current);
+      data = current;
+    } catch (failure) {
+      error = errorMessage(failure);
+    }
+  }
+
   function saveTeamDay(): void {
     error = '';
     try { 
@@ -175,6 +197,10 @@
           </select>
         </label>
         <button onclick={saveTeamDay}>Save team day</button>
+      </div>
+      <div>
+        <AppearanceSelect bind:value={appearance} />
+        <button onclick={saveAppearance}>Save appearance</button>
       </div>
     </section>
     
