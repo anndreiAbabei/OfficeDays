@@ -1,13 +1,14 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { mutate, errorMessage } from '$lib/api';
-  import type { TeamDay, User } from '$lib/types';
+  import type { Appearance, TeamDay, User } from '$lib/types';
   import Feedback from '$lib/components/Feedback.svelte';
   
   let { currentUser, onsave }: { currentUser: User; onsave: (user: User) => void } = $props();
   let email = $state(untrack(() => currentUser.email || ''));
   const teamDays: TeamDay[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
   let teamDay = $state<TeamDay | null>(untrack(() => currentUser.teamDay));
+  let appearance = $state<Appearance>(untrack((): Appearance => currentUser.appearance));
   let busy = $state(false); 
   let error = $state(''); 
   let message = $state('');
@@ -19,7 +20,7 @@
     message = '';
     
     try {
-      const updated = await mutate<User>('/api/users/me', 'PUT', { email: email.trim() || null, teamDay });
+      const updated = await mutate<User>('/api/users/me', 'PUT', { email: email.trim() || null, teamDay, appearance });
       
       email = updated.email || ''; 
       teamDay = updated.teamDay; 
@@ -52,6 +53,14 @@
       </select>
       <span id="team-day-help" class="muted">Your team's weekly office day. Highlighted in your calendar.</span>
     </label>
+    <label>
+      Appearance
+      <select bind:value={appearance}>
+        <option value="System">System</option>
+        <option value="Light">Light</option>
+        <option value="Dark">Dark</option>
+      </select>
+    </label>
     <button type="submit" disabled={busy}>
       {busy ? 'Saving…' : 'Save profile'}
     </button>
@@ -67,7 +76,8 @@
   }
   
   .profile-form button {
-    grid-column: 2;
+    align-self: end;
+    justify-self: start;
   }
   
   #team-day-help {

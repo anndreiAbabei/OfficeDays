@@ -1,9 +1,9 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/svelte';
 import { expect, it, vi } from 'vitest';
 import Profile from './Profile.svelte';
 import type { User } from '$lib/types';
 import { resetCsrf } from '$lib/api';
-const user: User = { id: '1', username: 'Andrei', email: 'old@example.com', timeZoneId: 'UTC', countryCode: 'RO', countryName: 'Romania', isAdmin: false, teamDay: null, requirementMode: 'Percentage', requirementValue: 50 };
+const user: User = { appearance: 'System', id: '1', username: 'Andrei', email: 'old@example.com', timeZoneId: 'UTC', countryCode: 'RO', countryName: 'Romania', isAdmin: false, teamDay: null, requirementMode: 'Percentage', requirementValue: 50 };
 
 it('clears optional email without changing attendance requirements', async () => {
   resetCsrf(); const onsave = vi.fn();
@@ -16,7 +16,7 @@ it('clears optional email without changing attendance requirements', async () =>
   await fireEvent.submit(screen.getByRole('button', { name: 'Save profile' }).closest('form')!);
   await waitFor(() => expect(onsave).toHaveBeenCalledWith({ ...user, email: null, requirementMode: 'Percentage', requirementValue: 50 }));
   
-  expect(JSON.parse(fetcher.mock.calls.find(([path]) => path === '/api/users/me')![1].body)).toEqual({ email: null, teamDay: null });
+  expect(JSON.parse(fetcher.mock.calls.find(([path]) => path === '/api/users/me')![1].body)).toEqual({ email: null, teamDay: null, appearance: 'System' });
   expect(screen.getByRole('status')).toHaveTextContent('Profile saved.');
 });
 it('keeps entered values and exposes a failed save for retry', async () => {
@@ -41,7 +41,7 @@ it('Should_LoadChangeAndClearTeamDay_WhenProfileIsSaved', async (): Promise<void
   render(Profile, { currentUser: { ...user, teamDay: 'thursday' }, onsave });
   const select = screen.getByRole('combobox', { name: /^Team day/ });
   expect(select).toHaveValue('thursday');
-  expect(screen.getAllByRole('option')).toHaveLength(6);
+  expect(within(select).getAllByRole('option')).toHaveLength(6);
   await fireEvent.change(select, { target: { value: 'monday' } });
   await fireEvent.submit(select.closest('form')!);
   await waitFor(() => expect(onsave).toHaveBeenLastCalledWith({ ...user, teamDay: 'monday' }));

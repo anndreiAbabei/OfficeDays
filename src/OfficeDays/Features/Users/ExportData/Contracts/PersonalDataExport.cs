@@ -28,7 +28,7 @@ public sealed record ExportProfile(Guid Id,
                                    int HolidayJurisdictionId,
                                    bool IsAdmin,
                                    DateTimeOffset CreatedAt);
-public sealed record ExportPreferences(string? TeamDay);
+public sealed record ExportPreferences(string? TeamDay, Appearance Appearance = Appearance.System);
 public sealed record ExportRequirement(Guid Id, Guid UserId, DateOnly StartingFrom, int RequirementValue, DateTimeOffset CreatedAt)
 {
     public AttendanceRequirementMode RequirementMode { get; init; } = AttendanceRequirementMode.Percentage;

@@ -15,6 +15,7 @@ public static class UpdateUserMapping
                                                                                            requirement.RequirementValue,
                                                                                            user.Preferences.TeamDay?.ToString().ToLowerInvariant())
         {
+            Appearance = user.Preferences.Appearance,
             RequirementMode = requirement.RequirementMode
         };
 }

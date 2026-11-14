@@ -28,6 +28,7 @@ That idea grew into a web app with a calendar, vacation tracking, attendance tar
 - **Plan ahead:** mark upcoming office days on the calendar. Plans stay separate from recorded attendance.
 - **Account for time off:** exclude weekends, bank holidays, and vacations from your target.
 - **Set your own target:** choose an office attendance percentage or days per week, then manage past or future changes from Profile.
+- **Appearance:** choose Light, Dark, or System in Profile. System follows your device. Your account remembers the choice across devices, and a browser cookie applies it on subsequent visits.
 - **Highlight your team day:** choose a weekday as a visual reminder in the calendar.
 - **Review and export reports:** view monthly attendance across a year or a range of months and download a CSV.
 - **Automate with iOS Shortcuts:** use a personal API token to log attendance from your iPhone.

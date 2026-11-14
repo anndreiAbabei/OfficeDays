@@ -98,7 +98,7 @@
     color: var(--green-dark); 
   }
   .attendance-check.manual {
-    color: #a87500; 
+    color: var(--calendar-planned-text);
   }
   .item-main strong .attendance-check { 
     display: inline; 

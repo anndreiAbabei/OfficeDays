@@ -12,5 +12,7 @@ public sealed record LoginResponse(Guid Id,
                                    int RequirementValue,
                                    string? TeamDay = null)
 {
+    public Appearance Appearance { get; init; } = Appearance.System;
+
     public AttendanceRequirementMode RequirementMode { get; init; } = AttendanceRequirementMode.Percentage;
 }

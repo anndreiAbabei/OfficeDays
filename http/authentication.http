@@ -51,6 +51,7 @@ Content-Type: application/json
 X-CSRF-TOKEN: {{csrfToken}}
 
 {
+  "appearance": "Dark",
   "email": "andrei@example.com"
 }
 

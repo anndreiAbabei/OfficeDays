@@ -63,9 +63,9 @@ public sealed class ExportDataHandler : IRequestHandler<ExportDataRequest>
             return Results.Problem(statusCode: 404, detail: "Your account could not be found. Please sign in again.");
         }
 
-        var teamDay = await _db.Users
+        var preferences = await _db.Users
                                .Where(x => x.Id == _currentUser.Id)
-                               .Select(x => x.Preferences.TeamDay)
+                               .Select(x => new { x.Preferences.TeamDay, x.Preferences.Appearance })
                                .SingleAsync(cancellationToken);
 
         var requirements = await _db.UserAttendanceRequirements
@@ -124,7 +124,7 @@ public sealed class ExportDataHandler : IRequestHandler<ExportDataRequest>
                                             new ExportReportContext(1, DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(exportedAt, zone).DateTime),
                                                                        DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(profile.CreatedAt, zone).DateTime)),
                                             profile,
-                                            new ExportPreferences(teamDay?.ToString().ToLowerInvariant()),
+                                            new ExportPreferences(preferences.TeamDay?.ToString().ToLowerInvariant(), preferences.Appearance),
                                             requirements,
                                             attendance,
                                             plans,

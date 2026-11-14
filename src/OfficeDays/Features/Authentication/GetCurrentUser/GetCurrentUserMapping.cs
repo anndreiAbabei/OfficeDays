@@ -17,6 +17,7 @@ public static class GetCurrentUserMapping
                                           requirement.RequirementValue,
                                           user.Preferences.TeamDay?.ToString().ToLowerInvariant())
         {
+            Appearance = user.Preferences.Appearance,
             RequirementMode = requirement.RequirementMode
         };
     }
