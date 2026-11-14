@@ -5,7 +5,9 @@ namespace OfficeDays.Features.Status.GetStatus;
 
 public static class GetStatusMapping
 {
-    public static GetStatusResponse ToViewModel(this AttendanceStatus status)
+    public static GetStatusResponse ToViewModel(this AttendanceStatus status,
+                                                GetStatusSummary summary,
+                                                int upcomingPlannedDays = 0)
     {
         return new GetStatusResponse(status.Period,
                                      status.EligibleWorkingDays,
@@ -13,6 +15,8 @@ public static class GetStatusMapping
                                      status.RequiredOfficeDays,
                                      status.OfficeDays,
                                      status.RemainingOfficeDays,
-                                     status.ProgressPercentage);
+                                     status.ProgressPercentage,
+                                     summary,
+                                     upcomingPlannedDays);
     }
 }

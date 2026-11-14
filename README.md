@@ -24,7 +24,7 @@ That idea grew into a web app with a calendar, vacation tracking, attendance tar
 ## What you can do
 
 - **Track attendance:** record today, add a missed office day, or remove an incorrect entry.
-- **See monthly progress:** check your required office days, remaining days, and maximum work-from-home days.
+- **See monthly progress:** check your required office days, remaining days, and maximum work-from-home days. Expand **How this is calculated** for the full breakdown.
 - **Plan ahead:** mark upcoming office days on the calendar. Plans stay separate from recorded attendance.
 - **Account for time off:** exclude weekends, bank holidays, and vacations from your target.
 - **Set your own target:** choose an office attendance percentage or days per week, then manage past or future changes from Profile.
@@ -38,6 +38,10 @@ That idea grew into a web app with a calendar, vacation tracking, attendance tar
 The default target is **50% of eligible working days**. Eligible days are weekdays, excluding your holiday calendar's bank holidays and your vacation dates. The required number of office days is rounded up.
 
 For example, with **21 eligible working days** and a **50% target**, you need **11 office days**, leaving up to **10 work-from-home days**. Only recorded attendance on eligible days counts toward that target; planning a visit does not mark it as attended.
+
+The monthly progress card's **How this is calculated** button explains the selected month's calendar days, weekdays, named bank holidays, vacation dates, requirement, and rounded office target. It compares the target with what it would be without holidays or vacation. Weekend absences do not reduce weekdays, and a vacation on a bank holiday is deducted only once. Lists include only dates in the selected month.
+
+The breakdown also shows eligible plans for the whole month, upcoming plans, recorded office days, days still required, and available days left. Available days exclude weekends, holidays, vacations, and dates already attended; today counts if eligible and not attended, using your configured timezone. **Unavoidable outstanding days** is the shortfall that would remain even if you attended every available date. Past months have no available days; future months show their full eligible capacity. This works for signed-in accounts and guests, including offline guest tracking.
 
 Choose either a whole percentage from 0 to 100 or a whole number of office days per week from 0 to 5. Weekly days represent a monthly average over a five-day working week, not a minimum each week: the target is `ceil(eligible working days × days per week / 5)`. Eligible days exclude weekends, jurisdiction holidays, and vacations. For example, 3 days per week requires 12 office days in a month with 20 eligible days, or 14 with 22. Attend on any eligible dates to meet the quota; there are no mandatory weekdays. The total rounds up once per month. Your selected format is preserved in history, reports, and exports. Later changes take effect from the first day of a chosen month. Editing an earlier requirement recalculates the affected months.
 
