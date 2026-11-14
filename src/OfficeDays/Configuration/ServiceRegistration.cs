@@ -13,6 +13,7 @@ using OfficeDays.Infrastructure;
 using OfficeDays.Security;
 using OfficeDays.Services;
 using Serilog;
+using Serilog.Sinks.OpenTelemetry;
 
 namespace OfficeDays.Configuration;
 
@@ -29,7 +30,7 @@ public static class ServiceRegistration
         if (cookieExpireTimeSpan <= TimeSpan.Zero)
             throw new InvalidOperationException("Authentication:CookieExpireTimeSpan must be a positive TimeSpan.");
 
-        builder.Services.AddSerilog();
+        AddLogging(builder);
 
         builder.Services.AddResponseCompression(options =>
         {
@@ -89,6 +90,35 @@ public static class ServiceRegistration
         AddAuthorization(builder, cookieExpireTimeSpan);
 
         return builder;
+    }
+
+    private static void AddLogging(WebApplicationBuilder builder)
+    {
+        builder.Services.AddSerilog((services, logger) =>
+        {
+            logger.Enrich.FromLogContext().WriteTo.Console();
+
+            var endpoint = builder.Configuration["Serilog:OpenTelemetry:Endpoint"];
+            if (string.IsNullOrWhiteSpace(endpoint))
+                return;
+
+            var version = services.GetRequiredService<IAppVersionService>().Version;
+            logger.WriteTo.OpenTelemetry(options => ConfigureLogExport(options, endpoint, builder.Environment.EnvironmentName, version),
+                                         ignoreEnvironment: true);
+        }, preserveStaticLogger: true);
+    }
+
+    internal static void ConfigureLogExport(OpenTelemetrySinkOptions options, string endpoint, string environment, string version)
+    {
+        options.Endpoint = endpoint;
+        options.Protocol = OtlpProtocol.HttpProtobuf;
+        options.IncludedData |= IncludedData.SourceContextAttribute;
+        options.ResourceAttributes = new Dictionary<string, object>
+        {
+            ["service.name"] = "OfficeDays",
+            ["deployment.environment.name"] = environment,
+            ["service.version"] = version
+        };
     }
 
     private static void AddHealthCheck(WebApplicationBuilder webApplicationBuilder)

@@ -5,8 +5,12 @@ services:
     user: "${OFFICEDAYS_UID:-1000}:${OFFICEDAYS_GID:-1000}"
     ports:
       - "5802:5802"
+    networks:
+      - default
+      - observability
     environment:
       ASPNETCORE_ENVIRONMENT: "Production"
+      Serilog__OpenTelemetry__Endpoint: "${OFFICEDAYS_OTLP_ENDPOINT-http://alloy:4318}"
       ConnectionStrings__Default: "Data Source=/app/data/officedays.db"
       DataProtection__KeysPath: "/app/data/keys"
       Security__RequireHttpsForBearerTokens: "${OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER:-true}"
@@ -18,3 +22,7 @@ services:
       - ${OFFICEDAYS_DATA_PATH:-./data}:/app/data
       - ./src/OfficeDays/appsettings.Production.json:/app/appsettings.Production.json:ro
     restart: unless-stopped
+
+networks:
+  observability:
+    external: true

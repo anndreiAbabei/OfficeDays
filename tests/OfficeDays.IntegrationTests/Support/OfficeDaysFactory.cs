@@ -13,9 +13,12 @@ public sealed class OfficeDaysFactory : WebApplicationFactory<Program>
     private readonly string _databasePath = Path.Combine(Path.GetTempPath(), $"officedays-tests-{Guid.NewGuid():N}.db");
     private readonly bool _requireHttpsForBearerTokens;
 
-    public OfficeDaysFactory(bool requireHttpsForBearerTokens = false)
+    private readonly bool _useApplicationLogging;
+
+    public OfficeDaysFactory(bool requireHttpsForBearerTokens = false, bool useApplicationLogging = false)
     {
         _requireHttpsForBearerTokens = requireHttpsForBearerTokens;
+        _useApplicationLogging = useApplicationLogging;
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -34,8 +37,11 @@ public sealed class OfficeDaysFactory : WebApplicationFactory<Program>
         builder.ConfigureServices(services =>
         {
             // Capture logs through the providers configured by each test, independently of Serilog.
-            services.RemoveAll<ILoggerFactory>();
-            services.AddSingleton<ILoggerFactory, LoggerFactory>();
+            if (!_useApplicationLogging)
+            {
+                services.RemoveAll<ILoggerFactory>();
+                services.AddSingleton<ILoggerFactory, LoggerFactory>();
+            }
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(new FixedTimeProvider(new DateTimeOffset(2099, 9, 15, 9, 0, 0, TimeSpan.Zero)));
         });

@@ -87,6 +87,8 @@ For testing API tokens over local HTTP, set `OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER
 
 ### 2. Start the app
 
+Compose joins the app’s default network and the external `observability` network. On a new Docker host, create the latter once with `docker network create observability`.
+
 ```bash
 docker compose up --build -d
 ```
@@ -128,6 +130,8 @@ cd ../..
 ```
 
 ### 2. Start the app
+
+Compose joins the app’s default network and the external `observability` network. On a new Docker host, create the latter once with `docker network create observability`.
 
 Replace the example password and adjust the timezone and holiday calendar as needed:
 
