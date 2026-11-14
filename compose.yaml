@@ -13,6 +13,7 @@ services:
       Serilog__OpenTelemetry__Endpoint: "${OFFICEDAYS_OTLP_ENDPOINT-http://alloy:4318}"
       ConnectionStrings__Default: "Data Source=/app/data/officedays.db"
       DataProtection__KeysPath: "/app/data/keys"
+      ReverseProxy__KnownProxies__0:
       Security__RequireHttpsForBearerTokens: "${OFFICEDAYS_REQUIRE_HTTPS_FOR_BEARER:-true}"
       BootstrapAdmin__Password: "${OFFICEDAYS_ADMIN_PASSWORD:-}"
       BootstrapAdmin__TimeZoneId: "${OFFICEDAYS_ADMIN_TIMEZONE:-Europe/Bucharest}"
