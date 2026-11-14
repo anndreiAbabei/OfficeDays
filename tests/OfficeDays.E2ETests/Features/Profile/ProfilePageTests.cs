@@ -43,7 +43,7 @@ public sealed class ProfilePageTests(ApplicationFixture application, ITestOutput
             var profile = await dashboard.GoToProfile();
 
             // assert
-            var footer = profile.Footer;
+            var footer = profile.Footer.Locator(".base");
             var authorLink = footer.GetByRole(AriaRole.Link,
                                               new LocatorGetByRoleOptions
                                               {

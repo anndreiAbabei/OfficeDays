@@ -67,8 +67,10 @@
   </main>
   <footer class="app-footer muted">
     <OfflineStatus />
-    <span>Created by <a href="{gitHubUrl}">{author}</a> · </span>
-    <span>Office Days · {version}</span>
+    <div class="base">
+      <span>Created by <a href="{gitHubUrl}">{author}</a> · </span>
+      <span>Office Days · {version}</span>
+    </div>
   </footer>
 </div>
 
