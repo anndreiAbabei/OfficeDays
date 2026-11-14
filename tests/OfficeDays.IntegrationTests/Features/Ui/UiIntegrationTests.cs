@@ -62,7 +62,7 @@ public sealed class UiIntegrationTests
         await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
         var content = factory.Services.GetRequiredService<UiContent>();
-        var asset = content.Assets.First(item => item.Path.EndsWith(".js") && item.Bytes.Length > 1000);
+        var asset = content.Assets.First(item => item.Immutable && item.Path.EndsWith(".js") && item.Bytes.Length > 1000);
         using var request = new HttpRequestMessage(HttpMethod.Get, asset.Path);
         request.Headers.AcceptEncoding.ParseAdd("gzip");
         var response = await client.SendAsync(request, TestContext.Current.CancellationToken);

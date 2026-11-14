@@ -47,6 +47,66 @@ test('Should_TrackReportAndExportWithoutRequests_WhenGuestGoesOffline', async ({
   expect(await page.evaluate((): boolean => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
+test('Should_ReopenAndExportSavedGuestData_WhenLaunchingOffline', async ({ page, context }): Promise<void> => {
+  // Arrange
+  await setupGuest(page);
+  await expect(page.getByText('Ready to reopen offline')).toBeVisible();
+  const manifest = await (await page.request.get('/manifest.webmanifest')).json();
+  expect(manifest.display).toBe('standalone');
+  expect(manifest.scope).toBe('/');
+  await page.close();
+  const launch = await context.newPage();
+  await context.setOffline(true);
+
+  // Act
+  await launch.goto(manifest.start_url);
+  await expect(launch.getByRole('button', { name: 'Retry connection' })).toBeVisible();
+  await expect(launch.getByRole('navigation', { name: 'Guest navigation' })).toHaveCount(0);
+  await launch.getByRole('button', { name: 'Open saved guest data' }).click();
+  await launch.reload();
+  await launch.getByRole('button', { name: 'Open saved guest data' }).click();
+  await launch.getByRole('button', { name: 'Reports', exact: true }).click();
+  await expect(launch.getByRole('heading', { name: 'Monthly breakdown' })).toBeVisible();
+  await launch.getByRole('button', { name: 'Profile', exact: true }).click();
+  const pendingDownload = launch.waitForEvent('download');
+  await launch.getByRole('button', { name: 'Download guest data' }).click();
+
+  // Assert
+  const expectedFilename = 'officedays-guest-data.json';
+  expect((await pendingDownload).suggestedFilename()).toBe(expectedFilename);
+  const cachedPaths = await launch.evaluate(async (): Promise<string[]> => {
+    const paths: string[] = [];
+    for (const name of await caches.keys()) {
+      for (const entry of await (await caches.open(name)).keys()) paths.push(new URL(entry.url).pathname);
+    }
+    return paths;
+  });
+  expect(cachedPaths).toContain('/index.html');
+  expect(cachedPaths.some((path): boolean => path.startsWith('/api/'))).toBe(false);
+});
+
+test('Should_RecoverGuestShell_WhenCachedAssetIsMissing', async ({ page, context }): Promise<void> => {
+  // Arrange
+  await setupGuest(page);
+  await expect(page.getByText('Ready to reopen offline')).toBeVisible();
+  await page.evaluate(async (): Promise<void> => {
+    const [name] = await caches.keys();
+    const cache = await caches.open(name);
+    await cache.delete('/index.html');
+  });
+  await context.setOffline(true);
+
+  // Act
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Offline files unavailable' })).toBeVisible();
+  await context.setOffline(false);
+  await page.getByRole('link', { name: 'Retry connection' }).click();
+
+  // Assert
+  await expect(page.getByText('Saved in this browser', { exact: true })).toBeVisible();
+  await expect(page.getByText('Ready to reopen offline')).toBeVisible();
+});
+
 test('Should_ReturnToGuestDashboard_WhenSetupAlreadyExists', async ({ page }): Promise<void> => {
   // Arrange
   await setupGuest(page);
