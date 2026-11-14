@@ -1,7 +1,6 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using OfficeDays.Domain;
@@ -135,7 +134,7 @@ public sealed class AttendanceSummaryIntegrationTests
         // Assert
         Assert.NotNull(response);
         Assert.Equal(expectedPeriod, response.Period);
-        Assert.Equal(DateOnly.Parse(expectedToday), response.Summary.Today);
+        Assert.Equal(DateOnly.Parse(expectedToday, CultureInfo.InvariantCulture), response.Summary.Today);
     }
 
     [Fact]
