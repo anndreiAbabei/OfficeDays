@@ -34,7 +34,7 @@ public sealed class CreateUserRequestBodyValidator : AbstractValidator<CreateUse
             .NotEmpty()
             .MinimumLength(3)
             .MaximumLength(100);
-            
+
         RuleFor(input => input.Password)
             .NotEmpty()
             .MinimumLength(12);
@@ -43,12 +43,12 @@ public sealed class CreateUserRequestBodyValidator : AbstractValidator<CreateUse
             .NotEmpty()
             .Must(dates.IsValidTimeZone)
             .WithMessage("A valid IANA timezone is required, for example Europe/Bucharest.");
-            
+
         RuleFor(input => input.CountryCode)
             .NotEmpty()
             .Must(code => HolidayJurisdictionCodes.TryNormalize(code, out _))
             .WithMessage("A valid country or subdivision code is required, for example RO, GB-NIR, or US.");
-            
+
         RuleFor(input => input.Email)
             .EmailAddress()
             .When(input => !string.IsNullOrWhiteSpace(input.Email));

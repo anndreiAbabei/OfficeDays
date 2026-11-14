@@ -13,17 +13,17 @@ public static class PageExtensions
             var url = TPage.Url;
 
             await page.GotoAsync(url, options);
-        
+
             return TPage.Create(page);
         }
-        
+
         public async Task<TPage> Expects<TPage>(PageAssertionsToHaveURLOptions? options = null)
             where TPage : IScenarioPage<TPage>
         {
             var url = TPage.Url;
 
             await Expect(page).ToHaveURLAsync(url, options);
-        
+
             return TPage.Create(page);
         }
     }

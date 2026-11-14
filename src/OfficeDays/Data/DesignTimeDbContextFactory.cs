@@ -1,8 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace OfficeDays.Data;
 
+[ExcludeFromCodeCoverage]
 public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 {
     public AppDbContext CreateDbContext(string[] args)
@@ -10,7 +12,7 @@ public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<App
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseSqlite("Data Source=officedays-design.db")
             .Options;
-        
+
         return new AppDbContext(options);
     }
 }

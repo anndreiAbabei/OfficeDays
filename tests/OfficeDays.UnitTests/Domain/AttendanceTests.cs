@@ -20,7 +20,7 @@ public sealed class AttendanceTests
             PasswordHash = null!,
             TimeZoneId = null!
         };
-        
+
         // act
         var sut = new Attendance
         {

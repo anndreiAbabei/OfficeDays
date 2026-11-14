@@ -7,7 +7,7 @@ namespace OfficeDays.Features.Users.UpdateUser;
 public sealed class UpdateUserEndpoint(IRequestExecutor executor) : IUsersEndpoint
 {
     private readonly IRequestExecutor _executor = executor;
-    
+
     public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
         endpoints.MapPut("me", _executor.Execute<UpdateUserRequest>)

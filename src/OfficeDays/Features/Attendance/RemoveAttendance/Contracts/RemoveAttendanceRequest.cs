@@ -6,5 +6,5 @@ namespace OfficeDays.Features.Attendance.RemoveAttendance.Contracts;
 public sealed record RemoveAttendanceRequest : IRequest
 {
     [FromRoute(Name = "date")]
-    public DateOnly Date { get; set; }
+    public DateOnly Date { get; init; }
 }

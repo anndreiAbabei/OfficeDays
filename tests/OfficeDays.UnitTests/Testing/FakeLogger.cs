@@ -9,7 +9,7 @@ namespace OfficeDays.UnitTests.Testing;
 public sealed class FakeLogger<T> : ILogger<T>
 {
     public IList<LogItem> Logs { get; } = new List<LogItem>();
-    
+
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
         var li = new LogItem(logLevel, formatter(state, exception), exception)
@@ -22,7 +22,7 @@ public sealed class FakeLogger<T> : ILogger<T>
 
     public bool IsEnabled(LogLevel logLevel) => true;
     public IDisposable BeginScope<TState>(TState state) where TState : notnull => new Disposable();
-    
+
     [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local", Justification = "Used for assertion")]
     [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Global", Justification = "Used for assertion")]
     public void Assert(LogLevel logLevel, FormattableString message, Exception? exception = null)
@@ -94,10 +94,10 @@ public sealed class FakeLogger<T> : ILogger<T>
     {
         if(state is IEnumerable<KeyValuePair<string, object>> values)
             return values.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        
+
         return new Dictionary<string, object>();
     }
-    
+
     [ExcludeFromCodeCoverage]
     private sealed class Disposable : IDisposable
     {

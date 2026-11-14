@@ -18,8 +18,7 @@ public sealed class RecordTodayHandler : IRequestHandler<RecordTodayRequest>
 
     private static readonly Func<AppDbContext, Guid, DateOnly, CancellationToken, Task<Domain.Attendance?>> _getAttendanceQuery =
         EF.CompileAsyncQuery((AppDbContext ctx, Guid userId, DateOnly date, CancellationToken ct) => ctx.Attendances.SingleOrDefault(x => x.UserId == userId && x.Date == date));
-
-
+    
     public RecordTodayHandler(AppDbContext dbContext,
                               ICurrentUser currentUser,
                               IUserDateService dates,

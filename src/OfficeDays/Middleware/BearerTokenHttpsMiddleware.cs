@@ -22,19 +22,23 @@ public sealed partial class BearerTokenHttpsMiddleware
         if (_requireHttps && !context.Request.IsHttps && HasBearerToken(context.Request))
         {
             LogRejectInsecureBearer(_logger, context.Request.Path, context.Connection.RemoteIpAddress);
-            
+
             await Results.Problem(statusCode: StatusCodes.Status400BadRequest,
                                   title: "HTTPS required",
                                   detail: "Bearer API tokens are not accepted over an insecure connection.")
                          .ExecuteAsync(context);
-            
+
             return;
         }
 
         await _next(context);
     }
 
-    private static bool HasBearerToken(HttpRequest request) => request.Headers.Authorization.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase);
+    private static bool HasBearerToken(HttpRequest request)
+    {
+        return request.Headers.Authorization.ToString()
+                      .StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase);
+    }
 
     private const int EventIdStart = 0500;
     [LoggerMessage(EventIdStart + 1, LogLevel.Warning, "Rejected an insecure bearer request to {Path} from {IpAddress}")]

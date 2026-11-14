@@ -14,9 +14,9 @@ public sealed class User
     public int HolidayJurisdictionId { get; init; }
     public bool IsAdmin { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
-    
+
     public UserPreferences Preferences { get; init; } = new UserPreferences();
-    
+
     public HolidayJurisdiction HolidayJurisdiction { get; init; } = null!;
     public List<Attendance> Attendances { get; init; } = [];
     public List<Vacation> Vacations { get; init; } = [];

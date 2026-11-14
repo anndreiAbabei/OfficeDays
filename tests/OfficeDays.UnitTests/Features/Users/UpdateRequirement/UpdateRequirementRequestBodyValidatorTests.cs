@@ -77,7 +77,7 @@ public sealed class UpdateRequirementRequestBodyValidatorTests
         var request = new UpdateRequirementRequestBody
         {
             RequirementMode = AttendanceRequirementMode.Percentage,
-            StartingFrom = new DateOnly(2026, 10, 1), 
+            StartingFrom = new DateOnly(2026, 10, 1),
             RequirementValue = 0
         };
         var sut = new UpdateRequirementRequestBodyValidator();
@@ -96,7 +96,7 @@ public sealed class UpdateRequirementRequestBodyValidatorTests
         var request = new UpdateRequirementRequestBody
         {
             RequirementMode = AttendanceRequirementMode.Percentage,
-            StartingFrom = new DateOnly(2026, 10, 1), 
+            StartingFrom = new DateOnly(2026, 10, 1),
             RequirementValue = 100
         };
         var sut = new UpdateRequirementRequestBodyValidator();
@@ -139,7 +139,7 @@ public sealed class UpdateRequirementRequestBodyValidatorTests
         // Arrange
         var request = new UpdateRequirementRequestBody
         {
-            StartingFrom = new DateOnly(2026, 11, 1), 
+            StartingFrom = new DateOnly(2026, 11, 1),
             RequirementMode = mode,
             RequirementValue = value
         };

@@ -17,11 +17,11 @@ public sealed class GetReportHandler : IRequestHandler<GetReportRequest>
     private readonly IHttpContextAccessor _context;
     private readonly ILogger<GetReportHandler> _logger;
 
-    public GetReportHandler(AppDbContext db, 
-                            ICurrentUser currentUser, 
+    public GetReportHandler(AppDbContext db,
+                            ICurrentUser currentUser,
                             TimeProvider clock,
-                            IReportCalculator calculator, 
-                            IHttpContextAccessor context, 
+                            IReportCalculator calculator,
+                            IHttpContextAccessor context,
                             ILogger<GetReportHandler> logger)
     {
         _db = db;
@@ -39,15 +39,15 @@ public sealed class GetReportHandler : IRequestHandler<GetReportRequest>
 
         // All inputs come from one database snapshot, even if another request edits attendance or requirements.
         await using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
-        
+
         var user = await _db.Users
                             .AsNoTracking()
                             .SingleOrDefaultAsync(x => x.Id == _currentUser.Id, cancellationToken);
-        
+
         if (user is null)
         {
             _logger.LogUserNotFound(_currentUser.Id);
-            
+
             return Results.NotFound();
         }
 
@@ -62,12 +62,12 @@ public sealed class GetReportHandler : IRequestHandler<GetReportRequest>
                                     .AsNoTracking()
                                     .Where(x => x.UserId == user.Id && x.StartingFrom <= end)
                                     .ToListAsync(cancellationToken);
-        
+
         var holidays = await _db.BankHolidays
                                 .Where(x => x.HolidayJurisdictionId == user.HolidayJurisdictionId && x.Date >= start && x.Date <= end)
                                 .Select(x => x.Date)
                                 .ToListAsync(cancellationToken);
-        
+
         var vacations = await _db.Vacations
                                  .Where(x => x.UserId == user.Id && x.From <= end && x.To >= start)
                                  .Select(x => new { x.From, x.To })
@@ -78,11 +78,11 @@ public sealed class GetReportHandler : IRequestHandler<GetReportRequest>
                                   .ToListAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        var report = _calculator.Calculate(year, startMonth, endMonth, user, generatedAt, requirements, holidays, 
+        var report = _calculator.Calculate(year, startMonth, endMonth, user, generatedAt, requirements, holidays,
                                            vacations.Select(x => (x.From, x.To)), attendance);
-        
+
         _logger.LogReportGenerated(user.Id, year, startMonth, endMonth, report.Months.Count);
-        
+
         return Results.Ok(report.ToViewModel());
     }
 }

@@ -19,7 +19,7 @@ public sealed class OfficePlanTests
             PasswordHash = null!,
             TimeZoneId = null!
         };
-        
+
         // act
         var sut = new OfficePlan
         {
@@ -29,7 +29,7 @@ public sealed class OfficePlanTests
             CreatedAt = expectedCreatedAt,
             User = expectedUser,
         };
-        
+
         // assert
         Assert.Equal(expectedId, sut.Id);
         Assert.Equal(expectedUserId, sut.UserId);

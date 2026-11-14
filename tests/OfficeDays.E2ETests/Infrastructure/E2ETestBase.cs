@@ -26,21 +26,21 @@ public abstract class E2ETestBase : IE2ETest
     {
         var directory = Path.Combine(_application.ArtifactsDirectory, $"{GetType().Name}-{scenarioName}-{Guid.NewGuid():N}");
         Directory.CreateDirectory(directory);
-        
+
         _output.WriteLine($"Artifacts: {directory}");
-        
+
         await using var context = await Application.Browser.CreateContextAsync(_application.BaseUrl, !headless);
         await context.Tracing.StartAsync(new TracingStartOptions { Screenshots = true, Snapshots = true, Sources = true });
-        
+
         var page = await context.NewPageAsync();
         var ct = Application.CancellationToken;
-        
+
         try
         {
             var seeder = new TestDataSeeder(Application.Api);
-            
+
             await scenario(page, seeder, ct);
-            
+
             await context.Tracing.StopAsync();
         }
         catch

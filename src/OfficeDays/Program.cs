@@ -5,11 +5,6 @@ using OfficeDays.Data;
 using OfficeDays.Endpoints;
 using OfficeDays.Extensions;
 using OfficeDays.Middleware;
-using Serilog;
-
-Log.Logger = new LoggerConfiguration()
-             .WriteTo.Console()
-             .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddApplicationServices();
@@ -17,7 +12,6 @@ builder.Services.AddFeatures();
 
 var app = builder.Build();
 
-app.UseSerilogRequestLogging();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseForwardedHeaders();
 app.UseExceptionHandler();

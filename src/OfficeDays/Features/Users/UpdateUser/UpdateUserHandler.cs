@@ -27,7 +27,7 @@ public sealed class UpdateUserHandler : IRequestHandler<UpdateUserRequest>
         _dbContext = dbContext;
         _userService = userService;
     }
-    
+
     public async ValueTask<IResult> Handle(UpdateUserRequest input, CancellationToken cancellationToken)
     {
         var request = input.Body;
@@ -42,12 +42,12 @@ public sealed class UpdateUserHandler : IRequestHandler<UpdateUserRequest>
         }
 
         user.Email = _userService.NormalizeEmail(request.Email);
-        
+
         if (request.HasTeamDay)
             user.Preferences.TeamDay = request.TeamDay is null ? null : Enum.Parse<DayOfWeek>(request.TeamDay, true);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-        
+
         var requirement = await _requirements.CurrentRequirement(user, cancellationToken);
         var result = user.ToViewModel(requirement);
 

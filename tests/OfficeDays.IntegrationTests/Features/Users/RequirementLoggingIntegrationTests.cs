@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
@@ -36,7 +36,7 @@ public sealed class RequirementLoggingIntegrationTests
         Assert.Equal(HttpStatusCode.NotFound, (await Delete(client, $"{path}/{missingId}", csrf)).StatusCode);
 
         // Deleted sessions are now rejected before feature handlers run.
-        var expectedUnauthorized = HttpStatusCode.Unauthorized;
+        const HttpStatusCode expectedUnauthorized = HttpStatusCode.Unauthorized;
         await DeleteUser(original, "requirementlogs");
         Assert.Equal(expectedUnauthorized, (await client.GetAsync(path, TestContext.Current.CancellationToken)).StatusCode);
         Assert.Equal(expectedUnauthorized, (await PostJson(client, path, body, csrf)).StatusCode);
@@ -48,8 +48,10 @@ public sealed class RequirementLoggingIntegrationTests
         Assert.Contains(logs.Entries, entry => entry.EventId == 4503 && entry.Exception is not null);
     }
 
+    [ExcludeFromCodeCoverage]
     private sealed record LogEntry(int EventId, LogLevel Level, Exception? Exception);
 
+    [ExcludeFromCodeCoverage]
     private sealed class CapturingLoggerProvider : ILoggerProvider
     {
         public ConcurrentQueue<LogEntry> Entries { get; } = new ConcurrentQueue<LogEntry>();

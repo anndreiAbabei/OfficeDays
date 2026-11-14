@@ -19,7 +19,7 @@ public sealed class PersonalDataExportTests
         var expectedAttendance = new[] { new ExportAttendance(Guid.NewGuid(), Guid.NewGuid(), new DateOnly(2026, 10, 19), true, new DateTimeOffset(2026, 10, 19, 9, 30, 0, TimeSpan.Zero)) };
         var expectedPlans = new[] { new ExportPlan(Guid.NewGuid(), Guid.NewGuid(), new DateOnly(2026, 10, 19), new DateTimeOffset(2026, 10, 19, 9, 30, 0, TimeSpan.Zero)) };
         var expectedVacations = new[] { new ExportVacation(Guid.NewGuid(), Guid.NewGuid(), new DateOnly(2026, 10, 19), new DateOnly(2026, 10, 23), new DateTimeOffset(2026, 10, 19, 9, 30, 0, TimeSpan.Zero)) };
-        var expectedHolidayCalendar = new ExportHolidayCalendar(42, "RO", "Romania", new[] { new ExportHoliday(Guid.NewGuid(), 42, new DateOnly(2026, 10, 19), "Holiday") });
+        var expectedHolidayCalendar = new ExportHolidayCalendar(42, "RO", "Romania", [new ExportHoliday(Guid.NewGuid(), 42, new DateOnly(2026, 10, 19), "Holiday")]);
 
         // act
         var sut = new PersonalDataExport(expectedFormat, expectedFormatVersion, expectedExportedAt, expectedApplication, expectedReportContext, expectedProfile, expectedPreferences, expectedRequirementHistory, expectedAttendance, expectedPlans, expectedVacations, expectedHolidayCalendar);

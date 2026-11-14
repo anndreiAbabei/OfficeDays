@@ -37,6 +37,7 @@ public sealed class EndpointGroupBuilder : IEndpointGroupBuilder
     {
         var group = _routeGroupBuilder.MapGroup(prefix);
         var endpoints = _serviceProvider.GetServices<T>().ToArray();
+
         if (endpoints.Length == 0)
             throw new InvalidOperationException($"Endpoint group interface '{typeof(T).FullName}' has no registered endpoints.");
 

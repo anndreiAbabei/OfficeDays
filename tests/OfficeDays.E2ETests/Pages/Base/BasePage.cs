@@ -21,11 +21,11 @@ public abstract class AuthenticatedPage(IPage page) : BasePage(page)
 {
     public ILocator LogoutButton => Page.Locator("#log-out-btn");
     public ILocator Footer => Page.Locator("footer.app-footer");
-    
+
     public async Task<LoginPage> SignOut()
     {
         await LogoutButton.ClickAsync();
-        
+
         return await Page.Expects<LoginPage>();
     }
 }

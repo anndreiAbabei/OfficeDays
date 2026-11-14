@@ -17,7 +17,7 @@ public sealed class BankHolidayTests
             Code = null!,
             Name = null!
         };
-        
+
         // act
         var sut = new BankHoliday
         {

@@ -12,7 +12,7 @@ public sealed class ExceptionExIsUniqueViolationTests
         // arrange
         var sqlEx = new SqliteException("", 19);
         var exception = new DbUpdateException("", sqlEx);
-        
+
         // act
         var result = exception.IsUniqueViolation();
 
@@ -26,21 +26,21 @@ public sealed class ExceptionExIsUniqueViolationTests
         // arrange
         var innerEx = new Exception();
         var exception = new DbUpdateException("", innerEx);
-        
+
         // act
         var result = exception.IsUniqueViolation();
 
         // assert
         Assert.False(result);
     }
-    
+
     [Fact]
     public void Should_ReturnFalse_WhenInnerExceptionIsSqliteException_ButCodeIsNotUniqueViolation()
     {
         // arrange
         var sqlEx = new SqliteException("", 123);
         var exception = new DbUpdateException("", sqlEx);
-        
+
         // act
         var result = exception.IsUniqueViolation();
 

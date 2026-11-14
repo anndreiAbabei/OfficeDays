@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -69,16 +70,21 @@ public sealed class FeatureCatalogTests
         Assert.Throws<InvalidOperationException>(() => catalog.ValidateServices(services));
     }
 
+    [ExcludeFromCodeCoverage]
     private sealed record TestRequest : IRequest;
+    [ExcludeFromCodeCoverage]
     private sealed record OtherRequest : IRequest;
+    [ExcludeFromCodeCoverage]
     private sealed class FirstHandler : IRequestHandler<TestRequest>
     {
         public ValueTask<IResult> Handle(TestRequest request, CancellationToken cancellationToken) => ValueTask.FromResult(Results.Empty);
     }
+    [ExcludeFromCodeCoverage]
     private sealed class SecondHandler : IRequestHandler<TestRequest>
     {
         public ValueTask<IResult> Handle(TestRequest request, CancellationToken cancellationToken) => ValueTask.FromResult(Results.Empty);
     }
+    [ExcludeFromCodeCoverage]
     private sealed class MultiHandler : IRequestHandler<TestRequest>, IRequestHandler<OtherRequest>
     {
         public ValueTask<IResult> Handle(TestRequest request, CancellationToken cancellationToken) => ValueTask.FromResult(Results.Empty);
@@ -86,14 +92,17 @@ public sealed class FeatureCatalogTests
     }
     private interface ITestEndpoint : IEndpoint;
     private interface IOtherEndpoint : IEndpoint;
+    [ExcludeFromCodeCoverage]
     private sealed class TestEndpoint : ITestEndpoint
     {
         public void MapEndpoint(IEndpointRouteBuilder endpoints) { }
     }
+    [ExcludeFromCodeCoverage]
     private sealed class UngroupedEndpoint : IEndpoint
     {
         public void MapEndpoint(IEndpointRouteBuilder endpoints) { }
     }
+    [ExcludeFromCodeCoverage]
     private sealed class AmbiguousEndpoint : ITestEndpoint, IOtherEndpoint
     {
         public void MapEndpoint(IEndpointRouteBuilder endpoints) { }

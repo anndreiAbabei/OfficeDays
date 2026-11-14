@@ -10,12 +10,12 @@ public sealed class RemovePlanRequestValidator : AbstractValidator<RemovePlanReq
 {
     public RemovePlanRequestValidator(AppDbContext db, ICurrentUser currentUser, IUserDateService dates)
     {
-        RuleFor(x => x.Date).MustAsync(async (date, ct) =>
-        {
-            var user = await db.Users.FindAsync([currentUser.Id], ct);
-            
-            return user is null || 
-                   date >= dates.Today(user);
-        }).WithMessage("Past plans cannot be changed.");
+        RuleFor(x => x.Date)
+            .MustAsync(async (date, ct) =>
+            {
+                var user = await db.Users.FindAsync([currentUser.Id], ct);
+
+                return user is null || date >= dates.Today(user);
+            }).WithMessage("Past plans cannot be changed.");
     }
 }

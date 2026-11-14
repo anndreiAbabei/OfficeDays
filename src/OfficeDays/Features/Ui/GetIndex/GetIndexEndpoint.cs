@@ -1,7 +1,14 @@
 namespace OfficeDays.Features.Ui.GetIndex;
 
-public sealed class GetIndexEndpoint(UiContent content) : IUiEndpoint
+public sealed class GetIndexEndpoint : IUiEndpoint
 {
+    private readonly UiContent _content;
+    
+    public GetIndexEndpoint(UiContent content)
+    {
+        _content = content;
+    }
+    
     public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
         endpoints.MapMethods("/index.html", ["GET", "HEAD"], Index);
@@ -16,8 +23,10 @@ public sealed class GetIndexEndpoint(UiContent content) : IUiEndpoint
                 context.Request.Path.StartsWithSegments("/_app") ||
                 context.Request.Path.StartsWithSegments("/assets"))
                 return Results.NotFound();
+            
             context.Response.Headers.CacheControl = "no-store";
-            return Results.Bytes(content.Index, "text/html; charset=utf-8");
+            
+            return Results.Bytes(_content.Index, "text/html; charset=utf-8");
         }
     }
 }

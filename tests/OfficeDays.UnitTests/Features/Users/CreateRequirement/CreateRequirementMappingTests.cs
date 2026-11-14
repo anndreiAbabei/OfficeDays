@@ -1,3 +1,4 @@
+using System.Globalization;
 using OfficeDays.Domain;
 using OfficeDays.Features.Users.CreateRequirement;
 
@@ -13,9 +14,9 @@ public sealed class CreateRequirementMappingTests
         // arrange
         var sut = new UserAttendanceRequirement
         {
-            Id = Guid.NewGuid(), 
-            UserId = Guid.NewGuid(), 
-            StartingFrom = DateOnly.Parse(startingFrom), 
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            StartingFrom = DateOnly.Parse(startingFrom, CultureInfo.InvariantCulture),
             RequirementValue = 65,
             CreatedAt = new DateTimeOffset(2026, 10, 1, 9, 0, 0, TimeSpan.Zero)
         };
@@ -39,8 +40,8 @@ public sealed class CreateRequirementMappingTests
         const AttendanceRequirementMode expectedMode = AttendanceRequirementMode.DaysPerWeek;
         var row = new UserAttendanceRequirement
         {
-            Id = Guid.NewGuid(), 
-            UserId = Guid.NewGuid(), 
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
             StartingFrom = new DateOnly(2026, 11, 1),
             CreatedAt = new DateTimeOffset(2026, 10, 21, 12, 0, 0, TimeSpan.Zero),
             RequirementMode = AttendanceRequirementMode.DaysPerWeek, RequirementValue = expectedValue

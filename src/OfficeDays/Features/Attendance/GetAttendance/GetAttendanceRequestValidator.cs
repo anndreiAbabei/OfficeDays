@@ -15,7 +15,7 @@ public sealed class GetAttendanceRequestValidator : AbstractValidator<GetAttenda
             RuleFor(s => s.Month)
                 .NotNull();
         });
-        
+
         When(s => s.Month.HasValue, () =>
         {
             RuleFor(s => s.Month)

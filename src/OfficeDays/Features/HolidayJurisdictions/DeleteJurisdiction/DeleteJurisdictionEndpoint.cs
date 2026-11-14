@@ -7,7 +7,7 @@ namespace OfficeDays.Features.HolidayJurisdictions.DeleteJurisdiction;
 public sealed class DeleteJurisdictionEndpoint(IRequestExecutor executor) : IHolidayJurisdictionsEndpoint
 {
     private readonly IRequestExecutor _executor = executor;
-    
+
     public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
         endpoints.MapDelete("{code}", _executor.Execute<DeleteJurisdictionRequest>)

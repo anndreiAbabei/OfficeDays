@@ -13,7 +13,7 @@ public sealed class RemoveAttendanceHandlerLoggingTests
         var expectedUserId = Guid.NewGuid();
         var expectedDate = DateOnly.FromDateTime(DateTime.Today);
         var logger = new FakeLogger<RemoveAttendanceHandler>();
-        
+
         // act
         logger.LogRemoveOfficeAttendance(expectedUserId, expectedDate);
 

@@ -22,7 +22,7 @@ public sealed class ApiTokenTests
             PasswordHash = null!,
             TimeZoneId = null!
         };
-        
+
         // act
         var sut = new ApiToken
         {

@@ -25,8 +25,8 @@ public sealed class AppDbContext : DbContext, IAppDbContext
     public DbSet<ApiToken> ApiTokens => Set<ApiToken>();
     public DbSet<BankHoliday> BankHolidays => Set<BankHoliday>();
     public DbSet<HolidayJurisdiction> HolidayJurisdictions => Set<HolidayJurisdiction>();
-    
-    public AppDbContext(DbContextOptions<AppDbContext> options) 
+
+    public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
     {
     }

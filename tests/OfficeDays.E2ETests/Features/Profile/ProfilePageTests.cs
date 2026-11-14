@@ -5,7 +5,7 @@ using OfficeDays.E2ETests.Pages;
 namespace OfficeDays.E2ETests.Features.Profile;
 
 [Collection(ApplicationCollection.Name)]
-public sealed class ProfilePageTests(ApplicationFixture application, ITestOutputHelper output) : E2ETestBase(application, output) 
+public sealed class ProfilePageTests(ApplicationFixture application, ITestOutputHelper output) : E2ETestBase(application, output)
 {
     [Fact]
     public async Task Should_DoLogout()

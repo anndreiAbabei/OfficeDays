@@ -15,7 +15,7 @@ public sealed class AttendanceStatusTests
         const int expectedOfficeDays = 0;
         const int expectedRemainingOfficeDays = 0;
         const decimal expectedProgressPercentage = 0m;
-        
+
         // act
         var sut = new AttendanceStatus
         (

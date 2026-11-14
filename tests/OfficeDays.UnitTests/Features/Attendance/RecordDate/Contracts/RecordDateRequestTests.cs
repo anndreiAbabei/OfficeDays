@@ -9,7 +9,7 @@ public sealed class RecordDateRequestTests
     {
         // arrange
         var expectedDate = new DateOnly(2021, 10, 22);
-        
+
         // act
         var sut = new RecordDateRequest
         {

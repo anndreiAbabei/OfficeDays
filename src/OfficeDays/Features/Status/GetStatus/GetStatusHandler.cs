@@ -27,14 +27,13 @@ public sealed class GetStatusHandler : IRequestHandler<GetStatusRequest>
         _db = db;
         _dates = dates;
     }
-    
+
     public async ValueTask<IResult> Handle(GetStatusRequest input, CancellationToken cancellationToken)
     {
         var year = input.Year;
         var month = input.Month;
-        
         var user = await _db.Users.FindAsync([_currentUser.Id], cancellationToken);
-        
+
         if (user is null)
         {
             _logger.LogUserNotFound(_currentUser.Id);

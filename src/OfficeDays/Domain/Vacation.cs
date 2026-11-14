@@ -7,6 +7,6 @@ public sealed class Vacation
     public DateOnly From { get; set; }
     public DateOnly To { get; set; }
     public DateTimeOffset CreatedAt { get; init; }
-    
+
     public User User { get; init; } = null!;
 }

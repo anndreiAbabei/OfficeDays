@@ -7,7 +7,7 @@ namespace OfficeDays.Features.HolidayJurisdictions.CreateJurisdiction;
 public sealed class CreateJurisdictionEndpoint(IRequestExecutor executor) : IHolidayJurisdictionsEndpoint
 {
     private readonly IRequestExecutor _executor = executor;
-    
+
     public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
         endpoints.MapPost("/", _executor.Execute<CreateJurisdictionRequest>)

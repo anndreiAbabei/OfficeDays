@@ -17,11 +17,11 @@ public sealed class CreateUserRequestBodyValidatorTests
         var request = new CreateUserRequestBody
         {
             RequirementMode = AttendanceRequirementMode.Percentage,
-            Username = "user", 
-            Password = "long-password", 
-            TimeZoneId = "Europe/Bucharest", 
+            Username = "user",
+            Password = "long-password",
+            TimeZoneId = "Europe/Bucharest",
             CountryCode = "RO",
-            Email = "user@example.com", 
+            Email = "user@example.com",
             RequirementValue = 50
         };
         var sut = new CreateUserRequestBodyValidator(dates);
@@ -65,7 +65,7 @@ public sealed class CreateUserRequestBodyValidatorTests
         // arrange
         var dates = Substitute.For<IUserDateService>();
         dates.IsValidTimeZone("Europe/Bucharest").Returns(true);
-        var request = new CreateUserRequestBody 
+        var request = new CreateUserRequestBody
         {
             RequirementMode = AttendanceRequirementMode.Percentage,
             Username = "",
@@ -625,9 +625,9 @@ public sealed class CreateUserRequestBodyValidatorTests
         dates.IsValidTimeZone("UTC").Returns(true);
         var request = new CreateUserRequestBody
         {
-            Username = "weekly-user", 
-            Password = "long-password", 
-            TimeZoneId = "UTC", 
+            Username = "weekly-user",
+            Password = "long-password",
+            TimeZoneId = "UTC",
             CountryCode = "RO",
             RequirementMode = mode,
             RequirementValue = value

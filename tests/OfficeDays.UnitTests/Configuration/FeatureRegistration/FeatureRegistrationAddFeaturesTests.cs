@@ -12,7 +12,7 @@ public sealed class FeatureRegistrationAddFeaturesTests
     {
         // arrange
         var sc = new ServiceCollection();
-        
+
         // act
         var result = sc.AddFeatures();
 
@@ -25,7 +25,7 @@ public sealed class FeatureRegistrationAddFeaturesTests
     {
         // arrange
         var sc = new ServiceCollection();
-        
+
         // act
         _ = sc.AddFeatures();
 
@@ -38,7 +38,7 @@ public sealed class FeatureRegistrationAddFeaturesTests
     {
         // arrange
         var sc = new ServiceCollection();
-        
+
         // act
         _ = sc.AddFeatures();
 
@@ -51,7 +51,7 @@ public sealed class FeatureRegistrationAddFeaturesTests
     {
         // arrange
         var sc = new ServiceCollection();
-        
+
         // act
         _ = sc.AddFeatures();
 
@@ -64,7 +64,7 @@ public sealed class FeatureRegistrationAddFeaturesTests
     {
         // arrange
         var sc = new ServiceCollection();
-        
+
         // act
         _ = sc.AddFeatures();
 
@@ -77,7 +77,7 @@ public sealed class FeatureRegistrationAddFeaturesTests
     {
         // arrange
         var sc = new ServiceCollection();
-        
+
         // act
         _ = sc.AddFeatures();
 

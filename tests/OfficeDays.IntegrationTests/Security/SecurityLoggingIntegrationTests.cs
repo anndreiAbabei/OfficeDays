@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -81,8 +80,10 @@ public sealed class SecurityLoggingIntegrationTests
         });
     }
 
+    [ExcludeFromCodeCoverage]
     private sealed record LogEntry(int EventId, LogLevel Level, string Message, Exception? Exception);
 
+    [ExcludeFromCodeCoverage]
     private sealed class CapturingLoggerProvider : ILoggerProvider
     {
         public ConcurrentQueue<LogEntry> Entries { get; } = new ConcurrentQueue<LogEntry>();

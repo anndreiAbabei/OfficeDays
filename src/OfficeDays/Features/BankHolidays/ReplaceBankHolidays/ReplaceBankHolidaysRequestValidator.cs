@@ -11,12 +11,12 @@ public sealed class ReplaceBankHolidaysRequestValidator : AbstractValidator<Repl
             .Must(code => HolidayJurisdictionCodes.TryNormalize(code, out _))
             .WithMessage("A valid country or subdivision code is required.")
             .OverridePropertyName("countryCode");
-        
+
         RuleFor(input => input.Year)
             .InclusiveBetween(1, 9999)
             .WithMessage("Year must be between 1 and 9999.")
             .OverridePropertyName("year");
-        
+
         RuleFor(input => input.Body)
             .Cascade(CascadeMode.Stop)
             .NotNull()
@@ -25,6 +25,7 @@ public sealed class ReplaceBankHolidaysRequestValidator : AbstractValidator<Repl
             .Custom((input, context) =>
             {
                 var items = input as IList<BankHolidayItem> ?? [.. input];
+                
                 if (items.Any(item => item.Date.Year != context.InstanceToValidate.Year))
                     context.AddFailure("date", "Every holiday date must belong to the year in the URL.");
 

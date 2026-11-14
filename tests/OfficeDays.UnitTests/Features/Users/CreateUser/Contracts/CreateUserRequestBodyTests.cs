@@ -47,7 +47,7 @@ public sealed class CreateUserRequestBodyTests
         var sut = new CreateUserRequestBody
         {
             Username = "alice",
-            Password = "long-password", 
+            Password = "long-password",
             TimeZoneId = "UTC",
             CountryCode = "RO"
         };
@@ -66,10 +66,10 @@ public sealed class CreateUserRequestBodyTests
         // act
         var sut = new CreateUserRequestBody
         {
-            Username = "alice", 
-            Password = "long-password", 
-            TimeZoneId = "UTC", 
-            CountryCode = "RO", 
+            Username = "alice",
+            Password = "long-password",
+            TimeZoneId = "UTC",
+            CountryCode = "RO",
             RequirementValue = expectedPercentage
         };
 

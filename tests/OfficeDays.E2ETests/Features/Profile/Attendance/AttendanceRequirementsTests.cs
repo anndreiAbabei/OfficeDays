@@ -49,7 +49,7 @@ public sealed class AttendanceRequirementsTests(ApplicationFixture application, 
             await Expect(editForm).ToBeVisibleAsync();
         });
     }
-    
+
     [Fact]
     public async Task Should_SetTextToRequiredOfficeDaysPercent_WhenPercentageIsSelected()
     {
@@ -73,7 +73,7 @@ public sealed class AttendanceRequirementsTests(ApplicationFixture application, 
             await Expect(inputProcDays).ToBeVisibleAsync();
         });
     }
-    
+
     [Fact]
     public async Task Should_SetTextToOfficeDaysPerWeek_WhenDaysPerWeekIsSelected()
     {

@@ -7,6 +7,6 @@ public sealed class Attendance
     public bool IsManual { get; init; }
     public DateOnly Date { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
-    
+
     public User User { get; init; } = null!;
 }

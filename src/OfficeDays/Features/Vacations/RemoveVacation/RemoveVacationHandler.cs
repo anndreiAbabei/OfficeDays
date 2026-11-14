@@ -11,7 +11,7 @@ public sealed class RemoveVacationHandler : IRequestHandler<RemoveVacationReques
     private readonly ICurrentUser _currentUser;
     private readonly AppDbContext _dbContext;
     private readonly ILogger<RemoveVacationHandler> _logger;
-    
+
     public RemoveVacationHandler(ICurrentUser currentUser,
                                  AppDbContext dbContext,
                                  ILogger<RemoveVacationHandler> logger)
@@ -20,24 +20,24 @@ public sealed class RemoveVacationHandler : IRequestHandler<RemoveVacationReques
         _dbContext = dbContext;
         _logger = logger;
     }
-    
+
     public async ValueTask<IResult> Handle(RemoveVacationRequest input, CancellationToken cancellationToken)
     {
         var id = input.Id;
         var userId = _currentUser.Id;
         var row = await _dbContext.Vacations.SingleOrDefaultAsync(x => x.Id == id && x.UserId == userId, cancellationToken);
-        
+
         if (row is null)
         {
             _logger.LogVacationNotFound(id, userId);
             return Results.NotFound();
         }
-        
+
         _dbContext.Vacations.Remove(row);
         await _dbContext.SaveChangesAsync(cancellationToken);
-        
+
         _logger.LogVacationRemoved(userId, row.Id);
-        
+
         return Results.NoContent();
     }
 }

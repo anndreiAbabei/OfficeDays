@@ -82,8 +82,8 @@ public sealed class GetReportMappingTests
         Assert.Equal(sut.AttendancePercentage, result.Summary.AttendancePercentage);
         Assert.Equal(sut.CompletedMonths, result.Summary.CompletedMonths);
         Assert.Equal(sut.MonthsMeetingTarget, result.Summary.MonthsMeetingTarget);
-        Assert.Equal(new[] { 5, 6 }, result.Months.Select(month => month.Month));
-        Assert.Equal(new[] { "targetMet", "notStarted" }, result.Months.Select(month => month.Result));
+        Assert.Equal([5, 6], result.Months.Select(month => month.Month));
+        Assert.Equal(["targetMet", "notStarted"], result.Months.Select(month => month.Result));
     }
 
     [Fact]

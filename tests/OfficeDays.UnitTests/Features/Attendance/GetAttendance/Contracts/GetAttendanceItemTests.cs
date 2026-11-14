@@ -11,7 +11,7 @@ public sealed class GetAttendanceItemTests
         var expectedDate = DateOnly.FromDateTime(DateTime.Now);
         var expectedCreatedAt = DateTimeOffset.Now;
         const bool expectedIsManual = true;
-        
+
         // act
         var sut = new GetAttendanceItem(expectedDate, expectedCreatedAt, expectedIsManual);
 

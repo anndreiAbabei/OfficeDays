@@ -15,13 +15,13 @@ public sealed class OfficeRequirementReader : IOfficeRequirementReader
 {
     private readonly AppDbContext _db;
     private readonly IUserDateService _dates;
-    
+
     public OfficeRequirementReader(AppDbContext db, IUserDateService dates)
     {
         _db = db;
         _dates = dates;
     }
-    
+
     public Task<UserAttendanceRequirement> CurrentRequirement(User user, CancellationToken cancellationToken)
     {
         var today = _dates.Today(user);

@@ -10,7 +10,7 @@ public sealed class GetAttendanceRequestTests
         // arrange
         const int expectedYear = 2021;
         const int expectedMonth = 12;
-        
+
         // act
         var sut = new GetAttendanceRequest
         {

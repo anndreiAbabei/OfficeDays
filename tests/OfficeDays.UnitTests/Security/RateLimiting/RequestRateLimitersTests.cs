@@ -166,10 +166,10 @@ public sealed class RequestRateLimitersTests
                 RemoteIpAddress = IPAddress.Parse(source)
             }
         };
-        
+
         if (user is null)
             return context;
-        
+
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user)
@@ -179,7 +179,7 @@ public sealed class RequestRateLimitersTests
 
         var identity = new ClaimsIdentity(claims, "test");
         context.User = new ClaimsPrincipal(identity);
-        
+
         return context;
     }
 }

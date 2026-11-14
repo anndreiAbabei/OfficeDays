@@ -13,6 +13,7 @@ using OfficeDays.Infrastructure;
 using OfficeDays.Security;
 using OfficeDays.Services;
 using Serilog;
+using Serilog.Sinks.OpenTelemetry;
 
 namespace OfficeDays.Configuration;
 
@@ -29,33 +30,33 @@ public static class ServiceRegistration
         if (cookieExpireTimeSpan <= TimeSpan.Zero)
             throw new InvalidOperationException("Authentication:CookieExpireTimeSpan must be a positive TimeSpan.");
 
-        builder.Services.AddSerilog();
-        
+        AddLogging(builder);
+
         builder.Services.AddResponseCompression(options =>
         {
             options.EnableForHttps = true;
             options.MimeTypes = ["text/javascript", "text/css", "application/json"];
         });
-        
+
         builder.Services.AddOptions<RequestLimits>()
                .Bind(builder.Configuration.GetSection("RateLimiting"))
-               .Validate(limits => limits.MaxBodyBytes is > 0 and <= 10_485_760 && 
-                                   new[] { 
-                                           limits.Source, 
-                                           limits.Api, 
-                                           limits.Token, 
-                                           limits.Login, 
+               .Validate(limits => limits.MaxBodyBytes is > 0 and <= 10_485_760 &&
+                                   new[] {
+                                           limits.Source,
+                                           limits.Api,
+                                           limits.Token,
+                                           limits.Login,
                                            limits.LoginAccount,
                                            limits.Registration,
-                                           limits.Recovery, 
-                                           limits.RecoveryAccount, 
+                                           limits.Recovery,
+                                           limits.RecoveryAccount,
                                            limits.Verification,
-                                           limits.Reports 
-                                       }.All(limit => limit.Permits > 0 && 
+                                           limits.Reports
+                                       }.All(limit => limit.Permits > 0 &&
                                                       limit.WindowSeconds is > 0 and <= 86_400),
                          "Rate limits must be positive; windows cannot exceed one day and bodies cannot exceed 10 MiB.")
             .ValidateOnStart();
-        
+
         builder.Services.AddSingleton<RequestRateLimiters>();
         builder.Services.AddRateLimiter(options =>
         {
@@ -64,11 +65,11 @@ public static class ServiceRegistration
         });
         builder.Services.AddOptions<RateLimiterOptions>().Configure<RequestRateLimiters>((options, limiters) =>
             options.GlobalLimiter = limiters.Api);
-        
+
         // Never enable ASPNETCORE_FORWARDEDHEADERS_ENABLED: it trusts every proxy.
         if (builder.Configuration.GetValue<bool>("FORWARDEDHEADERS_ENABLED"))
             throw new InvalidOperationException("Use ReverseProxy:KnownProxies instead of ASPNETCORE_FORWARDEDHEADERS_ENABLED.");
-       
+
         builder.Services.Configure<ForwardedHeadersOptions>(options =>
         {
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
@@ -87,8 +88,37 @@ public static class ServiceRegistration
         AddDatabase(builder);
         AddServices(builder);
         AddAuthorization(builder, cookieExpireTimeSpan);
-        
+
         return builder;
+    }
+
+    private static void AddLogging(WebApplicationBuilder builder)
+    {
+        builder.Services.AddSerilog((services, logger) =>
+        {
+            logger.Enrich.FromLogContext().WriteTo.Console();
+
+            var endpoint = builder.Configuration["Serilog:OpenTelemetry:Endpoint"];
+            if (string.IsNullOrWhiteSpace(endpoint))
+                return;
+
+            var version = services.GetRequiredService<IAppVersionService>().Version;
+            logger.WriteTo.OpenTelemetry(options => ConfigureLogExport(options, endpoint, builder.Environment.EnvironmentName, version),
+                                         ignoreEnvironment: true);
+        }, preserveStaticLogger: true);
+    }
+
+    internal static void ConfigureLogExport(OpenTelemetrySinkOptions options, string endpoint, string environment, string version)
+    {
+        options.Endpoint = endpoint;
+        options.Protocol = OtlpProtocol.HttpProtobuf;
+        options.IncludedData |= IncludedData.SourceContextAttribute;
+        options.ResourceAttributes = new Dictionary<string, object>
+        {
+            ["service.name"] = "OfficeDays",
+            ["deployment.environment.name"] = environment,
+            ["service.version"] = version
+        };
     }
 
     private static void AddHealthCheck(WebApplicationBuilder webApplicationBuilder)
@@ -101,7 +131,7 @@ public static class ServiceRegistration
     private static void AddKeyPath(WebApplicationBuilder kpBuilder)
     {
         var keysPath = kpBuilder.Configuration["DataProtection:KeysPath"];
-        
+
         if (string.IsNullOrWhiteSpace(keysPath))
             kpBuilder.Services.AddDataProtection();
         else
@@ -179,7 +209,7 @@ public static class ServiceRegistration
                                         .AnyAsync(user => user.Id == userId, context.HttpContext.RequestAborted))
                            {
                                context.RejectPrincipal();
-                               
+
                                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                            }
                        };

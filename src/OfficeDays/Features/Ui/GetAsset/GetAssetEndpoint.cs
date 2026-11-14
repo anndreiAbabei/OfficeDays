@@ -1,8 +1,13 @@
 namespace OfficeDays.Features.Ui.GetAsset;
 
-public sealed class GetAssetEndpoint(UiContent content) : IUiEndpoint
+public sealed class GetAssetEndpoint : IUiEndpoint
 {
-    private readonly UiContent _content = content;
+    private readonly UiContent _content;
+    
+    public GetAssetEndpoint(UiContent content)
+    {
+        _content = content;
+    }
 
     public void MapEndpoint(IEndpointRouteBuilder endpoints)
     {
@@ -11,7 +16,9 @@ public sealed class GetAssetEndpoint(UiContent content) : IUiEndpoint
             endpoints.MapMethods(asset.Path, ["GET", "HEAD"], (HttpContext context) =>
             {
                 context.Response.Headers.CacheControl = asset.Immutable
-                    ? "public, max-age=31536000, immutable" : "no-store";
+                    ? "public, max-age=31536000, immutable" 
+                    : "no-store";
+                
                 return Results.Bytes(asset.Bytes, asset.ContentType);
             });
         }

@@ -15,7 +15,8 @@ public sealed class CookieAntiforgeryFilter : IEndpointFilter
 
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
-        if (!context.HttpContext.Request.Headers.Authorization.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        if (!context.HttpContext.Request.Headers.Authorization.ToString()
+                    .StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
             try
             {
@@ -24,8 +25,8 @@ public sealed class CookieAntiforgeryFilter : IEndpointFilter
             catch (AntiforgeryValidationException exception)
             {
                 Logging.CookieAntiforgeryFilterLogging.LogValidationFailed(_logger, exception, context.HttpContext.Request.Path.Value ?? "/");
-                
-                return Results.Problem(statusCode: StatusCodes.Status400BadRequest, 
+
+                return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
                                        title: "Invalid antiforgery token",
                                        detail: "Refresh the page and try again.");
             }

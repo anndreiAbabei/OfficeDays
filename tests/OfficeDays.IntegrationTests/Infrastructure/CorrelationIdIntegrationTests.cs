@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text;
 using Microsoft.AspNetCore.Hosting;
@@ -114,8 +115,10 @@ public sealed class CorrelationIdIntegrationTests
             throw new InvalidOperationException("Deliberate test failure.");
     }
 
+    [ExcludeFromCodeCoverage]
     private sealed record LogEntry(string Category, LogLevel Level, string? CorrelationId);
 
+    [ExcludeFromCodeCoverage]
     private sealed class CapturingLoggerProvider : ILoggerProvider, ISupportExternalScope
     {
         private IExternalScopeProvider _scopes = new LoggerExternalScopeProvider();

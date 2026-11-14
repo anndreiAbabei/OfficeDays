@@ -12,7 +12,7 @@ public sealed class CreateRequirementRequestTests
         var expectedBody = new CreateRequirementRequestBody
         {
             RequirementMode = AttendanceRequirementMode.Percentage,
-            StartingFrom = DateOnly.FromDateTime(DateTime.Now), 
+            StartingFrom = DateOnly.FromDateTime(DateTime.Now),
             RequirementValue = 22
         };
 

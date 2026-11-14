@@ -23,12 +23,14 @@ public sealed class UpdateVacationHandler : IRequestHandler<UpdateVacationReques
 
     public async ValueTask<IResult> Handle(UpdateVacationRequest input, CancellationToken cancellationToken)
     {
-        var vacation = await _dbContext.Vacations.SingleOrDefaultAsync(
-            x => x.Id == input.Id && x.UserId == _currentUser.Id, cancellationToken);
+        var vacation = await _dbContext.Vacations.SingleOrDefaultAsync(x => x.Id == input.Id && 
+                                                                            x.UserId == _currentUser.Id, 
+                                                                       cancellationToken);
 
         if (vacation is null)
         {
             _logger.LogVacationNotFound(input.Id, _currentUser.Id);
+            
             return Results.NotFound();
         }
 

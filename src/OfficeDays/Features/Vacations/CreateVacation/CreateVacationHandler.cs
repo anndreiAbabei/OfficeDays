@@ -12,7 +12,7 @@ public sealed class CreateVacationHandler : IRequestHandler<CreateVacationReques
     private readonly AppDbContext _dbContext;
     private readonly TimeProvider _clock;
     private readonly ILogger<CreateVacationHandler> _logger;
-    
+
     public CreateVacationHandler(ICurrentUser currentUser,
                                  AppDbContext dbContext,
                                  TimeProvider clock,
@@ -23,7 +23,7 @@ public sealed class CreateVacationHandler : IRequestHandler<CreateVacationReques
         _clock = clock;
         _logger = logger;
     }
-    
+
     public async ValueTask<IResult> Handle(CreateVacationRequest input, CancellationToken cancellationToken)
     {
         var request = input.Body;
@@ -36,12 +36,12 @@ public sealed class CreateVacationHandler : IRequestHandler<CreateVacationReques
             To = request.To,
             CreatedAt = _clock.GetUtcNow()
         };
-        
+
         await _dbContext.Vacations.AddAsync(row, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
-        
+
         _logger.LogVacationCreated(row.UserId, row.Id, row.From, row.To);
-        
+
         return Results.Created($"/api/vacations/{row.Id}", row.ToViewModel());
     }
 }

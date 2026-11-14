@@ -8,12 +8,12 @@ namespace OfficeDays.Features.HolidayJurisdictions.GetJurisdictions;
 public sealed class GetJurisdictionsHandler : IRequestHandler<GetJurisdictionsRequest>
 {
     private readonly AppDbContext _dbContext;
-    
+
     public GetJurisdictionsHandler(AppDbContext dbContext)
     {
         _dbContext = dbContext;
     }
-    
+
     public async ValueTask<IResult> Handle(GetJurisdictionsRequest input, CancellationToken cancellationToken)
     {
         var rows = await _dbContext.HolidayJurisdictions

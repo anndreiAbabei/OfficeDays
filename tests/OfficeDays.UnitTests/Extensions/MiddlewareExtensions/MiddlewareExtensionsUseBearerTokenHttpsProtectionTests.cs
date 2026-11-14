@@ -13,10 +13,10 @@ public sealed class MiddlewareExtensionsUseBearerTokenHttpsProtectionTests
     {
         // arrange
         var app = Substitute.For<IApplicationBuilder>();
-        
+
         // act
         _ = app.UseBearerTokenHttpsProtection();
-        
+
         // assert
         app.Received().Use(Arg.Is<Func<RequestDelegate, RequestDelegate>>(f => f.Target!.ToString()!.Contains(nameof(BearerTokenHttpsMiddleware))));
     }
@@ -28,7 +28,7 @@ public sealed class MiddlewareExtensionsUseBearerTokenHttpsProtectionTests
         var app = Substitute.For<IApplicationBuilder>();
         app.Use(Arg.Any<Func<RequestDelegate, RequestDelegate>>())
            .Returns(app);
-        
+
         // act
         var result = app.UseBearerTokenHttpsProtection();
 

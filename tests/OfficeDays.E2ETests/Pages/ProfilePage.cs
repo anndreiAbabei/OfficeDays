@@ -25,7 +25,7 @@ public sealed class ProfilePage(IPage page) : AuthenticatedPage(page), IScenario
         if (doSave)
             await Save();
     }
-    
+
     public async Task SetEmail(string email, bool doSave = true)
     {
         await EmailInput.FillAsync(email);
@@ -33,7 +33,7 @@ public sealed class ProfilePage(IPage page) : AuthenticatedPage(page), IScenario
         if (doSave)
             await Save();
     }
-    
+
     public async Task Save()
     {
         var response = await Page.RunAndWaitForResponseAsync(

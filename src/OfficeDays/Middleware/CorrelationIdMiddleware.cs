@@ -6,24 +6,24 @@ public sealed partial class CorrelationIdMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<CorrelationIdMiddleware> _logger;
-    
+
     public const string HeaderName = "X-Correlation-ID";
-    
+
     public CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationIdMiddleware> logger)
     {
         _next = next;
         _logger = logger;
     }
-    
+
     public async Task InvokeAsync(HttpContext context)
     {
         var supplied = context.Request.Headers[HeaderName];
-        
+
         string? correlationId = null;
-        
+
         if(supplied.Count == 1 && !string.IsNullOrWhiteSpace(supplied[0]))
             correlationId = supplied[0];
-        
+
         if(string.IsNullOrWhiteSpace(correlationId))
             correlationId = Guid.NewGuid().ToString("N");
 
@@ -41,9 +41,9 @@ public sealed partial class CorrelationIdMiddleware
         });
 
         var started = Stopwatch.GetTimestamp();
-        
+
         await _next(context);
-        
+
         LogRequestCompleted(_logger, context.Request.Method, context.Request.Path.Value ?? "/", context.Response.StatusCode, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
     }
 

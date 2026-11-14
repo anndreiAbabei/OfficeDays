@@ -9,6 +9,6 @@ public interface IUserService
 public sealed class UserService : IUserService
 {
     public string NormalizeUsername(string username) => username.Trim().ToUpperInvariant();
-    
+
     public string? NormalizeEmail(string? email) => string.IsNullOrWhiteSpace(email) ? null : email.Trim();
 }

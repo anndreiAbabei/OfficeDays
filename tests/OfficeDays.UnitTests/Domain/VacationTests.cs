@@ -20,7 +20,7 @@ public sealed class VacationTests
             PasswordHash = null!,
             TimeZoneId = null!
         };
-        
+
         // act
         var sut = new Vacation
         {

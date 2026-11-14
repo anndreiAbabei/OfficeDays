@@ -9,7 +9,7 @@ public sealed class RemoveAttendanceRequestTests
     {
         // arrange
         var expectedDate = DateOnly.FromDateTime(DateTime.Now);
-        
+
         // act
         var sut = new RemoveAttendanceRequest
         {

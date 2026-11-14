@@ -8,7 +8,7 @@ public static class CreateUserMapping
     public static CreateUserResponse ToViewModel(this User user)
     {
         var requirement = user.AttendanceRequirements.Single();
-        
+
         return new CreateUserResponse
         {
             Id = user.Id,
