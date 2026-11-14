@@ -308,8 +308,17 @@ and next year's holidays. Guest features load when you enter guest mode.
 Attendance, plans, vacations, requirement history, team-day preferences, and reports
 stay in this browser's local storage. Tracking starts in the setup month; that month
 and subsequent months remain accessible. Once loaded, the guest dashboard, reports,
-and exports work without internet. Reopening the site offline is not yet supported;
-that will be part of PWA support.
+and exports work without internet. For offline reopening, open the production build over HTTPS (or localhost)
+and wait for **Ready to reopen offline**. Use your browser’s install command or
+Safari’s **Share → Add to Home Screen** to launch Office Days in its own window.
+On the first launch from the installed app, check that your guest profile and
+offline readiness are visible there before disconnecting.
+
+When offline, choose **Open saved guest data** at the connection screen. Account
+features require a connection. If setup was interrupted, reconnect and choose
+**Retry offline setup**. Updates download a complete set of public app files
+before activation. Close all Office Days tabs and app windows to switch to a
+downloaded update. Updating the app preserves the versioned guest profile.
 
 Holiday downloads happen only during setup or when you explicitly choose **Get holidays**
 for a missing year. You can view other years without downloading holidays, but targets

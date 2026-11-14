@@ -7,6 +7,8 @@ public sealed class UiContentTests
 {
     [Theory]
     [InlineData("_app/immutable/chunks/app.js", "text/javascript", true)]
+    [InlineData("manifest.webmanifest", "application/manifest+json", false)]
+    [InlineData("service-worker.js", "text/javascript", false)]
     [InlineData("assets/site.css", "text/css", false)]
     [InlineData("data.unknownextension", "application/octet-stream", false)]
     public void Should_LoadIndexAndAssets(string path, string expectedContentType, bool expectedImmutable)

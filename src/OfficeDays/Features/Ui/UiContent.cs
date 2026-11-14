@@ -22,6 +22,8 @@ public sealed class UiContent
         Index = File.ReadAllBytes(indexPath);
         var contentTypes = new FileExtensionContentTypeProvider();
         
+        contentTypes.Mappings[".webmanifest"] = "application/manifest+json";
+
         Assets =
         [
             .. Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)

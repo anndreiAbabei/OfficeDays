@@ -1,5 +1,6 @@
 <script lang="ts">
   import '../app.css';
+  import OfflineStatus from '$lib/components/OfflineStatus.svelte';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
@@ -65,8 +66,11 @@
     {/if}
   </main>
   <footer class="app-footer muted">
-    <span>Created by <a href="{gitHubUrl}">{author}</a> · </span>
-    <span>Office Days · {version}</span>
+    <OfflineStatus />
+    <div class="base">
+      <span>Created by <a href="{gitHubUrl}">{author}</a> · </span>
+      <span>Office Days · {version}</span>
+    </div>
   </footer>
 </div>
 
