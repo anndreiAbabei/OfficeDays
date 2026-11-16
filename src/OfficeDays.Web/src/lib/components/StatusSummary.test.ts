@@ -46,7 +46,7 @@ it('uses the instant calendar count while waiting for the refreshed summary', ()
 it('Should_ExpandAndCollapseCalculation_WhenButtonIsActivated', async (): Promise<void> => {
   // Arrange
   render(StatusSummary, { status: attendanceStatusFixture });
-  const toggle = screen.getByRole('button', { name: 'How this is calculated' });
+  const toggle = screen.getByRole('button', { name: 'Details' });
   const expectedCollapsed = 'false';
   const expectedExpanded = 'true';
   expect(toggle).toHaveAttribute('aria-expanded', expectedCollapsed);
@@ -57,7 +57,7 @@ it('Should_ExpandAndCollapseCalculation_WhenButtonIsActivated', async (): Promis
 
   // Assert
   expect(toggle).toHaveAttribute('aria-expanded', expectedExpanded);
-  expect(toggle).toHaveAccessibleName('Hide calculation');
+  expect(toggle).toHaveAccessibleName('Details');
   const calendar = screen.getByRole('region', { name: 'Calendar calculation' });
   expect(calendar).toBeVisible();
   expect(within(calendar).getByRole('list', { name: 'Bank holiday dates' })).toHaveTextContent('Weekday holiday');
@@ -77,7 +77,7 @@ it('Should_ExpandAndCollapseCalculation_WhenButtonIsActivated', async (): Promis
 it('Should_DisableCalculation_WhenSummaryIsLoadingOrUnavailable', async (): Promise<void> => {
   // Arrange
   const { rerender } = render(StatusSummary, { loading: true });
-  const toggle = screen.getByRole('button', { name: 'How this is calculated' });
+  const toggle = screen.getByRole('button', { name: 'Details' });
 
   // Act / Assert
   expect(toggle).toBeDisabled();
@@ -90,7 +90,7 @@ it('Should_DisableCalculation_WhenSummaryIsLoadingOrUnavailable', async (): Prom
 it('Should_UpdateExpandedCalculation_WhenFreshSummaryArrives', async (): Promise<void> => {
   // Arrange
   const { rerender } = render(StatusSummary, { status: attendanceStatusFixture });
-  await fireEvent.click(screen.getByRole('button', { name: 'How this is calculated' }));
+  await fireEvent.click(screen.getByRole('button', { name: 'Details' }));
   const expectedAvailable = '0 days';
   const updated = { ...attendanceStatusFixture, summary: { ...attendanceStatusFixture.summary, remainingEligibleDays: 0, outstandingOfficeDays: 2 } };
 
@@ -98,7 +98,7 @@ it('Should_UpdateExpandedCalculation_WhenFreshSummaryArrives', async (): Promise
   await rerender({ status: updated });
 
   // Assert
-  expect(screen.getByRole('button', { name: 'Hide calculation' })).toHaveAttribute('aria-expanded', 'true');
+  expect(screen.getByRole('button', { name: 'Details' })).toHaveAttribute('aria-expanded', 'true');
   expect(screen.getByText('Available days left').nextElementSibling).toHaveTextContent(expectedAvailable);
   expect(screen.getByText(/that cannot be covered this month/)).toHaveTextContent('2 days that cannot be covered this month');
 });

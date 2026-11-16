@@ -183,7 +183,7 @@ test('Should_RememberGuestAppearance_WhenReopeningGuestMode', async ({ page, con
 
   // Act
   await select.selectOption('Dark');
-  await page.getByRole('button', { name: 'Save appearance' }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
   await page.reload();
 
   // Assert

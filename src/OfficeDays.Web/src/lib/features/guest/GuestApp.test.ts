@@ -19,12 +19,18 @@ it('Should_ApplyAndPersistAppearance_WhenGuestSavesProfile', async (): Promise<v
   await fireEvent.click(screen.getByRole('button', { name: 'Profile' }));
   const select = screen.getByLabelText('Appearance');
 
+  const expectedTeamDay = 'monday';
+  expect(screen.getByRole('option', { name: 'Monday' })).toBeVisible();
+
   // Act
+  await fireEvent.change(screen.getByLabelText('Team day'), { target: { value: expectedTeamDay } });
+  expect(readGuestData()?.teamDay).toBeNull();
   for (const choice of ['Dark', 'Light', 'System']) {
     await fireEvent.change(select, { target: { value: choice } });
-    await fireEvent.click(screen.getByRole('button', { name: 'Save appearance' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     // Assert
+    expect(readGuestData()?.teamDay).toBe(expectedTeamDay);
     expect(root.dataset.guestAppearance).toBe(choice);
     expect(readGuestData()?.appearance).toBe(choice);
   }

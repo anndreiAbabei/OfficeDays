@@ -8,6 +8,7 @@ it('Should_ShowEveryTotalAndExplainAbsences_WhenRenderingCalculation', (): void 
   const expected = new Map([
     ['Total days', '31 including weekends'], ['Working days', '22 Monday–Friday'],
     ['Bank holidays', '2 days · 1 weekday excluded'], ['Vacation', '2 days · 1 additional weekday excluded'],
+    ['Office target without vacation', '11 days of 21 working days after bank holidays'],
     ['Attendance requirement', '50%'], ['Required office days', '10 days'],
     ['Planned days this month', '3 days'], ['Upcoming planned days', '1 day'],
     ['Office days recorded', '8 days'], ['Office days left to attend', '2 days'],

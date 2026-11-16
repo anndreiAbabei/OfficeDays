@@ -34,25 +34,33 @@
 </section>
 
 <style>
-  .period-picker { 
-    display: grid; 
-    grid-template-columns: auto 1fr 7rem auto; 
-    gap: .7rem; 
-    align-items: end; 
-    margin-bottom: 1rem; 
+  .period-picker {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 11rem) 5rem 44px;
+    align-items: end;
+    gap: .5rem;
+    margin-bottom: 1rem;
+    width: fit-content;
+    max-width: 100%;
   }
   
-  .period-picker .icon { 
-    min-height: 2.55rem; 
+  label { 
+    min-width: 0; 
   }
   
-  @media (max-width: 650px) {
+  @media (max-width: 400px) {
     .period-picker {
-      grid-template-columns: auto 1fr auto; 
+      gap: .25rem; 
+      padding: .5rem; 
+      grid-template-columns: 44px minmax(0, 11rem) 4rem 44px; 
     }
-    .period-picker label:last-of-type { 
-      grid-column: 2; 
-      grid-row: 2; 
+    
+    input { 
+      padding-inline: .25rem; 
+    }
+    
+    select { 
+      padding-left: .3rem; 
     }
   }
 </style>

@@ -6,6 +6,9 @@
   let summary = $derived(status.summary);
   let percentage = $derived(summary.requirementValue * (summary.requirementMode === 'DaysPerWeek' ? 20 : 1));
 
+  let daysBeforeVacation = $derived(summary.workingDays - summary.bankHolidayWorkingDays);
+  let targetBeforeVacation = $derived(Math.ceil(daysBeforeVacation * percentage / 100));
+
   function days(count: number): string {
     return `${count} ${count === 1 ? 'day' : 'days'}`;
   }
@@ -64,6 +67,10 @@
     <h3>Office target</h3>
     <dl>
       <div><dt>Attendance requirement</dt><dd>{summary.requirementMode === 'DaysPerWeek' ? `${summary.requirementValue} days per week (${percentage}%)` : `${percentage}%`}</dd></div>
+      <div>
+        <dt>Office target without vacation</dt>
+        <dd>{days(targetBeforeVacation)} of {daysBeforeVacation} working days after bank holidays</dd>
+      </div>
       <div><dt>Required office days</dt><dd>{days(status.requiredOfficeDays)}</dd></div>
     </dl>
     <p class="formula">{status.eligibleWorkingDays} eligible working days × {percentage}% = <strong>{days(status.requiredOfficeDays)}</strong>, rounded up to a whole day.</p>

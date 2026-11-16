@@ -63,8 +63,7 @@
     </p>
     <button class="secondary calculation-toggle" disabled={loading || !status?.summary}
       aria-expanded={expanded} aria-controls={detailsId} onclick={(): void => { expanded = !expanded; }}>
-      {expanded ? 'Hide calculation' : 'How this is calculated'}
-      <span aria-hidden="true">{expanded ? '−' : '+'}</span>
+      Details <span class="chevron" aria-hidden="true"></span>
     </button>
   </div>
   <div id={detailsId} hidden={!expanded}>
@@ -78,11 +77,13 @@
   .spread { 
     justify-content: space-between; 
   }
+  
   .status-grid { 
     display: grid; 
     grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
   }
+  
   .metric { 
     display: grid; 
     grid-template-columns: 1fr;
@@ -90,36 +91,43 @@
     column-gap: .5rem; 
     row-gap: .25rem; 
   }
+  
   .metric span { 
     grid-column: 1 / -1; 
     color: var(--muted); 
     font-size: .8rem; 
     font-weight: 650; 
   }
+  
   .metric-value {
     display: flex;
     align-items: baseline;
     gap: .65rem;
   }
+  
   .metric strong { 
     font-size: 2.5rem;
     letter-spacing: -.15em;
     font-variant-numeric: tabular-nums;
   }
+  
   .metric .planning-ratio {
     font-size: clamp(1.7rem, 3vw, 2.5rem);
     letter-spacing: normal;
     white-space: nowrap;
   }
+  
   .planning-hint {
     grid-column: 1 / -1;
     margin: .2rem 0 0;
     color: var(--muted);
     font-size: .8rem;
   }
+  
   .metric small { 
     color: var(--muted); 
   }
+  
   .metric.accent { 
     color: var(--green-dark); 
     background: var(--green-soft); 
@@ -128,18 +136,34 @@
   .progress-card { 
     margin: 1rem 0; 
   }
+  
   .explanation {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: .75rem;
   }
-  .calculation-toggle { 
-    display: flex;
-    align-items: center; 
-    justify-content: space-between; 
-    gap: 1rem; 
-    max-width: 100%; 
+  
+  .calculation-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    flex: none;
+    padding-inline: .7rem;
   }
+  
+  .chevron {
+    width: .45rem;
+    height: .45rem;
+    border: solid currentColor;
+    border-width: 0 2px 2px 0;
+    transform: translateY(-.1rem) rotate(45deg);
+  }
+  
+  [aria-expanded="true"] .chevron { 
+    transform: translateY(.1rem) rotate(225deg); 
+  }
+  
   .progress { 
     height: .65rem; 
     margin: .7rem 0; 
@@ -147,6 +171,7 @@
     border-radius: 999px;
     background: var(--progress-track); 
   }
+  
   .progress div { 
     width: 0; 
     height: 100%; 
@@ -154,6 +179,7 @@
     background: var(--green); 
     transition: width .2s ease; 
   }
+  
   @media (max-width: 650px) {
     .status-grid { grid-template-columns: 1fr; gap: .6rem; }
     .metric { grid-template-columns: minmax(0, 1fr) auto; }

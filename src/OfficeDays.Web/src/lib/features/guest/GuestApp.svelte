@@ -3,7 +3,7 @@
   import { errorMessage } from '$lib/api';
   import { localDate, months } from '$lib/dates';
   import type { Appearance, Period, TeamDay } from '$lib/types';
-  import AppearanceSelect from '$lib/components/AppearanceSelect.svelte';
+  import PreferencesForm from '../profile/PreferencesForm.svelte';
   import PeriodPicker from '$lib/components/PeriodPicker.svelte';
   import Feedback from '$lib/components/Feedback.svelte';
   import Dashboard from '../Dashboard.svelte';
@@ -24,7 +24,7 @@
   let revision = $state(0);
   let busy = $state(false);
   let error = $state('');
-  let teamDay = $state<TeamDay | ''>(untrack((): TeamDay | '' => initial?.teamDay ?? ''));
+  let teamDay = $derived<TeamDay | null>(data?.teamDay ?? null);
   let appearance = $derived<Appearance>(data?.appearance ?? 'System');
 
   $effect(() => {
@@ -34,7 +34,7 @@
     return (): void => { delete root.dataset.guestAppearance; };
   });
 
-  const weekdays: TeamDay[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+
   
   provideDataSource(createGuestSource());
   
@@ -88,10 +88,11 @@
     }
   }
   
-  function saveAppearance(): void {
+  function savePreferences(): void {
     error = '';
     try {
       const current = currentData();
+      current.teamDay = teamDay;
       current.appearance = appearance;
       saveGuestData(current);
       data = current;
@@ -100,18 +101,6 @@
     }
   }
 
-  function saveTeamDay(): void {
-    error = '';
-    try { 
-      const current = currentData(); 
-      current.teamDay = teamDay || null; 
-      saveGuestData(current); 
-      data = current; 
-    }
-    catch (failure) { 
-      error = errorMessage(failure); 
-    }
-  }
   function storageChanged(event: StorageEvent): void {
     // Re-render other tabs after an edit; never replace their saved data with a stale snapshot.
     if (event.storageArea !== localStorage || (event.key !== null && event.key !== guestStorageKey)) 
@@ -183,25 +172,10 @@
       <Reports timeZone={data.timeZoneId} initialYear={reportYear} onyearselection={(year): void => { reportYear = year; }} />
     {/key}
   {:else}
-    <section class="card guest-profile">
+    <section class="card">
       <h2>Guest profile</h2>
       <p>{data.countryName} · {data.timeZoneId}</p>
-      <div>
-        <label>
-          Team day
-          <select bind:value={teamDay}>
-            <option value="">None</option>
-            {#each weekdays as day}
-              <option value={day}>{day}</option>
-            {/each}
-          </select>
-        </label>
-        <button onclick={saveTeamDay}>Save team day</button>
-      </div>
-      <div>
-        <AppearanceSelect bind:value={appearance} />
-        <button onclick={saveAppearance}>Save appearance</button>
-      </div>
+      <PreferencesForm bind:teamDay bind:appearance saveLabel="Save" onsave={savePreferences} />
     </section>
     
     <AttendanceRequirements onsave={(): void => { data = currentData(); }} />
@@ -227,23 +201,5 @@
   
   .card { 
     margin: 1rem 0; 
-  }
-
-  .guest-profile > div {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 1em;
-  }
-  
-  .guest-profile > div > label {
-    grid-column: 1;
-    max-width: 25em;
-  }
-  
-  .guest-profile > div > button {
-    grid-column: 2;
-    height: 1em;
-    justify-self: end;
-    align-self: end;
   }
 </style>

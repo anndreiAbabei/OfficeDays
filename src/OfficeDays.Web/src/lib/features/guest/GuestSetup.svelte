@@ -139,11 +139,26 @@
 </section>
 
 <style>
-  .card > h1 {
-    margin-bottom: 1em;
+  .card { 
+    max-width: 42rem; 
+    margin-inline: auto; 
   }
   
-  form.stack {
-    margin-block: 2em;
+  form {
+    margin-block: 1.5rem; 
+    align-items: end; 
+  }
+  
+  button { 
+    justify-self: end; 
+  }
+  
+  @media (min-width: 600px) {
+    form { 
+      grid-template-columns: repeat(2, minmax(0, 1fr)); 
+    }
+    form :global(p), form button { 
+      grid-column: 1 / -1; 
+    }
   }
 </style>
