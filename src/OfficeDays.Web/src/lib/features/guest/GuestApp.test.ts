@@ -19,6 +19,7 @@ it('Should_ApplyAndPersistAppearance_WhenGuestSavesProfile', async (): Promise<v
   await fireEvent.click(screen.getByRole('button', { name: 'Profile' }));
   const select = screen.getByLabelText('Appearance');
 
+  const expectedMessage = 'Profile saved.';
   const expectedTeamDay = 'monday';
   expect(screen.getByRole('option', { name: 'Monday' })).toBeVisible();
 
@@ -27,9 +28,11 @@ it('Should_ApplyAndPersistAppearance_WhenGuestSavesProfile', async (): Promise<v
   expect(readGuestData()?.teamDay).toBeNull();
   for (const choice of ['Dark', 'Light', 'System']) {
     await fireEvent.change(select, { target: { value: choice } });
+    expect(screen.queryByText(expectedMessage)).not.toBeInTheDocument();
     await fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     // Assert
+    expect(screen.getByRole('status')).toHaveTextContent(expectedMessage);
     expect(readGuestData()?.teamDay).toBe(expectedTeamDay);
     expect(root.dataset.guestAppearance).toBe(choice);
     expect(readGuestData()?.appearance).toBe(choice);

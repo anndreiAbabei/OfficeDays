@@ -16,7 +16,7 @@ OfficeDays is a self-hosted office-attendance tracker with planning, vacations, 
 
 | Location | Responsibility |
 | --- | --- |
-| `src/OfficeDays/` | ASP.NET Core Minimal API, targeting .NET 10 / C# 14 |
+| `src/OfficeDays/` | ASP.NET Core Minimal API, targeting .NET 11 / C# 15 |
 | `src/OfficeDays/Features/<Area>/<UseCase>/` | Vertical slices: endpoint, request/response contracts, handler, validation, mapping, logging |
 | `src/OfficeDays/Domain/` | Shared persisted domain entities |
 | `src/OfficeDays/Data/` | EF Core SQLite context, initialization, and migrations |
@@ -62,7 +62,7 @@ Features/<Area>/<UseCase>/
 
 ## C# standards and naming
 
-- Prefer modern .NET 10 / C# 14 features when they improve clarity, including collection expressions, pattern matching, and extension members where appropriate. Use primary constructors only as described below. Do not change the language/framework version incidentally.
+- Prefer modern .NET 11 / C# 15 features when they improve clarity, including collection expressions, pattern matching, and extension members where appropriate. Use primary constructors only as described below. Do not change the language/framework version incidentally.
 - Nullable reference types stay enabled. Model absence explicitly; avoid `null!`, unchecked casts, and warning suppression unless required and explained.
 - Use `sealed class` or `sealed record` by default. Leave a type extensible only for a concrete reason, such as a framework integration requirement. Use immutable records and `init` properties for contracts where appropriate; EF entities may require mutable state.
 - Use file-scoped namespaces matching the folder structure and PascalCase filenames matching the main type. Use PascalCase for types, methods, and public properties; camelCase for parameters and locals; `_camelCase` for private instance fields; and `I` prefixes for interfaces.
@@ -188,7 +188,7 @@ public sealed class DeleteJurisdictionEndpoint(IRequestExecutor executor) : IHol
 
 ## Validation commands and completion
 
-Use .NET 10 and Node.js 24 (the CI/Docker baseline). Install frontend dependencies with the committed npm lockfile using `npm ci`.
+Use .NET 11 and Node.js 24 (the CI/Docker baseline). Install frontend dependencies with the committed npm lockfile using `npm ci`.
 
 From `src/OfficeDays.Web`:
 

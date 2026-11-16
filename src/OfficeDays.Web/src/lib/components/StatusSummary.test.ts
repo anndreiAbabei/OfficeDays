@@ -102,3 +102,22 @@ it('Should_UpdateExpandedCalculation_WhenFreshSummaryArrives', async (): Promise
   expect(screen.getByText('Available days left').nextElementSibling).toHaveTextContent(expectedAvailable);
   expect(screen.getByText(/that cannot be covered this month/)).toHaveTextContent('2 days that cannot be covered this month');
 });
+
+it.each([
+  [9, 10, '1 day still available to plan.'],
+  [10, 10, 'No more days available to plan.'],
+  [0, 0, 'No more days available to plan.']
+] as const)('Should_ShowOnlyAvailableDays_WhenTargetExceedsCapacityWith%iPlansAnd%iDaysLeft', (planned, available, hint): void => {
+  // Arrange
+  const remaining = 15;
+  const shortfall = remaining - available;
+  const status = { ...attendanceStatusFixture, remainingOfficeDays: remaining,
+    summary: { ...attendanceStatusFixture.summary, remainingEligibleDays: available, outstandingOfficeDays: shortfall } };
+  const expected = `${hint} Attending every remaining eligible day would still leave you ${shortfall} days short.`;
+
+  // Act
+  render(StatusSummary, { status, plannedCount: planned });
+
+  // Assert
+  expect(screen.getByText(expected)).toBeVisible();
+});

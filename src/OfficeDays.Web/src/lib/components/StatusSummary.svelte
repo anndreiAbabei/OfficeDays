@@ -7,13 +7,31 @@
   const detailsId = $props.id();
   let expanded = $state(false);
   let upcomingPlanned = $derived(plannedCount ?? status?.upcomingPlannedDays);
-  let daysToPlan = $derived(status && upcomingPlanned !== undefined 
-          ? Math.max(0, status.remainingOfficeDays - upcomingPlanned) 
-          : null);
-  let planningMessage = $derived(daysToPlan === null ? ''
-    : status?.remainingOfficeDays === 0 ? 'Office requirement met.'
-    : daysToPlan === 0 ? 'All remaining days planned.'
-    : `${daysToPlan} more ${daysToPlan === 1 ? 'day' : 'days'} to plan.`);
+  
+  function days(count: number): string {
+    return `${count} ${count === 1 ? 'day' : 'days'}`;
+  }
+
+  let planningMessage = $derived.by((): string => {
+    if (!status || upcomingPlanned === undefined) 
+      return '';
+    
+    if (status.remainingOfficeDays === 0)
+      return 'Office requirement met.';
+
+    if (status.summary && status.summary.outstandingOfficeDays > 0) {
+      const available = Math.max(0, status.summary.remainingEligibleDays - upcomingPlanned);
+      const hint = available ? `${days(available)} still available to plan.` : 'No more days available to plan.';
+     
+      return `${hint} Attending every remaining eligible day would still leave you ${days(status.summary.outstandingOfficeDays)} short.`;
+    }
+
+    const needed = Math.max(0, status.remainingOfficeDays - upcomingPlanned);
+    
+    return needed 
+            ? `${needed} more ${needed === 1 ? 'day' : 'days'} to plan.`
+            : 'All remaining days planned.';
+  });
   let progress: number = $derived(Math.max(0, Math.min(100, status?.progressPercentage ?? 0)));
 </script>
 

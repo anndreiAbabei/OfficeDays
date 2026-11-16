@@ -24,7 +24,7 @@ That idea grew into a web app with a calendar, vacation tracking, attendance tar
 ## What you can do
 
 - **Track attendance:** record today, add a missed office day, or remove an incorrect entry.
-- **See monthly progress:** check your required office days, remaining days, and maximum work-from-home days. Expand **Details** for the full breakdown.
+- **See monthly progress:** check your required office days, remaining days, and maximum work-from-home days. The planning hint shows how many additional days you can schedule and flags any shortfall when the target is out of reach. Expand **Details** for the full breakdown.
 - **Plan ahead:** mark upcoming office days on the calendar. Plans stay separate from recorded attendance.
 - **Account for time off:** exclude weekends, bank holidays, and vacations from your target.
 - **Set your own target:** choose an office attendance percentage or days per week, then manage past or future changes from Profile.
@@ -53,7 +53,7 @@ Choose whichever setup suits you:
 | Run with | What you need |
 | --- | --- |
 | Docker Compose | Docker with Compose support. No separate .NET or Node.js installation needed. |
-| Local installation | .NET 10 SDK, Node.js 24, and npm. |
+| Local installation | .NET 11 SDK, Node.js 24, and npm. |
 
 Both options use a local SQLite database, so there is no separate database server to install. Start with a copy of this repository and run the commands below from its root directory. The local installation examples use a macOS/Linux shell.
 

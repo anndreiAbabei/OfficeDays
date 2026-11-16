@@ -24,6 +24,7 @@
   let revision = $state(0);
   let busy = $state(false);
   let error = $state('');
+  let profileMessage = $state('');
   let teamDay = $derived<TeamDay | null>(data?.teamDay ?? null);
   let appearance = $derived<Appearance>(data?.appearance ?? 'System');
 
@@ -33,8 +34,6 @@
     
     return (): void => { delete root.dataset.guestAppearance; };
   });
-
-
   
   provideDataSource(createGuestSource());
   
@@ -89,6 +88,7 @@
   }
   
   function savePreferences(): void {
+    profileMessage = '';
     error = '';
     try {
       const current = currentData();
@@ -96,6 +96,7 @@
       current.appearance = appearance;
       saveGuestData(current);
       data = current;
+      profileMessage = 'Profile saved.';
     } catch (failure) {
       error = errorMessage(failure);
     }
@@ -121,25 +122,22 @@
 {#if !data}
   <GuestSetup oncomplete={complete} />
 {:else}
-  <header class="card">
-    <h1>Office Days · Guest</h1>
-    <p>
-      <strong>Saved in this browser</strong> · {data.countryName} · {data.timeZoneId}
-    </p>
-    <p class="muted">
-      Your personal tracking data stays on this device. Download a backup before clearing browser data.
-    </p>
+  <header class="guest-header">
+    <div>
+      <h1>Office Days · Guest</h1>
+      <span class="muted">Saved in this browser</span>
+    </div>
     <a href="/login">Sign in</a>
   </header>
   <nav aria-label="Guest navigation">
     <button class="secondary" aria-current={view === 'dashboard' ? 'page' : undefined} onclick={(): void => { view = 'dashboard'; }}>
       Dashboard
     </button>
+    <button class="secondary" aria-current={view === 'profile' ? 'page' : undefined} onclick={(): void => { view = 'profile'; profileMessage = ''; }}>
+      Profile
+    </button>
     <button class="secondary" aria-current={view === 'reports' ? 'page' : undefined} onclick={(): void => { view = 'reports'; }}>
       Reports
-    </button>
-    <button class="secondary" aria-current={view === 'profile' ? 'page' : undefined} onclick={(): void => { view = 'profile'; }}>
-      Profile
     </button>
   </nav>
   
@@ -172,22 +170,26 @@
       <Reports timeZone={data.timeZoneId} initialYear={reportYear} onyearselection={(year): void => { reportYear = year; }} />
     {/key}
   {:else}
-    <section class="card">
+    <section class="card" onchange={(): void => { profileMessage = ''; }}>
       <h2>Guest profile</h2>
       <p>{data.countryName} · {data.timeZoneId}</p>
       <PreferencesForm bind:teamDay bind:appearance saveLabel="Save" onsave={savePreferences} />
+      <Feedback message={profileMessage} />
     </section>
     
     <AttendanceRequirements onsave={(): void => { data = currentData(); }} />
     <section class="card">
       <h2>Download your data</h2>
-      <p>Export your personal data and downloaded holiday calendars as a JSON backup.</p>
+      <p>Download a JSON backup of your tracking data and holiday calendars before clearing browser data.</p>
       <button onclick={backup}>Download guest data</button>
     </section>
   {/if}
 {/if}
 
 <style>
+  .guest-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .guest-header h1 { font-size: 1.15rem; margin: 0; }
+
   nav { 
     display: flex; 
     flex-wrap: wrap; 

@@ -139,7 +139,7 @@ test('Should_KeepGuestDataUntouched_WhenFullAccountSignsIn', async ({ page }): P
   await page.getByLabel('Password', { exact: true }).fill('BrowserTestsOnly!123');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   // Assert
-  await expect(page.getByRole('link', { name: 'API tokens', exact: true })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
   await page.goto('/guest');
   await expect(page).toHaveURL(/\/$/);
   expect(await page.evaluate((): string | null => localStorage.getItem('officedays.guest.v1'))).toBe(before);
