@@ -12,6 +12,7 @@ using OfficeDays.Domain;
 using OfficeDays.Infrastructure;
 using OfficeDays.Security;
 using OfficeDays.Services;
+using OfficeDays.Services.External.GitHub;
 using Serilog;
 using Serilog.Sinks.OpenTelemetry;
 
@@ -88,6 +89,7 @@ public static class ServiceRegistration
         AddDatabase(builder);
         AddServices(builder);
         AddAuthorization(builder, cookieExpireTimeSpan);
+        AddHttpClients(builder);
 
         return builder;
     }
@@ -230,5 +232,20 @@ public static class ServiceRegistration
                    .AddPolicy("BrowserOnly", policy => policy.RequireAuthenticatedUser()
                        .RequireAssertion(context => context.User.Identity?.AuthenticationType == CookieAuthenticationDefaults.AuthenticationScheme))
                    .AddPolicy("AdminOnly", policy => policy.RequireClaim("is_admin", "true"));
+    }
+    
+    private static void AddHttpClients(WebApplicationBuilder builder)
+    {
+        builder.Services.AddHttpClient<IGitHubClient, GitHubClient>()
+               .ConfigureHttpClient((serviceProvider, client) =>
+               {
+                   var apiVersion = serviceProvider.GetRequiredService<IAppVersionService>();
+                   var gitHubRepo = new Uri(apiVersion.GitHubRepo);
+                   var baseAddress = new Uri("https://api.github.com");
+                   var repoAddress = new Uri(baseAddress, gitHubRepo.PathAndQuery);
+                   
+                   client.BaseAddress = repoAddress;
+                   client.Timeout = TimeSpan.FromSeconds(30);
+               });
     }
 }
