@@ -6,15 +6,17 @@ namespace OfficeDays.UnitTests.Features.Users.UpdateUser.Contracts;
 public sealed class UpdateUserRequestBodyTests
 {
     [Fact]
-    public void Should_SetProperties()
+    public void Should_SetProperties_WhenAppearanceIsProvided()
     {
         // arrange
+        const string expectedAppearance = "Dark";
         var expectedEmail = "user@example.com";
 
         // act
-        var sut = new UpdateUserRequestBody(expectedEmail);
+        var sut = new UpdateUserRequestBody(expectedEmail) { Appearance = expectedAppearance };
 
         // assert
+        Assert.Equal(expectedAppearance, sut.Appearance);
         Assert.Equal(expectedEmail, sut.Email);
     }
 
@@ -29,6 +31,7 @@ public sealed class UpdateUserRequestBodyTests
 
         // assert
         Assert.Equal(expectedEmail, sut.Email);
+        Assert.Null(sut.Appearance);
         Assert.Null(sut.TeamDay);
         Assert.False(sut.HasTeamDay);
     }

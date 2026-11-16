@@ -2,7 +2,7 @@
 
 Download from **Profile → Download my data (JSON)** or authenticated `GET /api/users/me/export` (cookie or bearer authentication). The response is a UTF-8 JSON attachment with `Cache-Control: no-store`. It is read-only and needs no CSRF token. Authentication failures use the normal API responses; a deleted account returns 404. The UI displays failures and permits retry.
 
-The machine-readable contract is [personal-data-export-v1.schema.json](personal-data-export-v1.schema.json), JSON Schema draft 2020-12. All fields are required; nullable fields are emitted as `null`, and empty collections as `[]`. Dates use `YYYY-MM-DD`; timestamps use ISO 8601 with an offset. No date-range or pagination limit is applied. All database reads share one transaction snapshot.
+The machine-readable contract is [personal-data-export-v1.schema.json](personal-data-export-v1.schema.json), JSON Schema draft 2020-12. The schema also accepts earlier version 1 exports that omit appearance or use percentage-only requirements. In current exports, nullable fields are emitted as `null`, and empty collections as `[]`. Dates use `YYYY-MM-DD`; timestamps use ISO 8601 with an offset. No date-range or pagination limit is applied. All database reads share one transaction snapshot.
 
 | Field | Meaning |
 | --- | --- |
@@ -12,8 +12,8 @@ The machine-readable contract is [personal-data-export-v1.schema.json](personal-
 | `application` | App name and complete assembly informational version, including build metadata when supplied by the build. Local builds have a `+local` suffix and do not uniquely identify uncommitted code. |
 | `reportContext` | Calculation contract version (`1`), user-local evaluation date, and user-local registration date. Dates are saved explicitly to detect differences in timezone rules on another instance. |
 | `profile` | Original user ID, username, normalized username, optional email, timezone ID, holiday jurisdiction ID, original registration timestamp, and administrator flag (informational only). |
-| `preferences` | Team day as lowercase weekday name or `null`. |
-| `requirementHistory` | Every requirement, including baseline and future changes: ID, owner ID, start date, percentage, creation timestamp. Baseline date `0001-01-01` applies to all history. |
+| `preferences` | Team day as a lowercase weekday name or `null`, and appearance (`System`, `Light`, or `Dark`). Older exports default to `System` when appearance is absent. |
+| `requirementHistory` | Every requirement, including baseline and future changes: ID, owner ID, start date, requirement mode and value, and creation timestamp. Values are 0–100 for `Percentage` and 0–5 for `DaysPerWeek`. Older exports use `requiredOfficePercentage`. Baseline date `0001-01-01` applies to all history. |
 | `attendance` | Every recorded day: ID, owner ID, date, manual-entry flag, creation timestamp. |
 | `plans` | Every plan, including past plans: ID, owner ID, date, creation timestamp. |
 | `vacations` | Every vacation: ID, owner ID, inclusive from/to dates, creation timestamp. |

@@ -17,6 +17,8 @@
     { href: '/profile', label: 'Profile' },
     { href: '/reports', label: 'Reports' }
   ];
+  let moreButton: HTMLButtonElement;
+  let accountLinks: HTMLDivElement;
   let moreOpen = $state(false);
   afterNavigate((): void => { moreOpen = false; });
 
@@ -51,7 +53,20 @@
       busy = false; 
     }
   }
+  function dismissMore(event: PointerEvent): void {
+    if (moreOpen && event.target instanceof Node && !accountLinks?.contains(event.target) && !moreButton?.contains(event.target))
+      moreOpen = false;
+  }
+
+  function escapeMore(event: KeyboardEvent): void {
+    if (moreOpen && event.key === 'Escape') {
+      moreOpen = false;
+      moreButton.focus();
+    }
+  }
 </script>
+
+<svelte:window onpointerdown={dismissMore} onkeydown={escapeMore} />
 {#if $user}
   <header class="topbar">
     <div>
@@ -70,9 +85,9 @@
       {#each primaryPages as link}
         <a href={link.href} aria-current={page.url.pathname === link.href ? 'page' : undefined}>{link.label}</a>
       {/each}
-      <button class="more" class:active={['/admin', '/tokens'].includes(page.url.pathname)}
+      <button bind:this={moreButton} class="more" class:active={['/admin', '/tokens'].includes(page.url.pathname)}
         aria-expanded={moreOpen} aria-controls="account-links" onclick={(): void => { moreOpen = !moreOpen; }}>More</button>
-      <div id="account-links" class:expanded={moreOpen}>
+      <div bind:this={accountLinks} id="account-links" class:expanded={moreOpen}>
         <a href="/tokens" aria-current={page.url.pathname === '/tokens' ? 'page' : undefined}>API tokens</a>
         {#if $user.isAdmin}
           <a href="/admin" aria-current={page.url.pathname === '/admin' ? 'page' : undefined}>Administration</a>

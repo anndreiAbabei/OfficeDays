@@ -22,6 +22,7 @@
       const updated = await mutate<User>('/api/users/me', 'PUT', { email: email.trim() || null, teamDay, appearance });
       
       email = updated.email || ''; 
+      appearance = updated.appearance;
       teamDay = updated.teamDay; 
       onsave(updated); 
       

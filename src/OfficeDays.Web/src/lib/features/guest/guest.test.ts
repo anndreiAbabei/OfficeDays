@@ -228,9 +228,9 @@ describe('guest calculations', (): void => {
     // Arrange
     const data = fixture(); const expectedFormat = 'officedays-guest-data';
     // Act
-    const result = guestExport(data, now);
+    const result = guestExport({ ...data, appearance: 'Dark' }, now);
     // Assert
-    expect(result).toMatchObject({ format: expectedFormat, attendance: [], plans: [], vacations: [], preferences: { appearance: 'System', teamDay: null }, holidayCalendar: { downloadedYears: [2026, 2027] } });
+    expect(result).toMatchObject({ format: expectedFormat, attendance: [], plans: [], vacations: [], preferences: { appearance: 'Dark', teamDay: null }, holidayCalendar: { downloadedYears: [2026, 2027] } });
   });
 });
 

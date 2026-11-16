@@ -6,7 +6,7 @@ namespace OfficeDays.UnitTests.Features.Authentication.GetCurrentUser;
 public sealed class GetCurrentUserMappingTests
 {
     [Fact]
-    public void Should_MapToViewModel()
+    public void Should_MapUserPreferences_WhenCreatingViewModel()
     {
         // arrange
         var expectedPercentage = 65;
@@ -20,13 +20,14 @@ public sealed class GetCurrentUserMappingTests
             HolidayJurisdiction = new HolidayJurisdiction { Id = 7, Code = "RO", Name = "Romania" },
             IsAdmin = true,
             Email = "alice@example.com",
-            Preferences = new UserPreferences { TeamDay = DayOfWeek.Wednesday }
+            Preferences = new UserPreferences { TeamDay = DayOfWeek.Wednesday, Appearance = Appearance.Dark }
         };
 
         // act
         var result = sut.ToViewModel(new UserAttendanceRequirement { RequirementMode = AttendanceRequirementMode.Percentage, RequirementValue = expectedPercentage });
 
         // assert
+        Assert.Equal(sut.Preferences.Appearance, result.Appearance);
         Assert.Equal(sut.Id, result.Id);
         Assert.Equal(sut.Username, result.Username);
         Assert.Equal(sut.TimeZoneId, result.TimeZoneId);

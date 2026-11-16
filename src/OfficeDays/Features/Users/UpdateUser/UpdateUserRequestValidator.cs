@@ -23,7 +23,7 @@ public sealed class UpdateUserRequestBodyValidator : AbstractValidator<UpdateUse
             .WithMessage("Team day must be Monday to Friday (lowercase), or null.");
 
         RuleFor(body => body.Appearance)
-            .Must(value => value is null or nameof(Appearance.System) or nameof(Appearance.Dark) or nameof(Appearance.Light))
+            .Must(value => value is null || Enum.IsDefined(typeof(Appearance), value))
             .WithMessage("Appearance must be System, Dark, or Light.");
 
         RuleFor(body => body.Email)

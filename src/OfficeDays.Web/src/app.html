@@ -5,9 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <script>
-      const appearance = document.cookie.match(/(?:^|;\s*)appearance=(Light|Dark)(?:;|$)/);
-      if (appearance) 
-        document.documentElement.dataset.appearance = appearance[1];
+      (() => {
+        const root = document.documentElement;
+        const account = document.cookie.match(/(?:^|;\s*)appearance=(Light|Dark)(?:;|$)/);
+        if (account) 
+            root.dataset.appearance = account[1];
+        if (!/^\/guest\/?$/.test(location.pathname)) 
+            return;
+
+        root.dataset.guestAppearance = 'System';
+        try {
+          const guest = JSON.parse(localStorage.getItem('officedays.guest.v1'));
+          
+          if (guest?.appearance === 'Dark' || guest?.appearance === 'Light')
+            root.dataset.guestAppearance = guest.appearance;
+        } catch {
+          // Guest setup handles unreadable storage after the page loads.
+        }
+      })();
     </script>
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/icons/office-days-180.png" />
