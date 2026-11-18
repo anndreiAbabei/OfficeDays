@@ -29,7 +29,7 @@
   <span>
     Office Days ·
     {#if release?.newVersionAvailable}
-      <strong title={`${release.latestVersion} version is available`}>v{release.version}</strong>
+      <strong class="new-version" title={`${release.latestVersion} version is available`}>v{release.version}</strong>
     {:else}
       {release ? `v${release.version}` : status}
     {/if}
@@ -37,8 +37,8 @@
 </div>
 
 <style>
-  strong {
-    color: var(--green-dark); 
+  strong.new-version {
+    color: var(--orange-warn); 
   }
   
   div.base {

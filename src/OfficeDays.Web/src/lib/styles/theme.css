@@ -8,6 +8,7 @@
   --green: light-dark(#287a55, #58b982);
   --green-dark: light-dark(#1f6144, #78d09d);
   --green-soft: light-dark(#e6f3eb, #193326);
+  --orange-warn: light-dark(#ff8c54, #b54500);
   --danger: light-dark(#a33a3a, #ff9292);
   --on-green: light-dark(#ffffff, #0c2115);
   --input: light-dark(#ffffff, #111612);
