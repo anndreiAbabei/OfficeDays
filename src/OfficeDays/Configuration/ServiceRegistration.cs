@@ -179,6 +179,8 @@ public static class ServiceRegistration
         svcBuilder.Services.AddHttpContextAccessor();
         svcBuilder.Services.AddSingleton<Features.Ui.UiContent>();
         svcBuilder.Services.AddScoped<ICurrentUser, CurrentUser>();
+        
+        svcBuilder.Services.AddMemoryCache();
     }
 
     private static void AddAuthorization(WebApplicationBuilder authBuilder, TimeSpan timeSpan)
@@ -241,10 +243,9 @@ public static class ServiceRegistration
                {
                    var apiVersion = serviceProvider.GetRequiredService<IAppVersionService>();
                    var gitHubRepo = new Uri(apiVersion.GitHubRepo);
-                   var baseAddress = new Uri("https://api.github.com");
-                   var repoAddress = new Uri(baseAddress, gitHubRepo.PathAndQuery);
-                   
-                   client.BaseAddress = repoAddress;
+                   client.BaseAddress = new Uri($"https://api.github.com/repos{gitHubRepo.AbsolutePath.TrimEnd('/')}/");
+                   client.DefaultRequestHeaders.UserAgent.ParseAdd("OfficeDays");
+                   client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
                    client.Timeout = TimeSpan.FromSeconds(30);
                });
     }

@@ -269,5 +269,9 @@ public sealed class ExportDataIntegrationTests
     private sealed class TestAppVersionService : IAppVersionService
     {
         public string Version => "9.8.7+test-build";
+        public string Author => "Test author";
+        public string GitHubRepo => "https://github.com/example/OfficeDays";
+
+        public AppVersionInfo GetAll() => new AppVersionInfo(Version, Author, GitHubRepo);
     }
 }

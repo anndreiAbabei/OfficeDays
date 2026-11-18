@@ -6,10 +6,12 @@ public sealed record GetVersionResponse(string Version, string LatestVersion, st
     {
         get
         {
-            var existingVersion = new Version(Version);
-            var latestVersion = new Version(LatestVersion);
+            var cleanVer = Version.Split('+', 2).FirstOrDefault();
+            var cleanLatestVer = LatestVersion.Split('+', 2).FirstOrDefault();
             
-            return existingVersion > latestVersion;
+            return System.Version.TryParse(cleanVer,        out var installed) &&
+                   System.Version.TryParse(cleanLatestVer,  out var latest) &&
+                   latest > installed;
         }
     }
 }

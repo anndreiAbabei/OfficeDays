@@ -1,3 +1,5 @@
+using System.Net;
+using OfficeDays.Services.External.GitHub;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +16,10 @@ public sealed class OfficeDaysFactory : WebApplicationFactory<Program>
     private readonly bool _requireHttpsForBearerTokens;
 
     private readonly bool _useApplicationLogging;
+
+    public HttpStatusCode ReleaseStatus { get; init; } = HttpStatusCode.OK;
+    public Uri? ReleaseRequestUri { get; private set; }
+    public string? ReleaseUserAgent { get; private set; }
 
     public OfficeDaysFactory(bool requireHttpsForBearerTokens = false, bool useApplicationLogging = false)
     {
@@ -36,6 +42,9 @@ public sealed class OfficeDaysFactory : WebApplicationFactory<Program>
         }));
         builder.ConfigureServices(services =>
         {
+            services.AddHttpClient<IGitHubClient, GitHubClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => new ReleaseHandler(this));
+
             // Capture logs through the providers configured by each test, independently of Serilog.
             if (!_useApplicationLogging)
             {
@@ -53,6 +62,20 @@ public sealed class OfficeDaysFactory : WebApplicationFactory<Program>
 
         if (disposing && File.Exists(_databasePath))
             File.Delete(_databasePath);
+    }
+    private sealed class ReleaseHandler(OfficeDaysFactory factory) : HttpMessageHandler
+    {
+        private readonly OfficeDaysFactory _factory = factory;
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            _factory.ReleaseRequestUri = request.RequestUri;
+            _factory.ReleaseUserAgent = request.Headers.UserAgent.ToString();
+            return Task.FromResult(new HttpResponseMessage(_factory.ReleaseStatus)
+            {
+                Content = new StringContent("""{"tag_name":"v999.0.0","name":"Autumn release"}""")
+            });
+        }
     }
 }
 

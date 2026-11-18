@@ -4,12 +4,11 @@ namespace OfficeDays.Services.External.GitHub.Models;
 
 internal record GetLatestVersionResponse
 (
+    [property: JsonPropertyName("id")]                              int Id,
     [property: JsonPropertyName("url")]                             string Url,
     [property: JsonPropertyName("assets_url")]                      string AssetsUrl,
     [property: JsonPropertyName("upload_url")]                      string UploadUrl,
     [property: JsonPropertyName("html_url")]                        string HtmlUrl,
-    [property: JsonPropertyName("id")]                              int Id,
-    [property: JsonPropertyName("author")]                          GetLatestVersionResponseAuthor Author,
     [property: JsonPropertyName("node_id")]                         string NodeId,
     [property: JsonPropertyName("tag_name")]                        string TagName,
     [property: JsonPropertyName("target_commitish")]                string TargetCommitish,
@@ -20,11 +19,12 @@ internal record GetLatestVersionResponse
     [property: JsonPropertyName("created_at")]                      DateTime CreatedAt,
     [property: JsonPropertyName("updated_at")]                      DateTime UpdatedAt,
     [property: JsonPropertyName("published_at")]                    DateTime PublishedAt,
-    // [property: JsonPropertyName("assets")] IReadOnlyList<object> Assets,
     [property: JsonPropertyName("tarball_url")]                     string TarballUrl,
-    [property: JsonPropertyName("zipball_url")]                     string ZipballUrl,
+    [property: JsonPropertyName("zipball_url")]                     string ZipBallUrl,
     [property: JsonPropertyName("body")]                            string Body,
-    [property: JsonPropertyName("mentions_count")]                  int MentionsCount
+    [property: JsonPropertyName("mentions_count")]                  int MentionsCount,
+    // [property: JsonPropertyName("assets")]                          IReadOnlyList<object> Assets,
+    [property: JsonPropertyName("author")]                          GetLatestVersionResponseAuthor Author
 );
 
 internal record GetLatestVersionResponseAuthor
@@ -50,3 +50,6 @@ internal record GetLatestVersionResponseAuthor
     [property: JsonPropertyName("site_admin")]          bool SiteAdmin
 );
 
+[JsonSerializable(typeof(GetLatestVersionResponse))]
+[JsonSourceGenerationOptions(GenerationMode = JsonSourceGenerationMode.Default)]
+internal sealed partial class GetLatestVersionResponseContext : JsonSerializerContext;

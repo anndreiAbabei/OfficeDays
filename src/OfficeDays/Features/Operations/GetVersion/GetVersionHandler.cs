@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using OfficeDays.Features.Operations.GetVersion.Contracts;
 using OfficeDays.Infrastructure;
-using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
 using OfficeDays.Services;
 using OfficeDays.Services.External.GitHub;
@@ -16,7 +15,6 @@ public sealed class GetVersionHandler : IRequestHandler<GetVersionRequest>
     private readonly IGitHubClient _gitHubClient;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<GetVersionHandler> _logger;
-    private static readonly Assembly _assembly = typeof(Program).Assembly;
 
     public GetVersionHandler(IHttpContextAccessor contextAccessor, 
                              IAppVersionService appVersion,
@@ -85,6 +83,8 @@ public sealed class GetVersionHandler : IRequestHandler<GetVersionRequest>
         {
             _logger.LogGetLatestVersionError(error);
 
+            cacheEntry.SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+            
             return _appVersion.Version;
         }
     }
