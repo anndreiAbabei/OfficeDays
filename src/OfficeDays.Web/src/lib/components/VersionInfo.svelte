@@ -24,7 +24,7 @@
   onMount(() => { void loadVersion(); });
 </script>
 
-<div>
+<div class="base">
   <span>Created by <a href={release?.gitHubRepo ?? '#'}>{release?.author ?? 'Andrei'}</a> · </span>
   <span>
     Office Days ·
@@ -37,5 +37,15 @@
 </div>
 
 <style>
-  strong { color: var(--green-dark); }
+  strong {
+    color: var(--green-dark); 
+  }
+  
+  div.base {
+    opacity: .5;
+  }
+
+  div.base {
+    opacity: initial;
+  }
 </style>
