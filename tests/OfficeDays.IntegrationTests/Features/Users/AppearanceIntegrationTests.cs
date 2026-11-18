@@ -6,6 +6,27 @@ namespace OfficeDays.IntegrationTests.Features.Users;
 
 public sealed class AppearanceIntegrationTests
 {
+    [Fact]
+    public async Task Should_AllowEveryExportedAppearance_WhenReadingTheVersionOneSchema()
+    {
+        // Arrange
+        var path = Path.Combine(AppContext.BaseDirectory, "personal-data-export-v1.schema.json");
+        await using var file = File.OpenRead(path);
+        using var schema = await JsonDocument.ParseAsync(file, cancellationToken: TestContext.Current.CancellationToken);
+        var preferences = schema.RootElement.GetProperty("properties").GetProperty("preferences");
+        var expectedChoices = Enum.GetNames<OfficeDays.Domain.Appearance>().Order(StringComparer.Ordinal);
+
+        // Act
+        var allowedChoices = preferences.GetProperty("properties").GetProperty("appearance")
+                                        .GetProperty("enum").EnumerateArray().Select(value => value.GetString())
+                                        .Order(StringComparer.Ordinal);
+        var required = preferences.GetProperty("required").EnumerateArray().Select(value => value.GetString());
+
+        // Assert
+        Assert.Equal(expectedChoices, allowedChoices);
+        Assert.DoesNotContain("appearance", required);
+    }
+
     [Theory]
     [InlineData("System")]
     [InlineData("Dark")]

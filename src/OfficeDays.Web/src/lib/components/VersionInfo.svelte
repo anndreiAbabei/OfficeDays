@@ -38,7 +38,9 @@
 
 <style>
   strong.new-version {
-    color: var(--orange-warn); 
+    color: var(--orange-warn);
+    text-decoration: underline;
+    text-decoration-style: dashed;
   }
   
   div.base {

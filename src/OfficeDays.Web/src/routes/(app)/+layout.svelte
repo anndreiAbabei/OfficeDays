@@ -17,9 +17,10 @@
     { href: '/profile', label: 'Profile' },
     { href: '/reports', label: 'Reports' }
   ];
-  let moreButton: HTMLButtonElement;
-  let accountLinks: HTMLDivElement;
+  let moreButton = $state<HTMLButtonElement>();
+  let accountLinks = $state<HTMLDivElement>();
   let moreOpen = $state(false);
+  
   afterNavigate((): void => { moreOpen = false; });
 
   $effect(() => {
@@ -61,7 +62,7 @@
   function escapeMore(event: KeyboardEvent): void {
     if (moreOpen && event.key === 'Escape') {
       moreOpen = false;
-      moreButton.focus();
+      moreButton?.focus();
     }
   }
 </script>
