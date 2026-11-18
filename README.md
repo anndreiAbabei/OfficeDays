@@ -114,6 +114,8 @@ Stop the app:
 docker compose down
 ```
 
+The footer highlights the installed version when a newer GitHub release is available. Hover over the highlighted version to see the release number. The server caches successful checks for 24 hours and retries failed checks after five minutes on the next version request.
+
 To update a Git checkout to the latest version and rebuild:
 
 ```bash

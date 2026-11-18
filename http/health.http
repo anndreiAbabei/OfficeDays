@@ -1,4 +1,5 @@
-### Running application version
+### Running application version and GitHub update availability
+# version includes build metadata; latestVersion and newVersionAvailable drive the footer.
 GET {{baseUrl}}/api/version
 Accept: application/json
 

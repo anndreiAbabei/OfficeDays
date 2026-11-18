@@ -12,6 +12,7 @@ using OfficeDays.Domain;
 using OfficeDays.Infrastructure;
 using OfficeDays.Security;
 using OfficeDays.Services;
+using OfficeDays.Services.External.GitHub;
 using Serilog;
 using Serilog.Sinks.OpenTelemetry;
 
@@ -88,6 +89,7 @@ public static class ServiceRegistration
         AddDatabase(builder);
         AddServices(builder);
         AddAuthorization(builder, cookieExpireTimeSpan);
+        AddHttpClients(builder);
 
         return builder;
     }
@@ -177,6 +179,8 @@ public static class ServiceRegistration
         svcBuilder.Services.AddHttpContextAccessor();
         svcBuilder.Services.AddSingleton<Features.Ui.UiContent>();
         svcBuilder.Services.AddScoped<ICurrentUser, CurrentUser>();
+        
+        svcBuilder.Services.AddMemoryCache();
     }
 
     private static void AddAuthorization(WebApplicationBuilder authBuilder, TimeSpan timeSpan)
@@ -230,5 +234,19 @@ public static class ServiceRegistration
                    .AddPolicy("BrowserOnly", policy => policy.RequireAuthenticatedUser()
                        .RequireAssertion(context => context.User.Identity?.AuthenticationType == CookieAuthenticationDefaults.AuthenticationScheme))
                    .AddPolicy("AdminOnly", policy => policy.RequireClaim("is_admin", "true"));
+    }
+    
+    private static void AddHttpClients(WebApplicationBuilder builder)
+    {
+        builder.Services.AddHttpClient<IGitHubClient, GitHubClient>()
+               .ConfigureHttpClient((serviceProvider, client) =>
+               {
+                   var apiVersion = serviceProvider.GetRequiredService<IAppVersionService>();
+                   var gitHubRepo = new Uri(apiVersion.GitHubRepo);
+                   client.BaseAddress = new Uri($"https://api.github.com/repos{gitHubRepo.AbsolutePath.TrimEnd('/')}/");
+                   client.DefaultRequestHeaders.UserAgent.ParseAdd("OfficeDays");
+                   client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+                   client.Timeout = TimeSpan.FromSeconds(30);
+               });
     }
 }
