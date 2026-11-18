@@ -2,7 +2,7 @@
   import { createSessionUpdater, user } from '$lib/session';
   import AttendanceRequirements from '$lib/features/AttendanceRequirements.svelte';
   import DeleteAccount from '$lib/features/DeleteAccount.svelte';
-  import Profile from '$lib/features/Profile.svelte';
+  import Profile from '$lib/features/profile/Profile.svelte';
   import PersonalDataDownload from '$lib/features/PersonalDataDownload.svelte';
   const updateSession = createSessionUpdater();
 </script>

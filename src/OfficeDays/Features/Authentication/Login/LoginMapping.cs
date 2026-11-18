@@ -20,6 +20,7 @@ public static class LoginMapping
                                      requirement.RequirementValue,
                                      user.Preferences.TeamDay?.ToString().ToLowerInvariant())
             {
+                Appearance = user.Preferences.Appearance,
                 RequirementMode = requirement.RequirementMode
             };
         }

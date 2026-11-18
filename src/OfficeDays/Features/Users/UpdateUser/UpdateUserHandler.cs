@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OfficeDays.Data;
+using OfficeDays.Domain;
 using OfficeDays.Features.Users.UpdateUser.Contracts;
 using OfficeDays.Infrastructure;
 using OfficeDays.Security;
@@ -42,6 +43,9 @@ public sealed class UpdateUserHandler : IRequestHandler<UpdateUserRequest>
         }
 
         user.Email = _userService.NormalizeEmail(request.Email);
+
+        if (request.Appearance is not null)
+            user.Preferences.Appearance = Enum.Parse<Appearance>(request.Appearance);
 
         if (request.HasTeamDay)
             user.Preferences.TeamDay = request.TeamDay is null ? null : Enum.Parse<DayOfWeek>(request.TeamDay, true);

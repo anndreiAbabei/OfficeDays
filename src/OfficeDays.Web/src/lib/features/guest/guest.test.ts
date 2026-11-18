@@ -7,12 +7,24 @@ import { guestExport } from './export';
 
 const now = new Date('2026-06-15T12:00:00Z');
 function fixture(): GuestData {
-  return { version: 1, id: 'guest', createdAt: now.toISOString(), registrationMonth: '2026-06-01', countryCode: 'RO', countryName: 'Romania', timeZoneId: 'UTC', teamDay: null,
+  return { version: 1, id: 'guest', createdAt: now.toISOString(), registrationMonth: '2026-06-01', countryCode: 'RO', countryName: 'Romania', timeZoneId: 'UTC', appearance: 'System', teamDay: null,
     requirements: [{ id: 'baseline', createdAt: now.toISOString(), startingFrom: '0001-01-01', requirementMode: 'Percentage', requirementValue: 50 }],
     attendance: [], plans: [], vacations: [], holidays: { '2026': [], '2027': [] } };
 }
 beforeEach((): void => { localStorage.clear(); vi.restoreAllMocks(); });
 describe('guest data', (): void => {
+  it('Should_DefaultToSystem_WhenOpeningAnOlderGuestProfile', (): void => {
+    // Arrange
+    const { appearance: expectedAppearance, ...legacy } = fixture();
+    localStorage.setItem(guestStorageKey, JSON.stringify(legacy));
+
+    // Act
+    const restored = readGuestData();
+
+    // Assert
+    expect(restored).toEqual({ ...legacy, appearance: expectedAppearance });
+  });
+
   it('Should_SaveAndReload_WhenSetupIsComplete', (): void => {
     // Arrange
     const expected = fixture();
@@ -216,9 +228,9 @@ describe('guest calculations', (): void => {
     // Arrange
     const data = fixture(); const expectedFormat = 'officedays-guest-data';
     // Act
-    const result = guestExport(data, now);
+    const result = guestExport({ ...data, appearance: 'Dark' }, now);
     // Assert
-    expect(result).toMatchObject({ format: expectedFormat, attendance: [], plans: [], vacations: [], preferences: { teamDay: null }, holidayCalendar: { downloadedYears: [2026, 2027] } });
+    expect(result).toMatchObject({ format: expectedFormat, attendance: [], plans: [], vacations: [], preferences: { appearance: 'Dark', teamDay: null }, holidayCalendar: { downloadedYears: [2026, 2027] } });
   });
 });
 

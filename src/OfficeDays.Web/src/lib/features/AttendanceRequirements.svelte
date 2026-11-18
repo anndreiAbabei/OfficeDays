@@ -246,7 +246,7 @@
     margin-left: .5rem; 
     padding: .15rem .5rem; 
     border-radius: 1rem; 
-    background: var(--surface-soft, #edf2ee); 
+    background: var(--green);
     font-size: .85rem; 
     color: var(--on-green);
   }

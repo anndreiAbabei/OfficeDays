@@ -34,6 +34,8 @@ public sealed class RequestLimitingMiddleware
         using var lease = limiters.Source.AttemptAcquire(context);
         if (!lease.IsAcquired)
         {
+            _logger.LogFailToAquireLease();
+            
             await RequestLimitResponses.RejectAsync(context, lease);
 
             return;
@@ -41,6 +43,8 @@ public sealed class RequestLimitingMiddleware
 
         if (context.Request.ContentLength > _limits.MaxBodyBytes)
         {
+            _logger.LogContentLengthExcededAllowedSize(context.Request.ContentLength, _limits.MaxBodyBytes);
+
             await RequestLimitResponses.RejectBodyAsync(context);
 
             return;
@@ -53,7 +57,7 @@ public sealed class RequestLimitingMiddleware
 
         while (true)
         {
-            var memory = buffer.AsMemory(0, Math.Min(buffer.Length, _limits.MaxBodyBytes + 1 - (int)body.Length));
+            var memory = buffer.AsMemory(0, (int)Math.Min(buffer.Length, _limits.MaxBodyBytes + 1 - body.Length));
             var count = await originalBody.ReadAsync(memory, context.RequestAborted);
 
             if (count == 0)
@@ -64,6 +68,7 @@ public sealed class RequestLimitingMiddleware
             if (body.Length <= _limits.MaxBodyBytes)
                 continue;
 
+            _logger.LogRejectBodyAsync();
             await RequestLimitResponses.RejectBodyAsync(context);
 
             return;

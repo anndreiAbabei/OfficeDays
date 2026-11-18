@@ -60,11 +60,10 @@ public sealed class GetVersionHandler : IRequestHandler<GetVersionRequest>
     {
         var githubResponse = await _gitHubClient.GetLatestVersion(cancellationToken);
 
-        return githubResponse switch
+        return githubResponse! switch
         {
             GitHubGetLatestVersionSuccessResponse success => GetSuccess(success),
-            GitHubGetLatestVersionErrorResponse error => GetError(error),
-            _ => throw new UnreachableException()
+            GitHubGetLatestVersionErrorResponse error => GetError(error)
         };
 
         string GetSuccess(GitHubGetLatestVersionSuccessResponse success)

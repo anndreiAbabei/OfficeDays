@@ -1,5 +1,6 @@
 /* Shared light/dark design tokens. Component styles consume these variables. */
-:root { color-scheme: light;
+:root {
+  color-scheme: light dark;
   --ink: #18201c;
   --muted: #66706a;
   --paper: #ffffff;
@@ -8,6 +9,7 @@
   --green: #287a55;
   --green-dark: #1f6144;
   --green-soft: #e6f3eb;
+  --orange-warn: #ff8c54;
   --danger: #a33a3a;
   --on-green: #ffffff;
   --input: #ffffff;
@@ -30,37 +32,116 @@
   --calendar-holiday-bg: #dcecff;
   --calendar-holiday-text: #204d85;
   --calendar-today-outline: #7055bb;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+
+  --dark-ink: #e6ece8;
+  --dark-muted: #9eaaa2;
+  --dark-paper: #181d19;
+  --dark-ground: #0f1310;
+  --dark-line: #303832;
+  --dark-green: #58b982;
+  --dark-green-dark: #78d09d;
+  --dark-green-soft: #193326;
+  --dark-orange-warn: #b54500;
+  --dark-danger: #ff9292;
+  --dark-on-green: #0c2115;
+  --dark-input: #111612;
+  --dark-input-border: #424c45;
+  --dark-secondary: #29302b;
+  --dark-secondary-hover: #353e37;
+  --dark-subtle-line: #2a312c;
+  --dark-progress-track: #29312b;
+  --dark-warning: #332f1d;
+  --dark-warning-border: #6c6130;
+  --dark-revoked: #29302b;
+  --dark-shadow: rgb(0 0 0 / 22%);
+  --dark-calendar-attended-bg: #193d29;
+  --dark-calendar-attended-text: #a7e1bd;
+  --dark-calendar-planned-bg: #453b18;
+  --dark-calendar-team-outline: #ffe18b;
+  --dark-calendar-planned-text: #ffe18b;
+  --dark-calendar-missed-bg: #472626;
+  --dark-calendar-missed-text: #ffb4b4;
+  --dark-calendar-holiday-bg: #20374f;
+  --dark-calendar-holiday-text: #b3d7ff;
+  --dark-calendar-today-outline: #bba3ff;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+:root[data-appearance="Light"] { color-scheme: light; }
+:root[data-appearance="Dark"] { color-scheme: dark; }
+:root[data-guest-appearance="System"] { color-scheme: light dark; }
+:root[data-guest-appearance="Light"] { color-scheme: light; }
+:root[data-guest-appearance="Dark"] { color-scheme: dark; }
+
+/* The guest preference takes precedence over the account cookie on guest pages. */
+:root[data-guest-appearance="Dark"],
+:root[data-appearance="Dark"]:not([data-guest-appearance]) {
+  --ink: var(--dark-ink);
+  --muted: var(--dark-muted);
+  --paper: var(--dark-paper);
+  --ground: var(--dark-ground);
+  --line: var(--dark-line);
+  --green: var(--dark-green);
+  --green-dark: var(--dark-green-dark);
+  --green-soft: var(--dark-green-soft);
+  --orange-warn: var(--dark-orange-warn);
+  --danger: var(--dark-danger);
+  --on-green: var(--dark-on-green);
+  --input: var(--dark-input);
+  --input-border: var(--dark-input-border);
+  --secondary: var(--dark-secondary);
+  --secondary-hover: var(--dark-secondary-hover);
+  --subtle-line: var(--dark-subtle-line);
+  --progress-track: var(--dark-progress-track);
+  --warning: var(--dark-warning);
+  --warning-border: var(--dark-warning-border);
+  --revoked: var(--dark-revoked);
+  --shadow: var(--dark-shadow);
+  --calendar-attended-bg: var(--dark-calendar-attended-bg);
+  --calendar-attended-text: var(--dark-calendar-attended-text);
+  --calendar-planned-bg: var(--dark-calendar-planned-bg);
+  --calendar-team-outline: var(--dark-calendar-team-outline);
+  --calendar-planned-text: var(--dark-calendar-planned-text);
+  --calendar-missed-bg: var(--dark-calendar-missed-bg);
+  --calendar-missed-text: var(--dark-calendar-missed-text);
+  --calendar-holiday-bg: var(--dark-calendar-holiday-bg);
+  --calendar-holiday-text: var(--dark-calendar-holiday-text);
+  --calendar-today-outline: var(--dark-calendar-today-outline);
+}
+
 @media (prefers-color-scheme: dark) {
-  :root { color-scheme: dark;
-    --ink: #e6ece8;
-    --muted: #9eaaa2;
-    --paper: #181d19;
-    --ground: #0f1310;
-    --line: #303832;
-    --green: #58b982;
-    --green-dark: #78d09d;
-    --green-soft: #193326;
-    --danger: #ff9292;
-    --on-green: #0c2115;
-    --input: #111612;
-    --input-border: #424c45;
-    --secondary: #29302b;
-    --secondary-hover: #353e37;
-    --subtle-line: #2a312c;
-    --progress-track: #29312b;
-    --warning: #332f1d;
-    --warning-border: #6c6130;
-    --revoked: #29302b;
-    --calendar-attended-bg: #193d29;
-    --calendar-attended-text: #a7e1bd;
-    --calendar-planned-bg: #453b18;
-    --calendar-team-outline: #ffe18b;
-    --calendar-planned-text: #ffe18b;
-    --calendar-missed-bg: #472626;
-    --calendar-missed-text: #ffb4b4;
-    --calendar-holiday-bg: #20374f;
-    --calendar-holiday-text: #b3d7ff;
-    --calendar-today-outline: #bba3ff;
-    --shadow: rgb(0 0 0 / 22%); }
+  :root[data-guest-appearance="System"],
+  :root:not([data-guest-appearance], [data-appearance="Dark"], [data-appearance="Light"]) {
+    --ink: var(--dark-ink);
+    --muted: var(--dark-muted);
+    --paper: var(--dark-paper);
+    --ground: var(--dark-ground);
+    --line: var(--dark-line);
+    --green: var(--dark-green);
+    --green-dark: var(--dark-green-dark);
+    --green-soft: var(--dark-green-soft);
+    --orange-warn: var(--dark-orange-warn);
+    --danger: var(--dark-danger);
+    --on-green: var(--dark-on-green);
+    --input: var(--dark-input);
+    --input-border: var(--dark-input-border);
+    --secondary: var(--dark-secondary);
+    --secondary-hover: var(--dark-secondary-hover);
+    --subtle-line: var(--dark-subtle-line);
+    --progress-track: var(--dark-progress-track);
+    --warning: var(--dark-warning);
+    --warning-border: var(--dark-warning-border);
+    --revoked: var(--dark-revoked);
+    --shadow: var(--dark-shadow);
+    --calendar-attended-bg: var(--dark-calendar-attended-bg);
+    --calendar-attended-text: var(--dark-calendar-attended-text);
+    --calendar-planned-bg: var(--dark-calendar-planned-bg);
+    --calendar-team-outline: var(--dark-calendar-team-outline);
+    --calendar-planned-text: var(--dark-calendar-planned-text);
+    --calendar-missed-bg: var(--dark-calendar-missed-bg);
+    --calendar-missed-text: var(--dark-calendar-missed-text);
+    --calendar-holiday-bg: var(--dark-calendar-holiday-bg);
+    --calendar-holiday-text: var(--dark-calendar-holiday-text);
+    --calendar-today-outline: var(--dark-calendar-today-outline);
+  }
 }

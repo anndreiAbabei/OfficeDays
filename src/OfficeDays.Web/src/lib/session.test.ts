@@ -3,7 +3,7 @@ import { get } from 'svelte/store';
 import { createSessionUpdater, signedIn, signedOut, user } from './session';
 import type { User } from './types';
 
-const original: User = { id: 'user-1', username: 'Guest test', email: null, countryCode: 'RO', countryName: 'Romania', timeZoneId: 'UTC', isAdmin: false, requirementMode: 'Percentage', requirementValue: 50, teamDay: null };
+const original: User = { appearance: 'System', id: 'user-1', username: 'Guest test', email: null, countryCode: 'RO', countryName: 'Romania', timeZoneId: 'UTC', isAdmin: false, requirementMode: 'Percentage', requirementValue: 50, teamDay: null };
 beforeEach((): void => { signedOut(); });
 it('Should_UpdateProfile_WhenTheOriginalSessionIsActive', (): void => {
   // Arrange
@@ -36,4 +36,18 @@ it.each(['user-1', 'user-2'])('Should_PreserveNewSession_WhenAnOldResponseArrive
   update({ ...original, email: 'late@example.com' });
   // Assert
   expect(get(user)).toBe(expectedUser);
+});
+
+it('Should_ApplyAccountAppearance_WhenSigningInAndSavingProfile', (): void => {
+  // Arrange
+  const expectedAppearance = 'Dark';
+  signedIn({ ...original, appearance: 'Light' });
+  expect(document.documentElement.dataset.appearance).toBe('Light');
+
+  // Act
+  createSessionUpdater()({ ...original, appearance: expectedAppearance });
+
+  // Assert
+  expect(document.documentElement.dataset.appearance).toBe(expectedAppearance);
+  expect(document.cookie.split('; ')).toContain(`appearance=${expectedAppearance}`);
 });

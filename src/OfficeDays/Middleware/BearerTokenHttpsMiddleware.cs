@@ -41,6 +41,7 @@ public sealed partial class BearerTokenHttpsMiddleware
     }
 
     private const int EventIdStart = 0500;
+    
     [LoggerMessage(EventIdStart + 1, LogLevel.Warning, "Rejected an insecure bearer request to {Path} from {IpAddress}")]
     private static partial void LogRejectInsecureBearer(ILogger<BearerTokenHttpsMiddleware> logger, string path, IPAddress? ipAddress);
 }

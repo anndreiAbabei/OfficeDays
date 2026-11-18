@@ -43,7 +43,7 @@ function execute(data: GuestData, path: string, options: RequestInit, now: Date,
     if (route === '/api/attendance') return data.attendance.filter((a): boolean => a.date >= start && a.date <= end).sort((a, b): number => b.date.localeCompare(a.date));
     if (route === '/api/vacations') return data.vacations.filter((v): boolean => v.from <= end && v.to >= start).sort((a, b): number => a.from.localeCompare(b.from));
     if (route === '/api/users/me/requirements') return { today, items: data.requirements.map((r): GuestRequirement & { isBaseline: boolean } => ({ ...r, isBaseline: r.startingFrom === '0001-01-01' })) };
-    if (route === '/api/auth/me') return { ...requirementAt(data, `${today.slice(0, 7)}-01`), id: data.id, username: 'Guest', email: null, timeZoneId: data.timeZoneId, countryCode: data.countryCode, countryName: data.countryName, isAdmin: false, teamDay: data.teamDay };
+    if (route === '/api/auth/me') return { ...requirementAt(data, `${today.slice(0, 7)}-01`), id: data.id, username: 'Guest', email: null, timeZoneId: data.timeZoneId, countryCode: data.countryCode, countryName: data.countryName, isAdmin: false, appearance: data.appearance, teamDay: data.teamDay };
     if (route === '/api/reports') {
       const first = Number(url.searchParams.get('startMonth') ?? 1);
       const last = Number(url.searchParams.get('endMonth') ?? 12);

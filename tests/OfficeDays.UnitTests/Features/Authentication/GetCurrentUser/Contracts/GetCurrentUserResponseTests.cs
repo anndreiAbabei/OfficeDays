@@ -1,3 +1,4 @@
+using OfficeDays.Domain;
 using OfficeDays.Features.Authentication.GetCurrentUser.Contracts;
 
 namespace OfficeDays.UnitTests.Features.Authentication.GetCurrentUser.Contracts;
@@ -5,10 +6,11 @@ namespace OfficeDays.UnitTests.Features.Authentication.GetCurrentUser.Contracts;
 public sealed class GetCurrentUserResponseTests
 {
     [Fact]
-    public void Should_SetProperties()
+    public void Should_SetProperties_WhenInitialized()
     {
         // arrange
         var expectedId = Guid.NewGuid();
+        const Appearance expectedAppearance = Appearance.Light;
         var expectedUsername = "Username value";
         var expectedTimeZoneId = "Europe/Bucharest";
         var expectedCountryCode = "RO";
@@ -19,7 +21,10 @@ public sealed class GetCurrentUserResponseTests
         var expectedTeamDay = "TeamDay value";
 
         // act
-        var sut = new GetCurrentUserResponse(expectedId, expectedUsername, expectedTimeZoneId, expectedCountryCode, expectedCountryName, expectedIsAdmin, expectedEmail, expectedValue, expectedTeamDay);
+        var sut = new GetCurrentUserResponse(expectedId, expectedUsername, expectedTimeZoneId, expectedCountryCode, expectedCountryName, expectedIsAdmin, expectedEmail, expectedValue, expectedTeamDay)
+        {
+            Appearance = expectedAppearance
+        };
 
         // assert
         Assert.Equal(expectedId, sut.Id);
@@ -30,19 +35,22 @@ public sealed class GetCurrentUserResponseTests
         Assert.Equal(expectedIsAdmin, sut.IsAdmin);
         Assert.Equal(expectedEmail, sut.Email);
         Assert.Equal(expectedValue, sut.RequirementValue);
+        Assert.Equal(expectedAppearance, sut.Appearance);
         Assert.Equal(expectedTeamDay, sut.TeamDay);
     }
 
     [Fact]
-    public void Should_DefaultTeamDayToNull()
+    public void Should_UseDefaults_WhenPreferencesAreOmitted()
     {
         // arrange
+        const Appearance expectedAppearance = Appearance.System;
         var expectedId = Guid.NewGuid();
 
         // act
         var sut = new GetCurrentUserResponse(expectedId, "alice", "UTC", "RO", "Romania", false, null, 50);
 
         // assert
+        Assert.Equal(expectedAppearance, sut.Appearance);
         Assert.Null(sut.TeamDay);
         Assert.Null(sut.Email);
     }

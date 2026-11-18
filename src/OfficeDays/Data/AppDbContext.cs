@@ -36,7 +36,11 @@ public sealed class AppDbContext : DbContext, IAppDbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(x => x.Id);
-            entity.ComplexProperty(x => x.Preferences, preferences => preferences.ToJson());
+            entity.ComplexProperty(x => x.Preferences, preferences =>
+            {
+                preferences.ToJson();
+                preferences.Property(x => x.Appearance).HasConversion<string>();
+            });
             entity.Property(x => x.Username).HasMaxLength(100).IsRequired();
             entity.Property(x => x.NormalizedUsername).HasMaxLength(100).IsRequired();
             entity.Property(x => x.Email).HasMaxLength(254);

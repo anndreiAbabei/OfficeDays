@@ -5,7 +5,7 @@ namespace OfficeDays.Security.RateLimiting;
 [SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Global", Justification = "Loaded from appsettings.json")]
 public sealed class RequestLimits
 {
-    public int MaxBodyBytes { get; init; } = 65_536;
+    public long MaxBodyBytes { get; init; } = 65_536L;
     public RequestLimit Source { get; init; } = new RequestLimit(600, 60);
     public RequestLimit Api { get; init; } = new RequestLimit(120, 60);
     public RequestLimit Token { get; init; } = new RequestLimit(60, 60);

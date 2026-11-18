@@ -2,7 +2,7 @@
   import '../app.css';
   import OfflineStatus from '$lib/components/OfflineStatus.svelte';
   import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
+  import { afterNavigate, goto } from '$app/navigation';
   import { page } from '$app/state';
   import VersionInfo from '$lib/components/VersionInfo.svelte';
   import { readGuestData } from '$lib/features/guest/storage';
@@ -10,6 +10,10 @@
   import type { Snippet } from 'svelte';
   
   let { children }: { children: Snippet } = $props();
+  afterNavigate(({ to }): void => {
+    if (to?.route.id !== '/guest') delete document.documentElement.dataset.guestAppearance;
+  });
+
   let hasGuestData = $state(false);
   async function openGuest(): Promise<void> {
     sessionError.set('');

@@ -32,6 +32,7 @@ public sealed partial class CorrelationIdMiddleware
         context.Response.OnStarting(() =>
         {
             context.Response.Headers[HeaderName] = correlationId;
+            
             return Task.CompletedTask;
         });
 
@@ -47,6 +48,8 @@ public sealed partial class CorrelationIdMiddleware
         LogRequestCompleted(_logger, context.Request.Method, context.Request.Path.Value ?? "/", context.Response.StatusCode, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
     }
 
-    [LoggerMessage(200, LogLevel.Information, "HTTP {Method} {Path} responded {StatusCode} in {ElapsedMilliseconds} ms")]
+    private const int EventIdStart = 0200;
+    
+    [LoggerMessage(EventIdStart + 1, LogLevel.Information, "HTTP {Method} {Path} responded {StatusCode} in {ElapsedMilliseconds} ms")]
     private static partial void LogRequestCompleted(ILogger logger, string method, string path, int statusCode, double elapsedMilliseconds);
 }

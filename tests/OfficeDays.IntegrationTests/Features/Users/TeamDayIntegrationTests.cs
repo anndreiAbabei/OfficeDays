@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using OfficeDays.Data;
+using OfficeDays.Domain;
 using static OfficeDays.IntegrationTests.Support.ApiTestHelpers;
 
 namespace OfficeDays.IntegrationTests.Features.Users;
@@ -62,7 +63,8 @@ public sealed class TeamDayIntegrationTests
             """, cancellationToken: TestContext.Current.CancellationToken);
         await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
         var user = await db.Users.SingleAsync(cancellationToken: TestContext.Current.CancellationToken);
-        Assert.NotNull(user.Preferences);
+        const Appearance expectedAppearance = Appearance.System;
+        Assert.Equal(expectedAppearance, user.Preferences.Appearance);
         Assert.Null(user.Preferences.TeamDay);
         user.Preferences.TeamDay = DayOfWeek.Thursday;
         await db.SaveChangesAsync(TestContext.Current.CancellationToken);

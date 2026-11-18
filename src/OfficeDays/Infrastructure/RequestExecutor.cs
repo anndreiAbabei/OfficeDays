@@ -17,10 +17,10 @@ public interface IRequestExecutor
 public sealed partial class RequestExecutor : IRequestExecutor
 {
     public async ValueTask<IResult> Execute<TRequest>([AsParameters] TRequest request,
-                                                     [FromServices] IRequestHandler<TRequest> handler,
-                                                     [FromServices] ILogger<TRequest> logger,
-                                                     [FromServices] IValidator<TRequest>? validator = null,
-                                                     CancellationToken cancellationToken = default)
+                                                      [FromServices] IRequestHandler<TRequest> handler,
+                                                      [FromServices] ILogger<TRequest> logger,
+                                                      [FromServices] IValidator<TRequest>? validator = null,
+                                                      CancellationToken cancellationToken = default)
         where TRequest : IRequest
     {
         LogStartRequest(logger, typeof(TRequest).Name);
@@ -36,6 +36,7 @@ public sealed partial class RequestExecutor : IRequestExecutor
             if (!validationResult.IsValid)
             {
                 LogValidationFailure(logger, string.Join(", ", validationResult.Errors.Select(error => error.PropertyName).Distinct()), elapsed);
+                
                 return Results.ValidationProblem(validationResult.ToDictionary());
             }
 

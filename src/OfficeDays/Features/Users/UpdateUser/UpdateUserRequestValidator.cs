@@ -1,4 +1,5 @@
 using FluentValidation;
+using OfficeDays.Domain;
 using OfficeDays.Features.Users.UpdateUser.Contracts;
 
 namespace OfficeDays.Features.Users.UpdateUser;
@@ -20,6 +21,10 @@ public sealed class UpdateUserRequestBodyValidator : AbstractValidator<UpdateUse
         RuleFor(body => body.TeamDay)
             .Must(day => day is null or "monday" or "tuesday" or "wednesday" or "thursday" or "friday")
             .WithMessage("Team day must be Monday to Friday (lowercase), or null.");
+
+        RuleFor(body => body.Appearance)
+            .Must(value => value is null || Enum.IsDefined(typeof(Appearance), value))
+            .WithMessage("Appearance must be System, Dark, or Light.");
 
         RuleFor(body => body.Email)
             .EmailAddress()

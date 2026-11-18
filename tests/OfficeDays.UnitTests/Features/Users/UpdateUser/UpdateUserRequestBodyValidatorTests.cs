@@ -5,6 +5,29 @@ namespace OfficeDays.UnitTests.Features.Users.UpdateUser;
 
 public sealed class UpdateUserRequestBodyValidatorTests
 {
+    [Theory]
+    [InlineData(null, true)]
+    [InlineData("System", true)]
+    [InlineData("Light", true)]
+    [InlineData("Dark", true)]
+    [InlineData("dark", false)]
+    [InlineData("blue", false)]
+    [InlineData("1", false)]
+    public void Should_ValidateAppearance_WhenCheckingProfile(string? appearance, bool expectedValid)
+    {
+        // Arrange
+        var validator = new UpdateUserRequestBodyValidator();
+        var request = new UpdateUserRequestBody(null) { Appearance = appearance };
+
+        // Act
+        var result = validator.Validate(request);
+
+        // Assert
+        Assert.Equal(expectedValid, result.IsValid);
+        if (!expectedValid)
+            Assert.Contains(result.Errors, error => error.PropertyName == nameof(request.Appearance));
+    }
+
     [Fact]
     public void Should_ReturnValidationSuccess_WhenBodyIsValid()
     {

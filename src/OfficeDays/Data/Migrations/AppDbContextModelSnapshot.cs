@@ -196,6 +196,9 @@ namespace OfficeDays.Data.Migrations
                         {
                             b1.IsRequired();
 
+                            b1.Property<string>("Appearance")
+                                .IsRequired();
+
                             b1.Property<int?>("TeamDay");
 
                             b1

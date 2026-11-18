@@ -3,6 +3,18 @@ import { ApiError, onUnauthorized, request, resetCsrf } from './api';
 import type { User } from './types';
 
 export const user = writable<User | null>(null);
+// The cookie supplies the initial theme before the session request finishes.
+user.subscribe((value): void => {
+  if (!value || typeof document === 'undefined') 
+    return;
+  
+  const appearance = value.appearance ?? 'System';
+  document.documentElement.dataset.appearance = appearance;
+  
+  const secure = location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `appearance=${appearance}; Path=/; Max-Age=31536000; SameSite=Lax${secure}`;
+});
+
 export const sessionReady = writable(false);
 export const sessionMessage = writable('');
 export const sessionError = writable('');

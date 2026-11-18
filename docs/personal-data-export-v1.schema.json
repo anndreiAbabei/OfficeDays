@@ -128,6 +128,13 @@
             "thursday",
             "friday"
           ]
+        },
+        "appearance": {
+          "enum": [
+            "System",
+            "Dark",
+            "Light"
+          ]
         }
       }
     },
@@ -140,7 +147,6 @@
           "id",
           "userId",
           "startingFrom",
-          "requiredOfficePercentage",
           "createdAt"
         ],
         "properties": {
@@ -164,8 +170,65 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "requirementMode": {
+            "enum": [
+              "Percentage",
+              "DaysPerWeek"
+            ]
+          },
+          "requirementValue": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
           }
-        }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "requiredOfficePercentage"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "requirementMode"
+                  ]
+                },
+                {
+                  "required": [
+                    "requirementValue"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "requirementMode",
+              "requirementValue"
+            ],
+            "not": {
+              "required": [
+                "requiredOfficePercentage"
+              ]
+            },
+            "if": {
+              "properties": {
+                "requirementMode": {
+                  "const": "DaysPerWeek"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "requirementValue": {
+                  "maximum": 5
+                }
+              }
+            }
+          }
+        ]
       }
     },
     "attendance": {

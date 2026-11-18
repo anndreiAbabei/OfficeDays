@@ -60,6 +60,8 @@ test('Should_SupportAccountWorkflow_WhenUsingTheRealApi', async ({ page }, testI
   await expect(page.getByText('Initial requirement · 60%')).toBeVisible();
   await noOverflow(page);
   await page.screenshot({ path: testInfo.outputPath('requirements.png'), fullPage: true });
+  if (!testInfo.project.name.startsWith('desktop'))
+    await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('link', { name: 'API tokens', exact: true }).click();
   await page.getByLabel('Token name').fill('Browser test');
   await page.getByRole('button', { name: 'Create token' }).click();
@@ -81,6 +83,19 @@ test('Should_SupportAccountWorkflow_WhenUsingTheRealApi', async ({ page }, testI
 
 test('admin manages jurisdictions and holidays, protects unsaved changes', async ({ page }, testInfo) => {
   await login(page, 'Admin');
+  if (!testInfo.project.name.startsWith('desktop')) {
+    const more = page.getByRole('button', { name: 'More', exact: true });
+    const administration = page.getByRole('link', { name: 'Administration' });
+    await more.click();
+    await administration.focus();
+    await page.keyboard.press('Escape');
+    await expect(administration).toBeHidden();
+    await expect(more).toBeFocused();
+    await more.click();
+    await page.locator('header .account-detail').click();
+    await expect(administration).toBeHidden();
+    await more.click();
+  }
   await page.getByRole('link', { name: 'Administration' }).click();
   const section = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Holiday jurisdictions' }) });
   const code = { 'desktop-chromium': 'TC', 'iphone-webkit': 'TW', 'android-chromium': 'US' }[testInfo.project.name]!;

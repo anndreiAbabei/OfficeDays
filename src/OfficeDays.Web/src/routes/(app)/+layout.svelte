@@ -1,30 +1,28 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
+  import { afterNavigate, goto } from '$app/navigation';
   import { page } from '$app/state';
   import { user, sessionReady, signedOut } from '$lib/session';
   import { mutate, errorMessage } from '$lib/api';
   import { readGuestData } from '$lib/features/guest/storage';
   import Feedback from '$lib/components/Feedback.svelte';
   import type { Snippet } from 'svelte';
-  import type { User } from "$lib/types";
   
   let { children }: { children: Snippet } = $props();
   let wasSignedIn = false;
   let busy = $state(false);
   let error = $state('');
   
-  function getPages(user: User): { href: string, label: string }[] {
-    return [
-      { href: '/',                label: 'Dashboard' },
-      { href: '/profile',         label: 'Profile' },
-      { href: '/reports',         label: 'Reports' },
-      { href: '/tokens',          label: 'API tokens' },
-      ...(user.isAdmin 
-              ? [{href: '/admin', label: 'Administration'}] 
-              : [])
-    ];
-  }
+  const primaryPages = [
+    { href: '/', label: 'Dashboard' },
+    { href: '/profile', label: 'Profile' },
+    { href: '/reports', label: 'Reports' }
+  ];
+  let moreButton = $state<HTMLButtonElement>();
+  let accountLinks = $state<HTMLDivElement>();
+  let moreOpen = $state(false);
   
+  afterNavigate((): void => { moreOpen = false; });
+
   $effect(() => {
     if ($user) { wasSignedIn = true; return; }
     if (!$sessionReady) return;
@@ -56,7 +54,20 @@
       busy = false; 
     }
   }
+  function dismissMore(event: PointerEvent): void {
+    if (moreOpen && event.target instanceof Node && !accountLinks?.contains(event.target) && !moreButton?.contains(event.target))
+      moreOpen = false;
+  }
+
+  function escapeMore(event: KeyboardEvent): void {
+    if (moreOpen && event.key === 'Escape') {
+      moreOpen = false;
+      moreButton?.focus();
+    }
+  }
 </script>
+
+<svelte:window onpointerdown={dismissMore} onkeydown={escapeMore} />
 {#if $user}
   <header class="topbar">
     <div>
@@ -72,9 +83,17 @@
   
   <div class="app-layout">
     <nav class="app-nav" aria-label="Main navigation">
-      {#each getPages($user) as link}
+      {#each primaryPages as link}
         <a href={link.href} aria-current={page.url.pathname === link.href ? 'page' : undefined}>{link.label}</a>
       {/each}
+      <button bind:this={moreButton} class="more" class:active={['/admin', '/tokens'].includes(page.url.pathname)}
+        aria-expanded={moreOpen} aria-controls="account-links" onclick={(): void => { moreOpen = !moreOpen; }}>More</button>
+      <div bind:this={accountLinks} id="account-links" class:expanded={moreOpen}>
+        <a href="/tokens" aria-current={page.url.pathname === '/tokens' ? 'page' : undefined}>API tokens</a>
+        {#if $user.isAdmin}
+          <a href="/admin" aria-current={page.url.pathname === '/admin' ? 'page' : undefined}>Administration</a>
+        {/if}
+      </div>
     </nav>
     <div class="page-content">
       <Feedback {error} />{@render children()}
@@ -170,11 +189,13 @@
     font-weight: 650; 
   }
   
+  .more { display: none; }
+  #account-links { display: contents; }
   .app-nav a:hover { 
     background: var(--secondary); 
   }
   
-  .app-nav a[aria-current="page"] { 
+  .more.active, .app-nav a[aria-current="page"] {
     color: var(--green-dark); 
     background: var(--green-soft); 
   }
@@ -184,7 +205,11 @@
     .app-nav { flex-direction: column; position: sticky; top: 1rem; align-self: start; }
   }
   @media (max-width: 650px) {
-    .app-nav { gap: .2rem; }
+    nav.app-nav { display: grid; grid-template-columns: auto auto auto auto; justify-content: start; gap: .15rem; }
+    nav.app-nav > a, .more { padding-inline: clamp(.25rem, 1.4vw, .65rem); }
+    .more { display: block; background: var(--secondary); color: var(--ink); font-size: .9rem; }
+    #account-links { display: none; }
+    #account-links.expanded { display: flex; grid-column: 1 / -1; gap: .4rem; }
     .app-nav a { padding: .5rem .65rem; font-size: .9rem; }
   }
 </style>

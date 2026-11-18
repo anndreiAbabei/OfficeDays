@@ -22,6 +22,10 @@ test('Should_ExplainAndRefreshMonthlyCalculation_WhenSignedInUserChangesVacation
   await page.getByLabel('Password', { exact: true }).fill('BrowserTestsOnly!123');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   const picker = page.getByLabel('Selected month');
+  const month = await picker.getByRole('combobox').boundingBox();
+  const year = await picker.getByLabel('Year').boundingBox();
+  expect(month).not.toBeNull();
+  expect(year?.y).toBe(month?.y);
   await picker.getByLabel('Year').fill('2099');
   await picker.getByLabel('Year').press('Tab');
   await picker.getByRole('combobox').selectOption('10');
@@ -31,7 +35,7 @@ test('Should_ExplainAndRefreshMonthlyCalculation_WhenSignedInUserChangesVacation
   await expect(page.getByText('Vacation added.')).toBeVisible();
   await page.getByRole('button', { name: /Oct 30, 2099.*Toggle plan/ }).click();
   await expect(page.getByRole('region', { name: 'Plan office days' })).toHaveAttribute('aria-busy', 'false');
-  const toggle = page.getByRole('button', { name: 'How this is calculated' });
+  const toggle = page.getByRole('button', { name: 'Details' });
   await expect(toggle).toBeEnabled();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 
@@ -59,7 +63,7 @@ test('Should_ExplainAndRefreshMonthlyCalculation_WhenSignedInUserChangesVacation
     expect(await page.evaluate((): boolean => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   }
   await page.locator('.progress-card').screenshot({ path: testInfo.outputPath('attendance-summary.png') });
-  await page.getByRole('button', { name: 'Hide calculation' }).click();
+  await page.getByRole('button', { name: 'Details' }).click();
   await expect(calendarCalculation).toHaveCount(0);
 });
 
@@ -68,7 +72,7 @@ test('Should_UpdateOutstandingDaysOffline_WhenGuestRecordsToday', async ({ page,
   const createdAt = '2026-10-01T12:00:00Z';
   const data: GuestData = {
     version: 1, id: 'summary-guest', createdAt, registrationMonth: '2026-10-01',
-    countryCode: 'RO', countryName: 'Romania', timeZoneId: 'UTC', teamDay: null,
+    countryCode: 'RO', countryName: 'Romania', timeZoneId: 'UTC', teamDay: null, appearance: 'System',
     requirements: [{ id: 'baseline', createdAt, startingFrom: '0001-01-01', requirementMode: 'Percentage', requirementValue: 50 }],
     holidays: { '2026': [{ date: '2026-10-01', name: 'Weekday holiday' }, { date: '2026-10-03', name: 'Weekend holiday' }] },
     vacations: [{ id: 'vacation', createdAt, from: '2026-10-01', to: '2026-10-02' }],
@@ -78,16 +82,17 @@ test('Should_UpdateOutstandingDaysOffline_WhenGuestRecordsToday', async ({ page,
   await page.clock.setFixedTime(new Date('2026-10-30T12:00:00Z'));
   await page.addInitScript((guest): void => { localStorage.setItem('officedays.guest.v1', JSON.stringify(guest)); }, data);
   await page.goto('/guest');
-  await expect(page.getByRole('button', { name: 'How this is calculated' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Details' })).toBeEnabled();
   await context.setOffline(true);
   const requests: string[] = [];
   page.on('request', (request): void => { if (request.url().includes('/api/')) requests.push(request.url()); });
 
   // Act
-  await page.getByRole('button', { name: 'How this is calculated' }).click();
+  await page.getByRole('button', { name: 'Details' }).click();
   const target = page.getByRole('region', { name: 'Office target calculation' });
 
   // Assert
+  await expect(target).toContainText('11 days of 21 working days after bank holidays');
   await expect(target).toContainText('2 days still required − 1 day available');
   await expect(target).toContainText('1 day that cannot be covered this month');
 

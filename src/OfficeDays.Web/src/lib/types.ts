@@ -2,6 +2,8 @@ import type { AttendanceRequirementMode } from '$lib/attendanceRequirementMode';
 
 export type TeamDay = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday';
 
+export type Appearance = 'System' | 'Light' | 'Dark';
+
 export type User = {
   id: string; 
   username: string; 
@@ -12,6 +14,7 @@ export type User = {
   isAdmin: boolean; 
   requirementMode: AttendanceRequirementMode;
   requirementValue: number;
+  appearance: Appearance;
   teamDay: TeamDay | null;
 }
 

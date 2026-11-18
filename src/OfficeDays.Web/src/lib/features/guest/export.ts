@@ -10,7 +10,7 @@ export function guestExport(data: GuestData, now: Date): object {
     application: { name: 'OfficeDays' },
     reportContext: { calculationVersion: 1, localDate: todayIn(data, now), registrationLocalDate: isoDate(registered.year, registered.month, registered.day) },
     profile: { id: data.id, username: 'Guest', timeZoneId: data.timeZoneId, countryCode: data.countryCode, createdAt: data.createdAt },
-    preferences: { teamDay: data.teamDay },
+    preferences: { appearance: data.appearance, teamDay: data.teamDay },
     requirementHistory: data.requirements.map((r): GuestData['requirements'][number] & { userId: string } => ({ ...r, userId: data.id })),
     attendance: data.attendance.map((a): GuestData['attendance'][number] & { userId: string } => ({ ...a, userId: data.id })),
     plans: data.plans.map((p): GuestData['plans'][number] & { userId: string } => ({ ...p, userId: data.id })),
