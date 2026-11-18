@@ -9,16 +9,27 @@ namespace OfficeDays.IntegrationTests.Features.Operations;
 
 public sealed class OperationsIntegrationTests
 {
-    [Fact]
-    public async Task Version_is_public_matches_build_and_is_not_cached()
+    [Theory]
+    [InlineData(HttpStatusCode.OK, true)]
+    [InlineData(HttpStatusCode.ServiceUnavailable, false)]
+    public async Task Should_ReturnInstalledVersionAndUpdateStatus_WhenCheckingPublicVersion(HttpStatusCode releaseStatus, bool expectedUpdate)
     {
-        await using var factory = new OfficeDaysFactory();
+        // Arrange
+        var expectedVersion = typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
+        var expectedLatest = expectedUpdate ? "999.0.0" : expectedVersion;
+        var expectedUrl = new Uri("https://api.github.com/repos/anndreiAbabei/OfficeDays/releases/latest");
+        await using var factory = new OfficeDaysFactory { ReleaseStatus = releaseStatus };
         using var client = factory.CreateClient();
-        var response = await client.GetAsync("/api/version", TestContext.Current.CancellationToken);
+        // Act
+        using var response = await client.GetAsync("/api/version", TestContext.Current.CancellationToken);
+        // Assert
         response.EnsureSuccessStatusCode();
         using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
-        Assert.Equal(typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!
-            .InformationalVersion, json.RootElement.GetProperty("version").GetString());
+        Assert.Equal(expectedUrl, factory.ReleaseRequestUri);
+        Assert.False(string.IsNullOrWhiteSpace(factory.ReleaseUserAgent));
+        Assert.Equal(expectedLatest, json.RootElement.GetProperty("latestVersion").GetString());
+        Assert.Equal(expectedUpdate, json.RootElement.GetProperty("newVersionAvailable").GetBoolean());
+        Assert.Equal(expectedVersion, json.RootElement.GetProperty("version").GetString());
         Assert.True(response.Headers.CacheControl!.NoStore);
     }
 

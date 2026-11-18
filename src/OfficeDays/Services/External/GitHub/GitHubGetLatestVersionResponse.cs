@@ -1,0 +1,6 @@
+namespace OfficeDays.Services.External.GitHub;
+
+public union GitHubGetLatestVersionResponse(GitHubGetLatestVersionSuccessResponse, GitHubGetLatestVersionErrorResponse);
+
+public sealed record GitHubGetLatestVersionSuccessResponse(string Version);
+public sealed record GitHubGetLatestVersionErrorResponse(string Error);

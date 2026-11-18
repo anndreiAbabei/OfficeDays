@@ -77,9 +77,3 @@ export interface PlanningMonth {
   upcomingPlannedDays: number;
   days: PlanningDay[];
 }
-
-export interface AppVersion {
-  version: string,
-  author: string,
-  gitHubRepo: string
-}

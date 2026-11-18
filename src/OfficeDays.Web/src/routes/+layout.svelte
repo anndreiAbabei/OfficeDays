@@ -4,11 +4,10 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { request } from '$lib/api';
+  import VersionInfo from '$lib/components/VersionInfo.svelte';
   import { readGuestData } from '$lib/features/guest/storage';
   import { loadSession, sessionReady, sessionError } from '$lib/session';
   import type { Snippet } from 'svelte';
-  import type { AppVersion } from "$lib/types";
   
   let { children }: { children: Snippet } = $props();
   let hasGuestData = $state(false);
@@ -16,10 +15,6 @@
     sessionError.set('');
     await goto('/guest');
   }
-  let version = $state('Loading version…');
-  let author = $state('Andrei');
-  let gitHubUrl = $state('#');
-  
   onMount(() => {
     // Preserve links from the original UI.
     void (async () => {
@@ -34,13 +29,6 @@
         hasGuestData = true; 
       }
     })();
-    void request<AppVersion>('/api/version')
-            .then(data => {
-              version = `v${data.version}`;
-              author = data.author;
-              gitHubUrl = data.gitHubRepo
-            })
-            .catch(() => version = 'Version unavailable');
   });
 </script>
 <a class="skip-link" href="#main-content">
@@ -67,10 +55,7 @@
   </main>
   <footer class="app-footer muted">
     <OfflineStatus />
-    <div class="base">
-      <span>Created by <a href="{gitHubUrl}">{author}</a> · </span>
-      <span>Office Days · {version}</span>
-    </div>
+    <VersionInfo />
   </footer>
 </div>
 
