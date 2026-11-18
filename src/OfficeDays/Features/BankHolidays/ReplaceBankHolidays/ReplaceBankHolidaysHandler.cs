@@ -34,6 +34,7 @@ public sealed class ReplaceBankHolidaysHandler : IRequestHandler<ReplaceBankHoli
         if (jurisdiction is null)
         {
             _logger.LogJurisdictionNotFound(normalizedCode);
+            
             return Results.NotFound();
         }
 
@@ -42,9 +43,9 @@ public sealed class ReplaceBankHolidaysHandler : IRequestHandler<ReplaceBankHoli
 
         await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
         await _dbContext.BankHolidays
-                 .Where(x => x.HolidayJurisdictionId == jurisdiction.Id &&
-                             x.Date >= start && x.Date <= end)
-                 .ExecuteDeleteAsync(cancellationToken);
+                        .Where(x => x.HolidayJurisdictionId == jurisdiction.Id &&
+                                    x.Date >= start && x.Date <= end)
+                        .ExecuteDeleteAsync(cancellationToken);
 
         var rows = request.Select(x => x.ToEntity(jurisdiction)).ToList();
         _dbContext.BankHolidays.AddRange(rows);

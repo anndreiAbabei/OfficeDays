@@ -14,8 +14,7 @@ public sealed class CreateJurisdictionHandler : IRequestHandler<CreateJurisdicti
     private readonly AppDbContext _dbContext;
     private readonly ILogger<CreateJurisdictionHandler> _logger;
 
-    public CreateJurisdictionHandler(AppDbContext dbContext,
-                                     ILogger<CreateJurisdictionHandler> logger)
+    public CreateJurisdictionHandler(AppDbContext dbContext, ILogger<CreateJurisdictionHandler> logger)
     {
         _dbContext = dbContext;
         _logger = logger;
@@ -35,6 +34,7 @@ public sealed class CreateJurisdictionHandler : IRequestHandler<CreateJurisdicti
                 Status = StatusCodes.Status409Conflict,
                 Title = "Holiday jurisdiction already exists"
             };
+            
             return Results.Conflict(problem);
         }
 

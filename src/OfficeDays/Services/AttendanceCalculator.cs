@@ -20,6 +20,16 @@ public sealed record AttendanceStatus(string Period,
                                       int RemainingOfficeDays,
                                       decimal ProgressPercentage);
 
+public interface IAttendanceCalculator
+{
+    AttendanceStatus Calculate(CalculationPeriod period,
+                               IEnumerable<DateOnly> bankHolidays,
+                               IEnumerable<(DateOnly From, DateOnly To)> vacations,
+                               IEnumerable<DateOnly> officeDates,
+                               int requiredOfficePercentage = 50);
+}
+
+
 public sealed class AttendanceCalculator : IAttendanceCalculator
 {
     public AttendanceStatus Calculate(CalculationPeriod period,

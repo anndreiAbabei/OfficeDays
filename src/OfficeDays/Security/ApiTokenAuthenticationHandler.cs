@@ -36,6 +36,7 @@ public sealed class ApiTokenAuthenticationHandler : AuthenticationHandler<Authen
         if (!header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
             _logger.LogNoBearerCredentials();
+            
             return AuthenticateResult.NoResult();
         }
 
@@ -43,6 +44,7 @@ public sealed class ApiTokenAuthenticationHandler : AuthenticationHandler<Authen
         if (rawToken.Length == 0)
         {
             _logger.LogMissingToken(Context.Connection.RemoteIpAddress);
+            
             return AuthenticateResult.Fail("A bearer token is required.");
         }
 
@@ -54,17 +56,20 @@ public sealed class ApiTokenAuthenticationHandler : AuthenticationHandler<Authen
         if (token is null)
         {
             _logger.LogInvalidToken(Context.Connection.RemoteIpAddress);
+            
             return AuthenticateResult.Fail("The bearer token is invalid or revoked.");
         }
 
         if (token.RevokedAt is not null)
         {
             _logger.LogRevokedToken(token.Id, Context.Connection.RemoteIpAddress);
+            
             return AuthenticateResult.Fail("The bearer token is invalid or revoked.");
         }
 
         token.LastUsedAt = _timeProvider.GetUtcNow();
         await _dbContext.SaveChangesAsync(Context.RequestAborted);
+        
         _logger.LogTokenAuthenticated(token.Id, token.UserId);
 
         var claims = new List<Claim>

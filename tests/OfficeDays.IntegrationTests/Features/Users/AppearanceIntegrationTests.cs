@@ -14,7 +14,7 @@ public sealed class AppearanceIntegrationTests
         await using var file = File.OpenRead(path);
         using var schema = await JsonDocument.ParseAsync(file, cancellationToken: TestContext.Current.CancellationToken);
         var preferences = schema.RootElement.GetProperty("properties").GetProperty("preferences");
-        var expectedChoices = Enum.GetNames<OfficeDays.Domain.Appearance>().Order(StringComparer.Ordinal);
+        var expectedChoices = Enum.GetNames<Domain.Appearance>().Order(StringComparer.Ordinal);
 
         // Act
         var allowedChoices = preferences.GetProperty("properties").GetProperty("appearance")

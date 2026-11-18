@@ -29,6 +29,7 @@ public sealed class GetBankHolidaysHandler : IRequestHandler<GetBankHolidaysRequ
         if (jurisdiction is null)
         {
             _logger.LogJurisdictionNotFound(normalizedCode);
+            
             return Results.NotFound();
         }
 

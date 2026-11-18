@@ -16,10 +16,10 @@ public sealed class ReportCalculator(IAttendanceCalculator attendanceCalculator)
     private readonly IAttendanceCalculator _attendanceCalculator = attendanceCalculator;
 
     public AttendanceReport Calculate(int year, int startMonth, int endMonth, User user, DateTimeOffset generatedAt,
-                                       IEnumerable<UserAttendanceRequirement> requirements,
-                                       IEnumerable<DateOnly> bankHolidays,
-                                       IEnumerable<(DateOnly From, DateOnly To)> vacations,
-                                       IEnumerable<DateOnly> officeDates)
+                                      IEnumerable<UserAttendanceRequirement> requirements,
+                                      IEnumerable<DateOnly> bankHolidays,
+                                      IEnumerable<(DateOnly From, DateOnly To)> vacations,
+                                      IEnumerable<DateOnly> officeDates)
     {
         var zone = TimeZoneInfo.FindSystemTimeZoneById(user.TimeZoneId);
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(generatedAt, zone).DateTime);
