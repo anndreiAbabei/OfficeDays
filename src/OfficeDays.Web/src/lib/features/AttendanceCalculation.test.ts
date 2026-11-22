@@ -11,7 +11,7 @@ it('Should_ShowEveryTotalAndExplainAbsences_WhenRenderingCalculation', (): void 
     ['Attendance requirement', '50%'], ['Required office days', '10 days'],
     ['Planned days this month', '3 days'], ['Upcoming planned days', '1 day'],
     ['Office days recorded', '8 days'], ['Office days left to attend', '2 days'],
-    ['Available days left', '1 day'], ['Unavoidable outstanding days', '1 day']
+    ['Available days left', '1 day'], ['Shortfall on eligible working days', '1 day']
   ]);
 
   // Act
@@ -58,5 +58,5 @@ it.each([0, 2])('Should_ShowCapacityWithoutWarning_WhenOutstandingIsZeroAndRemai
   expect(screen.getByText(expectedMessage)).toBeVisible();
   expect(screen.queryByText(/that cannot be covered/)).not.toBeInTheDocument();
   const target = within(screen.getByRole('region', { name: 'Office target calculation' }));
-  expect(target.getByText('Unavoidable outstanding days').nextElementSibling).toHaveTextContent('0 days');
+  expect(target.getByText('Shortfall on eligible working days').nextElementSibling).toHaveTextContent('0 days');
 });

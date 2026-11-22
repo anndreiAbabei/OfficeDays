@@ -41,6 +41,8 @@ it('records a manual day and refreshes the summary only after a successful write
     if (path.endsWith('/csrf')) 
       return json({ token: 'csrf' });
     
+    if (path.startsWith('/api/planning'))
+      return json({ days: [{ date: '2026-09-04', isEligible: true }] });
     return options.method === 'PUT' ? json({}) : json([]);
   });
   vi.stubGlobal('fetch', fetcher);

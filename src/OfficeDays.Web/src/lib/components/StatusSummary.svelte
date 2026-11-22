@@ -29,7 +29,7 @@
     <span>Office so far</span>
     <div class="metric-value">
       <strong>{status?.officeDays ?? '—'}</strong>
-      <small>eligible days</small>
+      <small>credited days</small>
     </div>
   </article>
   <article class="metric card accent">

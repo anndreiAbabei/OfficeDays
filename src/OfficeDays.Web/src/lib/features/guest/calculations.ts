@@ -81,7 +81,7 @@ export function status(data: GuestData, period: Period, now: Date): AttendanceSt
   const requirement = requirementAt(data, isoDate(period.year, period.month));
   const percent = requirement.requirementValue * (requirement.requirementMode === 'DaysPerWeek' ? 20 : 1);
   const requiredOfficeDays = Math.ceil(eligibleWorkingDays * percent / 100);
-  const officeDays = calendar.days.filter((d): boolean => d.isEligible && d.isAttended && d.date <= calendar.today).length;
+  const officeDays = calendar.days.filter((d): boolean => !d.holidays.length && !d.isVacation && d.isAttended && d.date <= calendar.today).length;
   const weekdays = calendar.days.filter((day): boolean => ![0, 6].includes(new Date(`${day.date}T00:00:00Z`).getUTCDay()));
   const remainingOfficeDays = Math.max(0, requiredOfficeDays - officeDays);
   const remainingEligibleDays = calendar.days.filter((day): boolean => day.date >= calendar.today && day.isEligible && !day.isAttended).length;

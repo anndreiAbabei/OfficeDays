@@ -175,7 +175,7 @@ describe('guest calculations', (): void => {
     // Act
     const result = status(data, { year: 2026, month: 6 }, now);
     // Assert
-    const expected = { eligibleWorkingDays: 20, requiredOfficeDays: 8, officeDays: 1, progressPercentage: 12.5 };
+    const expected = { eligibleWorkingDays: 20, requiredOfficeDays: 8, officeDays: 2, progressPercentage: 25 };
     expect(result).toMatchObject(expected);
   });
   it('Should_MatchServerRounding_WhenPercentageIsMidpoint', (): void => {

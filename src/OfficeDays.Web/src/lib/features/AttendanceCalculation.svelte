@@ -81,12 +81,12 @@
       <div><dt>Office days recorded</dt><dd>{days(status.officeDays)}</dd></div>
       <div><dt>Office days left to attend</dt><dd>{days(status.remainingOfficeDays)}</dd></div>
       <div><dt>Available days left</dt><dd>{days(summary.remainingEligibleDays)}</dd></div>
-      <div class:outstanding={summary.outstandingOfficeDays > 0}><dt>Unavoidable outstanding days</dt><dd>{days(summary.outstandingOfficeDays)}</dd></div>
+      <div class:outstanding={summary.outstandingOfficeDays > 0}><dt>Shortfall on eligible working days</dt><dd>{days(summary.outstandingOfficeDays)}</dd></div>
     </dl>
     <p class="muted">Planned totals include eligible plans for the whole month. Upcoming plans exclude attended and past dates.</p>
-    <p class="muted">As of <time datetime={summary.today}>{displayDate(summary.today)}</time> in your timezone. Available days include today if eligible and not already attended. Only eligible attendance counts; plans do not count as attendance.</p>
+    <p class="muted">As of <time datetime={summary.today}>{displayDate(summary.today)}</time> in your timezone. Available days include today if eligible and not already attended. Recorded weekend visits count toward your target; bank holiday and vacation visits do not. Plans do not count as attendance.</p>
     {#if summary.outstandingOfficeDays > 0}
-      <p class="outstanding-message">{days(status.remainingOfficeDays)} still required − {days(summary.remainingEligibleDays)} available = <strong>{days(summary.outstandingOfficeDays)} that cannot be covered this month</strong>.</p>
+      <p class="outstanding-message">{days(status.remainingOfficeDays)} still required − {days(summary.remainingEligibleDays)} available = <strong>{days(summary.outstandingOfficeDays)} that cannot be covered on eligible working days</strong>.</p>
     {:else}
       <p class="muted">{status.remainingOfficeDays === 0 ? 'Your office requirement is met.' : 'There are enough eligible days left to meet your target.'}</p>
     {/if}

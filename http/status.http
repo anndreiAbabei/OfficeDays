@@ -15,6 +15,10 @@
 # then vacation weekdays that are not bank holidays.
 # plannedDays counts all eligible plans in the month; upcomingPlannedDays excludes
 # past and attended dates. Plans never count as attendance.
+# Recorded weekday and weekend visits count toward officeDays; bank holiday and
+# vacation visits do not. Weekend visits do not increase eligibleWorkingDays or
+# requiredOfficeDays. outstandingOfficeDays describes remaining working-day
+# capacity; additional weekend visits can reduce the shortfall.
 # remainingEligibleDays includes today when eligible and not already attended.
 # outstandingOfficeDays = max(0, remainingOfficeDays - remainingEligibleDays).
 ### Current user's current-month status
