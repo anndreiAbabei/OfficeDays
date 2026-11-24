@@ -5,7 +5,7 @@
   import { errorMessage } from '$lib/api';
   import { useDataSource } from './dataSource';
   import { displayDate, isoDate, localDate, periodQuery } from '$lib/dates';
-  import type { Attendance, Period } from '$lib/types';
+  import type { Attendance, Period, PlanningMonth } from '$lib/types';
   import Feedback from '$lib/components/Feedback.svelte';
   const { request, mutate } = useDataSource();
   
@@ -33,11 +33,25 @@
   onMount(() => { void load(); });
   
   async function change(method: string, value: string) : Promise<void> {
+    if (busy) return;
     busy = true; 
     error = '';
     message = '';
     
     try {
+      if (method === 'PUT') {
+        const selectedPeriod = { year: Number(value.slice(0, 4)), month: Number(value.slice(5, 7)) };
+        const calendar = await request<PlanningMonth>(`/api/planning?${periodQuery(selectedPeriod)}`);
+        const day = calendar.days.find((item): boolean => item.date === value);
+        if (!day) throw new Error('Could not check whether this is a working day. Please retry.');
+        if (!day.isEligible) {
+          const excluded = day.isVacation || day.holidays.length > 0;
+          const explanation = excluded
+            ? 'This date is a bank holiday or vacation day. It will be recorded but will not count toward your office target.'
+            : 'This date is a weekend. It will count toward your office target without increasing the target.';
+          if (!window.confirm(`Record an office day on ${displayDate(value)}? ${explanation}`)) return;
+        }
+      }
       await mutate(`/api/attendance/${value}`, method);
       message = method === 'PUT' ? 'Office day recorded.' : 'Office day removed.';
       onchange(); 

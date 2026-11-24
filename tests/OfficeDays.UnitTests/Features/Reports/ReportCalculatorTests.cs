@@ -50,13 +50,13 @@ public sealed class ReportCalculatorTests
     }
 
     [Fact]
-    public void Should_CountOnlyEligibleAttendance_WhenTimeOffOverlaps()
+    public void Should_CountWeekendsButExcludeTimeOff_WhenTimeOffOverlaps()
     {
         // arrange
         var expectedEligibleWorkingDays = 19;
         var expectedRequiredOfficeDays = 10;
-        var expectedOfficeDays = 1;
-        var expectedAttendancePercentage = 5.3m;
+        var expectedOfficeDays = 2;
+        var expectedAttendancePercentage = 10.5m;
 
         // act
         // June 2026 has 22 weekdays. A holiday and two vacation weekdays leave 19.

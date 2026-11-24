@@ -64,7 +64,7 @@ it('Should_ExpandAndCollapseCalculation_WhenButtonIsActivated', async (): Promis
   expect(within(calendar).getByRole('list', { name: 'Vacation dates' })).toHaveTextContent('Bank holiday; already excluded');
   expect(calendar).toHaveTextContent('20 eligible working days');
   expect(screen.getByText(/Without holidays or vacation/)).toHaveTextContent('11 office days out of 22 weekdays');
-  expect(screen.getByText(/that cannot be covered this month/)).toHaveTextContent('1 day that cannot be covered this month');
+  expect(screen.getByText(/that cannot be covered on eligible working days/)).toHaveTextContent('1 day that cannot be covered on eligible working days');
 
   // Act
   await fireEvent.click(toggle);
@@ -100,7 +100,7 @@ it('Should_UpdateExpandedCalculation_WhenFreshSummaryArrives', async (): Promise
   // Assert
   expect(screen.getByRole('button', { name: 'Details' })).toHaveAttribute('aria-expanded', 'true');
   expect(screen.getByText('Available days left').nextElementSibling).toHaveTextContent(expectedAvailable);
-  expect(screen.getByText(/that cannot be covered this month/)).toHaveTextContent('2 days that cannot be covered this month');
+  expect(screen.getByText(/that cannot be covered on eligible working days/)).toHaveTextContent('2 days that cannot be covered on eligible working days');
 });
 
 it.each([

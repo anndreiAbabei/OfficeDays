@@ -94,7 +94,7 @@ test('Should_UpdateOutstandingDaysOffline_WhenGuestRecordsToday', async ({ page,
   // Assert
   await expect(target).toContainText('11 days of 21 working days after bank holidays');
   await expect(target).toContainText('2 days still required − 1 day available');
-  await expect(target).toContainText('1 day that cannot be covered this month');
+  await expect(target).toContainText('1 day that cannot be covered on eligible working days');
 
   // Act
   await page.getByLabel('Office attendance date').fill('2026-10-30');
@@ -102,7 +102,7 @@ test('Should_UpdateOutstandingDaysOffline_WhenGuestRecordsToday', async ({ page,
 
   // Assert
   await expect(target).toContainText('1 day still required − 0 days available');
-  await expect(target).toContainText('1 day that cannot be covered this month');
+  await expect(target).toContainText('1 day that cannot be covered on eligible working days');
   await expect(target.locator('dl > div').filter({ has: page.getByText('Office days recorded', { exact: true }) })).toContainText('9 days');
   expect(requests).toEqual([]);
   expect(await page.evaluate((): boolean => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

@@ -7,6 +7,61 @@ namespace OfficeDays.IntegrationTests.Features.Status;
 public sealed class StatusIntegrationTests
 {
     [Fact]
+    public async Task Should_CreditWeekendVisitsOnceAndKeepDashboardAndReportsConsistent_WhenRecordingAttendance()
+    {
+        // Arrange
+        await using var factory = new OfficeDaysFactory();
+        using var client = factory.CreateClient();
+        await CreateUser(client, "weekend-owner");
+        await Login(client, "weekend-owner", "Normal-user-password!");
+        var csrf = await Csrf(client);
+        const string statusPath = "/api/status?year=2099&month=9";
+        var before = await client.GetFromJsonAsync<JsonElement>(statusPath, TestContext.Current.CancellationToken);
+        const int expectedOffice = 3;
+        const int expectedStored = 3;
+        const int expectedRemaining = 8;
+        const decimal expectedProgress = 27.3m;
+        const decimal expectedAttendancePercentage = 13.6m;
+        const bool expectedAttended = true;
+        string[] dates = ["2099-09-04", "2099-09-05", "2099-09-06"];
+
+        // Act: Friday, Saturday and Sunday, each recorded twice.
+        foreach (var date in dates)
+        {
+            (await PutJson(client, $"/api/attendance/{date}", new { }, csrf)).EnsureSuccessStatusCode();
+            (await PutJson(client, $"/api/attendance/{date}", new { }, csrf)).EnsureSuccessStatusCode();
+        }
+        var status = await client.GetFromJsonAsync<JsonElement>(statusPath, TestContext.Current.CancellationToken);
+        var report = await client.GetFromJsonAsync<JsonElement>("/api/reports?year=2099&startMonth=9&endMonth=9", TestContext.Current.CancellationToken);
+        var stored = await client.GetFromJsonAsync<JsonElement>("/api/attendance?year=2099&month=9", TestContext.Current.CancellationToken);
+        var calendar = await client.GetFromJsonAsync<JsonElement>("/api/planning?year=2099&month=9", TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(expectedStored, stored.GetArrayLength());
+        Assert.Equal(expectedOffice, status.GetProperty("officeDays").GetInt32());
+        Assert.Equal(expectedRemaining, status.GetProperty("remainingOfficeDays").GetInt32());
+        Assert.Equal(expectedProgress, status.GetProperty("progressPercentage").GetDecimal());
+        foreach (var property in new[] { "eligibleWorkingDays", "requiredOfficeDays", "maximumWfhDays" })
+            Assert.Equal(before.GetProperty(property).GetInt32(), status.GetProperty(property).GetInt32());
+        var month = Assert.Single(report.GetProperty("months").EnumerateArray());
+        Assert.Equal(expectedOffice, month.GetProperty("officeDays").GetInt32());
+        Assert.Equal(expectedOffice, report.GetProperty("summary").GetProperty("officeDays").GetInt32());
+        Assert.Equal(expectedAttendancePercentage, month.GetProperty("attendancePercentage").GetDecimal());
+        foreach (var property in new[] { "eligibleWorkingDays", "requiredOfficeDays" })
+            Assert.Equal(status.GetProperty(property).GetInt32(), month.GetProperty(property).GetInt32());
+        foreach (var date in dates)
+            Assert.Equal(expectedAttended, calendar.GetProperty("days").EnumerateArray()
+                .Single(day => day.GetProperty("date").GetString() == date).GetProperty("isAttended").GetBoolean());
+
+        using var other = factory.CreateClient();
+        await CreateUser(other, "weekend-other");
+        await Login(other, "weekend-other", "Normal-user-password!");
+        var otherStatus = await other.GetFromJsonAsync<JsonElement>(statusPath, TestContext.Current.CancellationToken);
+        const int expectedOtherOffice = 0;
+        Assert.Equal(expectedOtherOffice, otherStatus.GetProperty("officeDays").GetInt32());
+    }
+
+    [Fact]
     public async Task Status_uses_persisted_holidays_vacations_and_attendance()
     {
         await using var factory = new OfficeDaysFactory();

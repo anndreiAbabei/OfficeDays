@@ -120,11 +120,62 @@ public sealed class AttendanceCalculatorTests
     }
 
     [Fact]
-    public void Attendance_on_ineligible_days_does_not_count()
+    public void Should_CountWeekendAttendance_WhenHolidayAttendanceIsExcluded()
     {
+        // Arrange
+        const int expectedOfficeDays = 2;
+
+        // Act
         var result = Calculate(new DateOnly(2026, 9, 11), new DateOnly(2026, 9, 14), holidays: [new DateOnly(2026, 9, 14)],
             office: [new DateOnly(2026, 9, 11), new DateOnly(2026, 9, 12), new DateOnly(2026, 9, 14)]);
-        Assert.Equal(1, result.OfficeDays);
+
+        // Assert
+        Assert.Equal(expectedOfficeDays, result.OfficeDays);
+    }
+
+    [Theory]
+    [InlineData(4)] // Friday
+    [InlineData(5)] // Saturday
+    [InlineData(6)] // Sunday
+    public void Should_CreditEachVisitOnceWithoutIncreasingTarget_WhenAttendingWeekdaysOrWeekends(int day)
+    {
+        // Arrange
+        var period = CalculationPeriod.ForMonth(2026, 9);
+        var date = new DateOnly(2026, 9, day);
+        const int expectedEligible = 22;
+        const int expectedRequired = 11;
+        const int expectedOffice = 1;
+        const int expectedRemaining = 10;
+        const decimal expectedProgress = 9.1m;
+
+        // Act
+        var result = _calculator.Calculate(period, [], [],
+            [date, date, period.Start.AddDays(-1), period.End.AddDays(1)]);
+
+        // Assert
+        Assert.Equal(expectedEligible, result.EligibleWorkingDays);
+        Assert.Equal(expectedRequired, result.RequiredOfficeDays);
+        Assert.Equal(expectedOffice, result.OfficeDays);
+        Assert.Equal(expectedRemaining, result.RemainingOfficeDays);
+        Assert.Equal(expectedProgress, result.ProgressPercentage);
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public void Should_ExcludeAttendance_WhenWeekendOverlapsHolidayOrVacation(bool isHoliday, bool isVacation)
+    {
+        // Arrange
+        var date = new DateOnly(2026, 9, 5);
+        const int expectedOffice = 0;
+
+        // Act
+        var result = _calculator.Calculate(CalculationPeriod.ForMonth(2026, 9),
+            isHoliday ? [date] : [], isVacation ? [(date, date)] : [], [date]);
+
+        // Assert
+        Assert.Equal(expectedOffice, result.OfficeDays);
     }
 
     [Fact]

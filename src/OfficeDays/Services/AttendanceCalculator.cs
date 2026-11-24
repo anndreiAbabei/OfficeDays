@@ -56,7 +56,9 @@ public sealed class AttendanceCalculator : IAttendanceCalculator
         var eligibleWorkingDays = eligibleDates.Count;
         var requiredOfficeDays = (int)Math.Ceiling(eligibleWorkingDays * requiredOfficePercentage / 100m);
         var maximumWfhDays = eligibleWorkingDays - requiredOfficeDays;
-        var officeDays = officeDates.Distinct().Count(eligibleDates.Contains);
+        // Weekend visits earn credit without increasing the working-day target.
+        var officeDays = officeDates.Distinct().Count(date => date >= period.Start && date <= period.End &&
+                                                            !holidays.Contains(date) && !vacationDates.Contains(date));
         var remainingOfficeDays = Math.Max(0, requiredOfficeDays - officeDays);
         var progress = requiredOfficeDays == 0
             ? 100m

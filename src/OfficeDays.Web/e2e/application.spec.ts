@@ -32,6 +32,7 @@ test('Should_SupportAccountWorkflow_WhenUsingTheRealApi', async ({ page }, testI
   await noOverflow(page);
   const date = new Date().toISOString().slice(0, 10);
   await page.getByLabel('Office attendance date').fill(date);
+  page.once('dialog', async (dialog): Promise<void> => { await dialog.accept(); });
   await page.getByRole('button', { name: 'Add day', exact: true }).click();
   await expect(page.getByText('Office day recorded.')).toBeVisible();
   await expect(page.getByRole('button', { name: /Remove office day/ })).toHaveCount(1);
