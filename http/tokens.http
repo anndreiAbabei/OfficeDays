@@ -2,6 +2,11 @@
 # A value named apiToken in http-client.private.env.json overrides this OS variable.
 @apiToken = {{$env.OFFICEDAYS_API_TOKEN}}
 
+### Read the configured iOS/iPadOS shortcut link
+GET {{baseUrl}}/api/automation/ios
+Authorization: Bearer {{apiToken}}
+Accept: application/json
+
 ### List this user's API tokens
 GET {{baseUrl}}/api/tokens
 Authorization: Bearer {{apiToken}}
@@ -21,7 +26,17 @@ Content-Type: application/json
     client.log("The raw token is shown only in this response. Copy it now if needed.");
 %}
 
-### Rename the token without replacing its credential
+### Create a token labeled for the iPhone/iPad guide (omit purpose for a generic token)
+POST {{baseUrl}}/api/tokens
+Authorization: Bearer {{apiToken}}
+Content-Type: application/json
+
+{
+  "name": "Work iPhone",
+  "purpose": "ios-shortcuts"
+}
+
+### Rename an active token (409 Conflict if revoked)
 PATCH {{baseUrl}}/api/tokens/{{createdTokenId}}
 Authorization: Bearer {{apiToken}}
 Content-Type: application/json

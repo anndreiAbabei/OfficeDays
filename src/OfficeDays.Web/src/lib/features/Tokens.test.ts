@@ -3,7 +3,7 @@ import { expect, it, vi } from 'vitest';
 import Tokens from './Tokens.svelte';
 import { resetCsrf } from '$lib/api';
 
-function setup(fail = false, status = 'Active') {
+function setup(fail = false, status = 'Active', purpose: string | null = null) {
   resetCsrf();
   const fetcher = vi.fn(async (path: string, options?: RequestInit) => {
     if (path.endsWith('csrf')) return Response.json({ token: 'csrf' });
@@ -12,7 +12,7 @@ function setup(fail = false, status = 'Active') {
         ? Response.json({ detail: 'Could not save name.' }, { status: 500 })
         : new Response(null, { status: 204 });
     }
-    return Response.json([{ id: 'token-1', name: 'Phone', createdAt: '2026-10-17T09:00:00Z', lastUsedAt: null, status }]);
+    return Response.json([{ id: 'token-1', name: 'Phone', createdAt: '2026-10-17T09:00:00Z', lastUsedAt: null, status, purpose }]);
   });
   vi.stubGlobal('fetch', fetcher);
   render(Tokens);
@@ -88,7 +88,31 @@ it('removes a token from the list after revocation and keeps active tokens', asy
   expect(fetcher.mock.calls.some(([path, options]) => path === '/api/tokens/phone' && options?.method === 'DELETE')).toBe(true);
 });
 
-it('shows revoked tokens on demand and hides them again', async () => {
+it('Should_CloseEditorAndKeepOriginalName_WhenRenameConflictsWithRevocation', async (): Promise<void> => {
+  // Arrange
+  const expectedDetail = 'Revoked tokens cannot be renamed.';
+  const fetcher = setup();
+  await fireEvent.click(await screen.findByRole('button', { name: 'Rename Phone' }));
+  await fireEvent.click(screen.getByRole('checkbox', { name: 'Show revoked tokens' }));
+  const input = screen.getByLabelText('New token name');
+  await fireEvent.input(input, { target: { value: 'Changed' } });
+  fetcher.mockImplementation(async (path: string): Promise<Response> => path.endsWith('csrf')
+    ? Response.json({ token: 'csrf' })
+    : Response.json({ detail: expectedDetail }, { status: 409 }));
+
+  // Act
+  await fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+  // Assert
+  expect(await screen.findByRole('alert')).toHaveTextContent(expectedDetail);
+  expect(screen.getByText('Phone')).toBeInTheDocument();
+  expect(screen.getByText('Revoked')).toBeInTheDocument();
+  expect(screen.queryByLabelText('New token name')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Rename Phone' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Delete' })).toBeEnabled();
+});
+
+it('Should_ShowRevokedTokensWithoutRename_WhenFilterIsEnabled', async () => {
   setup(false, 'Revoked');
   await screen.findByText('No active API tokens.');
   const toggle = screen.getByRole('checkbox', { name: 'Show revoked tokens' });
@@ -97,6 +121,7 @@ it('shows revoked tokens on demand and hides them again', async () => {
   expect(screen.getByText('Phone')).toBeInTheDocument();
   expect(screen.getByText('Revoked')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Revoke' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Rename Phone' })).not.toBeInTheDocument();
   await fireEvent.click(toggle);
   expect(screen.queryByText('Phone')).not.toBeInTheDocument();
   expect(screen.getByText('No active API tokens.')).toBeInTheDocument();
@@ -135,4 +160,16 @@ it('does not offer permanent deletion for active tokens', async () => {
   await screen.findByRole('button', { name: 'Revoke' });
   await fireEvent.click(screen.getByRole('checkbox', { name: 'Show revoked tokens' }));
   expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+});
+
+it.each([
+  [null, 'Generic API token'],
+  ['ios-shortcuts', 'iOS/iPadOS Shortcuts token']
+] as const)('Should_LabelTokenIcon_WhenPurposeIs%s', async (purpose, expectedLabel): Promise<void> => {
+  // Arrange and act
+  setup(false, 'Active', purpose);
+
+  // Assert
+  const icon = await screen.findByRole('img', { name: expectedLabel });
+  expect(icon).toHaveAttribute('title', expectedLabel);
 });

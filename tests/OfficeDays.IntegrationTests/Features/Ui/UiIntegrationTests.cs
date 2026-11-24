@@ -14,7 +14,8 @@ public sealed class UiIntegrationTests
     [InlineData("/login")]
     [InlineData("/register")]
     [InlineData("/profile")]
-    [InlineData("/tokens")]
+    [InlineData("/automation")]
+    [InlineData("/automation/ios")]
     [InlineData("/admin")]
     public async Task Deep_links_serve_uncached_spa_with_hashed_entry_chunks(string route)
     {

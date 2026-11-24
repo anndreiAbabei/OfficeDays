@@ -44,6 +44,7 @@ public sealed class TokensIntegrationTests
         const HttpStatusCode expectedCreated = HttpStatusCode.Created;
         const HttpStatusCode expectedNoContent = HttpStatusCode.NoContent;
         const HttpStatusCode expectedUnauthorized = HttpStatusCode.Unauthorized;
+        const string expectedPurpose = "ios-shortcuts";
         var cancellationToken = TestContext.Current.CancellationToken;
         await using var factory = new OfficeDaysFactory();
         using var browser = factory.CreateClient();
@@ -52,7 +53,7 @@ public sealed class TokensIntegrationTests
         var csrf = await Csrf(browser);
 
         // Act
-        using var createdResponse = await PostJson(browser, "/api/tokens", new { name = "Phone" }, csrf);
+        using var createdResponse = await PostJson(browser, "/api/tokens", new { name = "Phone", purpose = expectedPurpose }, csrf);
         var created = await Read(createdResponse);
         var raw = created.GetProperty("token").GetString();
 
@@ -70,7 +71,10 @@ public sealed class TokensIntegrationTests
         Assert.StartsWith("odt_", raw);
         Assert.Equal(expectedCreated, attendance.StatusCode);
         Assert.NotNull(tokens);
-        Assert.NotEqual(JsonValueKind.Null, Assert.Single(tokens).GetProperty("lastUsedAt").ValueKind);
+        var listed = Assert.Single(tokens);
+        Assert.NotEqual(JsonValueKind.Null, listed.GetProperty("lastUsedAt").ValueKind);
+        Assert.Equal(expectedPurpose, listed.GetProperty("purpose").GetString());
+        Assert.False(listed.TryGetProperty("token", out _));
         Assert.Equal(expectedNoContent, revocation.StatusCode);
         Assert.Equal(expectedUnauthorized, deniedAttendance.StatusCode);
     }
@@ -106,14 +110,14 @@ public sealed class TokensIntegrationTests
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task Should_TrimNameAndPreserveCredentialAndMetadata_WhenTokenIsRenamed(bool revoked)
+    [InlineData(false, HttpStatusCode.NoContent, "Work phone")]
+    [InlineData(true, HttpStatusCode.Conflict, "Phone")]
+    public async Task Should_AllowOnlyActiveTokensToBeRenamed_WhenOwnerRequestsRename(bool revoked, HttpStatusCode expectedRenameStatus, string expectedName)
     {
         // Arrange
         const HttpStatusCode expectedCreated = HttpStatusCode.Created;
         const HttpStatusCode expectedNoContent = HttpStatusCode.NoContent;
-        const string expectedName = "Work phone";
+        const string expectedConflictDetail = "Revoked tokens cannot be renamed.";
         var expectedCredentialStatus = revoked ? HttpStatusCode.Unauthorized : HttpStatusCode.OK;
         var cancellationToken = TestContext.Current.CancellationToken;
         await using var factory = new OfficeDaysFactory();
@@ -147,7 +151,9 @@ public sealed class TokensIntegrationTests
         using var credentialResponse = await shortcut.PostAsync("/api/attendance", null, cancellationToken);
 
         // Assert
-        Assert.Equal(expectedNoContent, response.StatusCode);
+        Assert.Equal(expectedRenameStatus, response.StatusCode);
+        if (revoked)
+            Assert.Equal(expectedConflictDetail, (await Read(response)).GetProperty("detail").GetString());
         Assert.Equal(expectedName, after.Name);
         Assert.Equal(before.TokenHash, after.TokenHash);
         Assert.Equal(before.UserId, after.UserId);

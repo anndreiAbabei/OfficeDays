@@ -1,7 +1,8 @@
 <script lang="ts">
+  import AutomationSectionHeader from './automation/AutomationSectionHeader.svelte';
   import ItemList from '$lib/components/ItemList.svelte';
   import { onMount } from 'svelte';
-  import { request, mutate, errorMessage } from '$lib/api';
+  import { ApiError, request, mutate, errorMessage } from '$lib/api';
   import { displayTime } from '$lib/dates';
   import type { ApiToken } from '$lib/types';
   import Feedback from '$lib/components/Feedback.svelte';
@@ -72,10 +73,20 @@
       editingId = null;
       message = 'Token renamed.';
     } catch (failure) {
+      if (failure instanceof ApiError && failure.status === 409)
+        markRevoked(token.id);
+      
       error = errorMessage(failure);
     } finally {
       busy = false;
     }
+  }
+
+  function markRevoked(id: string): void {
+    tokens = tokens.map(token => token.id === id ? { ...token, status: 'Revoked' } : token);
+    
+    if (editingId === id) 
+      editingId = null;
   }
 
   async function revoke(token: ApiToken) : Promise<void> {
@@ -88,6 +99,7 @@
     
     try { 
       await mutate(`/api/tokens/${token.id}`, 'DELETE'); 
+      markRevoked(token.id);
       message = 'Token revoked.'; 
       
       await load(); 
@@ -131,9 +143,8 @@
 </script>
 
 <section class="card">
-  <p class="muted">
-    For iOS Shortcuts and other trusted clients.
-  </p>
+  <AutomationSectionHeader heading="h2" title="API tokens" icon="code"
+    description="For iOS Shortcuts and other trusted clients." />
   
   <form class="inline-form token-form" onsubmit={create}>
     <input maxlength="100" placeholder="e.g. Andrew's iPhone" required aria-label="Token name" bind:value={name} />
@@ -171,14 +182,21 @@
       {#each visibleTokens as token (token.id)}
       <li>
         <div class="item-main">
-          {#if editingId === token.id}
+          {#if editingId === token.id && token.status === 'Active'}
             <form class="rename-form" onsubmit={(event) => rename(event, token)}>
               <input aria-label="New token name" required maxlength="100" bind:value={editedName} disabled={busy} />
               <button type="submit" disabled={busy || !editedName.trim()}>Save</button>
               <button type="button" class="secondary" disabled={busy} onclick={() => editingId = null}>Cancel</button>
             </form>
           {:else}
-            <strong>{token.name}</strong>
+            <span class="token-name">
+              {#if token.purpose === 'ios-shortcuts'}
+                <img src="/automation/shortcuts.webp" alt="iOS/iPadOS Shortcuts token" title="iOS/iPadOS Shortcuts token" width="20" height="20" />
+              {:else}
+                <span class="code-icon" role="img" aria-label="Generic API token" title="Generic API token">&lt;/&gt;</span>
+              {/if}
+              <strong>{token.name}</strong>
+            </span>
           {/if}
           <small>
             Created {displayTime(token.createdAt)} · Last used {displayTime(token.lastUsedAt)}
@@ -188,7 +206,7 @@
           </span>
         </div>
         <div class="actions">
-          {#if editingId !== token.id}
+          {#if editingId !== token.id && token.status === 'Active'}
             <button class="secondary small" disabled={busy} onclick={() => edit(token)} aria-label={`Rename ${token.name}`}>
               Rename
             </button>
@@ -209,6 +227,22 @@
 </section>
 
 <style>
+  .item-main .token-name { 
+    display: flex; 
+    align-items: center; 
+    gap: .45rem; 
+    overflow-wrap: anywhere; 
+  }
+  
+  .token-name img { 
+    border-radius: .25rem; 
+  }
+  
+  .code-icon { 
+    color: var(--muted); 
+    font: bold .85rem monospace; 
+  }
+
   .revoked-filter {
     display: flex;
     align-items: center;

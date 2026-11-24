@@ -12,6 +12,6 @@ public static class GetTokensMapping
 
     public static GetTokensItem ToViewModel(this ApiToken token)
     {
-        return new GetTokensItem(token.Id, token.Name, token.CreatedAt, token.LastUsedAt, token.RevokedAt, token.RevokedAt is null ? "Active" : "Revoked");
+        return new GetTokensItem(token.Id, token.Name, token.CreatedAt, token.LastUsedAt, token.RevokedAt, token.RevokedAt is null ? "Active" : "Revoked", token.Purpose);
     }
 }

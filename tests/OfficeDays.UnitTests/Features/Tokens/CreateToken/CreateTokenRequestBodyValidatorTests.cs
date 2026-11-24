@@ -5,6 +5,24 @@ namespace OfficeDays.UnitTests.Features.Tokens.CreateToken;
 
 public sealed class CreateTokenRequestBodyValidatorTests
 {
+    [Theory]
+    [InlineData(null, true)]
+    [InlineData("ios-shortcuts", true)]
+    [InlineData("", false)]
+    [InlineData("unknown", false)]
+    public void Should_ValidatePurpose_WhenCreatingToken(string? purpose, bool expectedValid)
+    {
+        // Arrange
+        var request = new CreateTokenRequestBody("Work", purpose);
+        var validator = new CreateTokenRequestBodyValidator();
+
+        // Act
+        var result = validator.Validate(request);
+
+        // Assert
+        Assert.Equal(expectedValid, result.IsValid);
+    }
+
     [Fact]
     public void Should_ReturnValidationSuccess_WhenBodyIsValid()
     {

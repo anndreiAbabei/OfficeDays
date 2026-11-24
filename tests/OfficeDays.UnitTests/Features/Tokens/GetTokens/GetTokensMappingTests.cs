@@ -8,10 +8,12 @@ public sealed class GetTokensMappingTests
     [Theory]
     [InlineData(false, "Active")]
     [InlineData(true, "Revoked")]
-    public void Should_MapTokenStatus(bool revoked, string expectedStatus)
+    public void Should_MapTokenFields_WhenTokenIsListed(bool revoked, string expectedStatus)
     {
         // arrange
+        const string expectedPurpose = "ios-shortcuts";
         var sut = new ApiToken { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), Name = "Desktop", TokenHash = "hash", CreatedAt = new DateTimeOffset(2026, 1, 2, 9, 0, 0, TimeSpan.Zero), LastUsedAt = new DateTimeOffset(2026, 2, 3, 10, 0, 0, TimeSpan.Zero),
+            Purpose = expectedPurpose,
             RevokedAt = revoked ? new DateTimeOffset(2026, 10, 1, 9, 0, 0, TimeSpan.Zero) : null
         };
 
@@ -25,6 +27,7 @@ public sealed class GetTokensMappingTests
         Assert.Equal(sut.LastUsedAt, result.LastUsedAt);
         Assert.Equal(sut.RevokedAt, result.RevokedAt);
         Assert.Equal(expectedStatus, result.Status);
+        Assert.Equal(expectedPurpose, result.Purpose);
     }
 
     [Fact]
