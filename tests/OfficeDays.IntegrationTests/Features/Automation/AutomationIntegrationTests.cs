@@ -1,6 +1,5 @@
 using System.Net;
 using System.Text.Json;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using static OfficeDays.IntegrationTests.Support.ApiTestHelpers;
 

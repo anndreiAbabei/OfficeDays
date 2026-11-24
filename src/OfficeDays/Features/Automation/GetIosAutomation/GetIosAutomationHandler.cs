@@ -3,9 +3,14 @@ using OfficeDays.Infrastructure;
 
 namespace OfficeDays.Features.Automation.GetIosAutomation;
 
-public sealed class GetIosAutomationHandler(IConfiguration configuration) : IRequestHandler<GetIosAutomationRequest>
+public sealed class GetIosAutomationHandler : IRequestHandler<GetIosAutomationRequest>
 {
-    private readonly IConfiguration _configuration = configuration;
+    private readonly IConfiguration _configuration;
+    
+    public GetIosAutomationHandler(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
 
     public ValueTask<IResult> Handle(GetIosAutomationRequest input, CancellationToken cancellationToken)
     {
@@ -18,6 +23,9 @@ public sealed class GetIosAutomationHandler(IConfiguration configuration) : IReq
                              && url.AbsolutePath.StartsWith("/shortcuts/", StringComparison.Ordinal)
                              && url.Segments.Length == 3;
 
-        return ValueTask.FromResult<IResult>(Results.Ok(new GetIosAutomationResponse(isShortcutLink ? configuredUrl : null)));
+        var response = new GetIosAutomationResponse(isShortcutLink ? configuredUrl : null);
+        var result = Results.Ok(response);
+        
+        return ValueTask.FromResult(result);
     }
 }
