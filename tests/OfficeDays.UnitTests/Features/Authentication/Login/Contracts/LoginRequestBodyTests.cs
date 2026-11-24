@@ -8,14 +8,27 @@ public sealed class LoginRequestBodyTests
     public void Should_SetProperties()
     {
         // arrange
-        var expectedUsername = "Username value";
-        var expectedPassword = "a-long-password";
+        const string expectedUsername = "Username value";
+        const string expectedPassword = "a-long-password";
+        const bool expectedRememberMe = true;
 
         // act
-        var sut = new LoginRequestBody(expectedUsername, expectedPassword);
+        var sut = new LoginRequestBody(expectedUsername, expectedPassword, expectedRememberMe);
 
         // assert
         Assert.Equal(expectedUsername, sut.Username);
         Assert.Equal(expectedPassword, sut.Password);
+        Assert.Equal(expectedRememberMe, sut.RememberMe);
+    }
+
+    [Fact]
+    public void Should_HaveRememberMe_FalseByDefault()
+    {
+        // arrange
+        // act
+        var sut = new LoginRequestBody("", "");
+
+        // assert
+        Assert.False(sut.RememberMe);
     }
 }

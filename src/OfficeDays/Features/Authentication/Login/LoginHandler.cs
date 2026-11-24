@@ -59,7 +59,7 @@ public sealed class LoginHandler : IRequestHandler<LoginRequest>
         cancellationToken.ThrowIfCancellationRequested();
         await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
                                   new ClaimsPrincipal(identity),
-                                  new AuthenticationProperties { IsPersistent = true });
+                                  new AuthenticationProperties { IsPersistent = request.RememberMe });
 
         _logger.LogSignedIn(user.Id);
         var requirement = await _requirements.CurrentRequirement(user, cancellationToken);

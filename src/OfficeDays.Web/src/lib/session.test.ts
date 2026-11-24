@@ -51,3 +51,15 @@ it('Should_ApplyAccountAppearance_WhenSigningInAndSavingProfile', (): void => {
   expect(document.documentElement.dataset.appearance).toBe(expectedAppearance);
   expect(document.cookie.split('; ')).toContain(`appearance=${expectedAppearance}`);
 });
+
+it.each(['Light', 'Dark', 'System'])('Should_RemoveAppearanceCookie_WhenSystemReplaces%s', (previous): void => {
+  // Arrange
+  document.cookie = `appearance=${previous}; Path=/`;
+
+  // Act
+  signedIn(original);
+
+  // Assert
+  expect(document.documentElement.dataset.appearance).toBe(original.appearance);
+  expect(document.cookie.split('; ').some((cookie): boolean => cookie.startsWith('appearance='))).toBe(false);
+});

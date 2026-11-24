@@ -12,7 +12,11 @@ user.subscribe((value): void => {
   document.documentElement.dataset.appearance = appearance;
   
   const secure = location.protocol === 'https:' ? '; Secure' : '';
-  document.cookie = `appearance=${appearance}; Path=/; Max-Age=31536000; SameSite=Lax${secure}`;
+  if (appearance === 'System') {
+    document.cookie = `appearance=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
+  } else {
+    document.cookie = `appearance=${appearance}; Path=/; Max-Age=31536000; SameSite=Lax${secure}`;
+  }
 });
 
 export const sessionReady = writable(false);
