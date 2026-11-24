@@ -57,7 +57,10 @@
     </label>
     <label class="remember">
       <input type="checkbox" bind:checked={rememberMe} />
-      <span>Keep me signed in on this device {#if $configuration.status === 'ready'} ({formatLifetime($configuration.persistentLoginSeconds)}){/if}</span>
+      <span>
+        Keep me signed in on this device 
+        {#if $configuration.status === 'ready'} ({formatLifetime($configuration.persistentLoginSeconds)}){/if}
+      </span>
     </label>
     <button disabled={busy} type="submit">
       {busy ? 'Signing in…' : 'Sign in'}

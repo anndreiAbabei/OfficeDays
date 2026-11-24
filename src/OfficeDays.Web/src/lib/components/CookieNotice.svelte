@@ -5,7 +5,8 @@
   let closeButton: HTMLButtonElement;
 
   function focusPanel(event: ToggleEvent): void {
-    if (event.newState === 'open') closeButton.focus({ preventScroll: true });
+    if (event.newState === 'open') 
+      closeButton.focus({ preventScroll: true });
   }
 </script>
 
@@ -76,13 +77,54 @@
     overscroll-behavior: contain;
   }
 
-  header { position: sticky; top: 0; background: var(--paper); display: flex; align-items: center; gap: .5rem; justify-content: space-between; padding: .4rem .5rem .4rem 1rem; border-bottom: 1px solid var(--line); }
-  header h2 { margin: 0; }
-  .close { flex: none; width: 44px; padding: 0; background: transparent; color: var(--muted); font-size: 1.5rem; }
-  .close:hover { background: var(--secondary); color: var(--ink); }
-  .content { padding: 1rem; overflow-wrap: anywhere; }
-  dl { margin: 0; }
-  dt { font-weight: 650; }
-  dd { margin: .2rem 0 1rem; }
-  p { margin: .5rem 0 0; }
+  header {
+    position: sticky;
+    top: 0; 
+    background: var(--paper); 
+    display: flex; 
+    align-items: center; 
+    gap: .5rem; 
+    justify-content: space-between; 
+    padding: .4rem .5rem .4rem 1rem; 
+    border-bottom: 1px solid var(--line); 
+  }
+  
+  header h2 { 
+    margin: 0; 
+  }
+  
+  .close { 
+    flex: none; 
+    width: 44px; 
+    padding: 0;
+    background: transparent; 
+    color: var(--muted); 
+    font-size: 1.5rem; 
+  }
+  
+  .close:hover { 
+    background: var(--secondary); 
+    color: var(--ink); 
+  }
+  
+  .content { 
+    padding: 1rem; 
+    overflow-wrap: anywhere; 
+  }
+  
+  dl { 
+    margin: 0; 
+  }
+  
+  dt { 
+    font-weight: 650; 
+  }
+  
+  dd { 
+    margin: .2rem 0 1rem; 
+  }
+  
+  p { 
+    margin: .5rem 0 0; 
+  }
 </style>
