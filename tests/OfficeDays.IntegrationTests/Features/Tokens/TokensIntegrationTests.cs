@@ -110,14 +110,14 @@ public sealed class TokensIntegrationTests
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task Should_TrimNameAndPreserveCredentialAndMetadata_WhenTokenIsRenamed(bool revoked)
+    [InlineData(false, HttpStatusCode.NoContent, "Work phone")]
+    [InlineData(true, HttpStatusCode.Conflict, "Phone")]
+    public async Task Should_AllowOnlyActiveTokensToBeRenamed_WhenOwnerRequestsRename(bool revoked, HttpStatusCode expectedRenameStatus, string expectedName)
     {
         // Arrange
         const HttpStatusCode expectedCreated = HttpStatusCode.Created;
         const HttpStatusCode expectedNoContent = HttpStatusCode.NoContent;
-        const string expectedName = "Work phone";
+        const string expectedConflictDetail = "Revoked tokens cannot be renamed.";
         var expectedCredentialStatus = revoked ? HttpStatusCode.Unauthorized : HttpStatusCode.OK;
         var cancellationToken = TestContext.Current.CancellationToken;
         await using var factory = new OfficeDaysFactory();
@@ -151,7 +151,9 @@ public sealed class TokensIntegrationTests
         using var credentialResponse = await shortcut.PostAsync("/api/attendance", null, cancellationToken);
 
         // Assert
-        Assert.Equal(expectedNoContent, response.StatusCode);
+        Assert.Equal(expectedRenameStatus, response.StatusCode);
+        if (revoked)
+            Assert.Equal(expectedConflictDetail, (await Read(response)).GetProperty("detail").GetString());
         Assert.Equal(expectedName, after.Name);
         Assert.Equal(before.TokenHash, after.TokenHash);
         Assert.Equal(before.UserId, after.UserId);

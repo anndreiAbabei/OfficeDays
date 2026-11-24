@@ -2,7 +2,7 @@
   import AutomationSectionHeader from './automation/AutomationSectionHeader.svelte';
   import ItemList from '$lib/components/ItemList.svelte';
   import { onMount } from 'svelte';
-  import { request, mutate, errorMessage } from '$lib/api';
+  import { ApiError, request, mutate, errorMessage } from '$lib/api';
   import { displayTime } from '$lib/dates';
   import type { ApiToken } from '$lib/types';
   import Feedback from '$lib/components/Feedback.svelte';
@@ -73,10 +73,20 @@
       editingId = null;
       message = 'Token renamed.';
     } catch (failure) {
+      if (failure instanceof ApiError && failure.status === 409)
+        markRevoked(token.id);
+      
       error = errorMessage(failure);
     } finally {
       busy = false;
     }
+  }
+
+  function markRevoked(id: string): void {
+    tokens = tokens.map(token => token.id === id ? { ...token, status: 'Revoked' } : token);
+    
+    if (editingId === id) 
+      editingId = null;
   }
 
   async function revoke(token: ApiToken) : Promise<void> {
@@ -89,6 +99,7 @@
     
     try { 
       await mutate(`/api/tokens/${token.id}`, 'DELETE'); 
+      markRevoked(token.id);
       message = 'Token revoked.'; 
       
       await load(); 
@@ -171,7 +182,7 @@
       {#each visibleTokens as token (token.id)}
       <li>
         <div class="item-main">
-          {#if editingId === token.id}
+          {#if editingId === token.id && token.status === 'Active'}
             <form class="rename-form" onsubmit={(event) => rename(event, token)}>
               <input aria-label="New token name" required maxlength="100" bind:value={editedName} disabled={busy} />
               <button type="submit" disabled={busy || !editedName.trim()}>Save</button>
@@ -195,7 +206,7 @@
           </span>
         </div>
         <div class="actions">
-          {#if editingId !== token.id}
+          {#if editingId !== token.id && token.status === 'Active'}
             <button class="secondary small" disabled={busy} onclick={() => edit(token)} aria-label={`Rename ${token.name}`}>
               Rename
             </button>

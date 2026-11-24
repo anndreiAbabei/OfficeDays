@@ -88,7 +88,31 @@ it('removes a token from the list after revocation and keeps active tokens', asy
   expect(fetcher.mock.calls.some(([path, options]) => path === '/api/tokens/phone' && options?.method === 'DELETE')).toBe(true);
 });
 
-it('shows revoked tokens on demand and hides them again', async () => {
+it('Should_CloseEditorAndKeepOriginalName_WhenRenameConflictsWithRevocation', async (): Promise<void> => {
+  // Arrange
+  const expectedDetail = 'Revoked tokens cannot be renamed.';
+  const fetcher = setup();
+  await fireEvent.click(await screen.findByRole('button', { name: 'Rename Phone' }));
+  await fireEvent.click(screen.getByRole('checkbox', { name: 'Show revoked tokens' }));
+  const input = screen.getByLabelText('New token name');
+  await fireEvent.input(input, { target: { value: 'Changed' } });
+  fetcher.mockImplementation(async (path: string): Promise<Response> => path.endsWith('csrf')
+    ? Response.json({ token: 'csrf' })
+    : Response.json({ detail: expectedDetail }, { status: 409 }));
+
+  // Act
+  await fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+  // Assert
+  expect(await screen.findByRole('alert')).toHaveTextContent(expectedDetail);
+  expect(screen.getByText('Phone')).toBeInTheDocument();
+  expect(screen.getByText('Revoked')).toBeInTheDocument();
+  expect(screen.queryByLabelText('New token name')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Rename Phone' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Delete' })).toBeEnabled();
+});
+
+it('Should_ShowRevokedTokensWithoutRename_WhenFilterIsEnabled', async () => {
   setup(false, 'Revoked');
   await screen.findByText('No active API tokens.');
   const toggle = screen.getByRole('checkbox', { name: 'Show revoked tokens' });
@@ -97,6 +121,7 @@ it('shows revoked tokens on demand and hides them again', async () => {
   expect(screen.getByText('Phone')).toBeInTheDocument();
   expect(screen.getByText('Revoked')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Revoke' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Rename Phone' })).not.toBeInTheDocument();
   await fireEvent.click(toggle);
   expect(screen.queryByText('Phone')).not.toBeInTheDocument();
   expect(screen.getByText('No active API tokens.')).toBeInTheDocument();

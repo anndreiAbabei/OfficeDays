@@ -71,6 +71,8 @@ test('Should_SupportAccountWorkflow_WhenUsingTheRealApi', async ({ page }, testI
   await expect(page.getByText('Token revoked.', { exact: true })).toBeVisible();
   await page.getByRole('checkbox', { name: 'Show revoked tokens' }).check();
   await expect(page.getByText('Revoked', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Rename Browser test' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Delete', exact: true })).toBeVisible();
   await noOverflow(page);
   await page.goto('/admin');
   await expect(page.getByText('Administrator access is required.')).toBeVisible();

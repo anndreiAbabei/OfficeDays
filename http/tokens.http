@@ -36,7 +36,7 @@ Content-Type: application/json
   "purpose": "ios-shortcuts"
 }
 
-### Rename the token without replacing its credential
+### Rename an active token (409 Conflict if revoked)
 PATCH {{baseUrl}}/api/tokens/{{createdTokenId}}
 Authorization: Bearer {{apiToken}}
 Content-Type: application/json

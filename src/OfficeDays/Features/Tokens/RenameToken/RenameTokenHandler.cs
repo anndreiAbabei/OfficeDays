@@ -21,20 +21,23 @@ public sealed class RenameTokenHandler : IRequestHandler<RenameTokenRequest>
 
     public async ValueTask<IResult> Handle(RenameTokenRequest input, CancellationToken cancellationToken)
     {
-        var token = await _db.ApiTokens.SingleOrDefaultAsync(x => x.Id == input.Id &&
-                                                                  x.UserId == _currentUser.Id,
-                                                             cancellationToken);
+        var userId = _currentUser.Id;
+        var ownedToken = _db.ApiTokens.Where(token => token.Id == input.Id && token.UserId == userId);
+        var name = input.Body.Name.Trim();
+        var updated = await ownedToken.Where(token => token.RevokedAt == null)
+                                      .ExecuteUpdateAsync(setters => setters.SetProperty(token => token.Name, name), cancellationToken);
+        if (updated > 0)
+            return Results.NoContent();
 
-        if (token is null)
+        if (await ownedToken.AnyAsync(cancellationToken))
         {
-            _logger.LogTokenNotFound(input.Id, _currentUser.Id);
-
-            return Results.NotFound();
+            _logger.LogRenameRejectedForRevokedToken(input.Id, userId);
+            
+            return Results.Problem(statusCode: StatusCodes.Status409Conflict, detail: "Revoked tokens cannot be renamed.");
         }
 
-        token.Name = input.Body.Name.Trim();
-        await _db.SaveChangesAsync(cancellationToken);
-
-        return Results.NoContent();
+        _logger.LogTokenNotFound(input.Id, userId);
+        
+        return Results.NotFound();
     }
 }
