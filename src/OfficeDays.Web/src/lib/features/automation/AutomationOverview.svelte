@@ -1,26 +1,34 @@
 <script lang="ts">
+  import AutomationSectionHeader from './AutomationSectionHeader.svelte';
   import { onMount } from 'svelte';
   import { detectPlatform, groups, platforms, type Platform } from './platforms';
 
   let device = $state<Platform | null>(null);
   onMount((): void => { device = detectPlatform(navigator); });
+
+  let getDescription = (platform : string): string => {
+    platform = platform.toLocaleLowerCase();
+    switch (platform) {
+      case 'ios': 
+        return 'Shortcuts';
+      case 'macos':
+        return 'Shortcuts (coming soon)';
+      default:
+        return 'Not available yet';
+    }
+  } 
 </script>
 
 <section class="card overview">
-  <header>
-    <span class="calendar" aria-hidden="true"><span>✓</span></span>
-    <div>
-      <h1>Automation</h1>
-      <p>Automatically mark your days at the office.</p>
-    </div>
-  </header>
+  <AutomationSectionHeader heading="h1" title="Automation" icon="calendar"
+    description="Automatically mark your days at the office." />
   
   {#if device === 'ios'}
     <a class="shortcut" href="/automation/ios">
       <img src="/automation/shortcuts.webp" alt="" width="24" height="24" /> Automate with Shortcuts
     </a>
   {:else if device}
-    <a href={'/automation/' + device}>{platforms[device]} automation</a>
+    <a class="unavailable" href={'/automation/' + device}>{platforms[device]} automation</a>
     <p class="muted">Not yet available. We’re working on it!</p>
   {/if}
   
@@ -33,9 +41,8 @@
           <ul>
             {#each group.devices as platform}
               <li>
-                <a href={'/automation/' + platform}>
-                  {platforms[platform]} — {platform === 'ios' ? 'Shortcuts' : platform === 'macos' ? 'Shortcuts (coming soon)' : 'Not available yet'}
-                </a>
+                <a class:unavailable={platform !== 'ios'} href={'/automation/' + platform}>{platforms[platform]}</a>
+                <span> — {getDescription(platform)}</span>
               </li>
             {/each}
           </ul>
@@ -48,36 +55,6 @@
 <style>
   .overview { 
     margin-bottom: 1rem; 
-  }
-  
-  header { 
-    display: flex; 
-    align-items: center; 
-    gap: .85rem; 
-    margin-bottom: .75rem; 
-  }
-  
-  header p { 
-    margin-bottom: 0; 
-  }
-  
-  .calendar {
-    flex: none; 
-    width: 3rem; 
-    height: 3rem; 
-    border: 2px solid var(--green); 
-    border-top-width: .6rem;
-    border-radius: .55rem; 
-    background: var(--green-soft); 
-    color: var(--green-dark); 
-    display: grid; 
-    place-items: center; 
-  }
-  
-  .calendar span { 
-    font-size: 1.6rem; 
-    font-weight: 750; 
-    line-height: 1; 
   }
   
   .overview > p { 
@@ -121,6 +98,10 @@
     margin: 0; 
   }
   
+  a.unavailable + span { 
+    color: var(--muted); 
+  }
+
   li a { 
     display: inline-block; 
     padding-block: .55rem; 

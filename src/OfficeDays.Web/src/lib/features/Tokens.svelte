@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AutomationSectionHeader from './automation/AutomationSectionHeader.svelte';
   import ItemList from '$lib/components/ItemList.svelte';
   import { onMount } from 'svelte';
   import { request, mutate, errorMessage } from '$lib/api';
@@ -131,10 +132,8 @@
 </script>
 
 <section class="card">
-  <h2>API tokens</h2>
-  <p class="muted">
-    For iOS Shortcuts and other trusted clients.
-  </p>
+  <AutomationSectionHeader heading="h2" title="API tokens" icon="code"
+    description="For iOS Shortcuts and other trusted clients." />
   
   <form class="inline-form token-form" onsubmit={create}>
     <input maxlength="100" placeholder="e.g. Andrew's iPhone" required aria-label="Token name" bind:value={name} />

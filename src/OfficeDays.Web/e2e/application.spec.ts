@@ -93,6 +93,8 @@ test('Should_SetUpDeviceToken_WhenOpeningTheIosGuide', async ({ page }, testInfo
     await page.getByRole('link', { name: 'iOS/iPadOS — Shortcuts' }).click();
   }
   await expect(page).toHaveURL(/\/automation\/ios$/);
+  const automationNav = page.getByRole('navigation').locator('a[href="/automation"]');
+  await expect(automationNav).toHaveAttribute('aria-current', 'location');
   await expect(page.getByRole('heading', { name: 'Setup guide' })).toBeHidden();
   await expect.poll((): Promise<boolean> => page.locator('figure img').evaluateAll(images =>
     images.length > 0 && images.every(image => image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0)
@@ -104,6 +106,9 @@ test('Should_SetUpDeviceToken_WhenOpeningTheIosGuide', async ({ page }, testInfo
 
   // Assert
   await expect(page.getByLabel('Authorization header')).toHaveValue(/^Bearer odt_/);
+  const addressWidth = await page.getByLabel('OfficeDays address').evaluate(input => input.getBoundingClientRect().width);
+  const headerWidth = await page.getByLabel('Authorization header').evaluate(input => input.getBoundingClientRect().width);
+  expect(headerWidth).toBe(addressWidth);
   await expect(page.getByRole('link', { name: 'Add to Shortcuts' })).toHaveAttribute('href', /^https:\/\/www\.icloud\.com\/shortcuts\//);
   await page.getByRole('button', { name: 'Next' }).click();
   await expect(page.getByRole('link', { name: 'Enlarge screenshot: Start the import' })).toBeVisible();
@@ -113,6 +118,7 @@ test('Should_SetUpDeviceToken_WhenOpeningTheIosGuide', async ({ page }, testInfo
   else expect(guide.y).toBeGreaterThan(credentials.y);
   await noOverflow(page);
   await page.getByRole('link', { name: '← Automation' }).click();
+  await expect(automationNav).toHaveAttribute('aria-current', 'page');
   const token = page.getByRole('listitem').filter({ hasText: deviceName });
   await expect(token.getByRole('img', { name: 'iOS/iPadOS Shortcuts token' })).toBeVisible();
   await expect(page.getByLabel('Authorization header')).toHaveCount(0);

@@ -69,6 +69,10 @@ it('Should_ShowOneTimeHeaderAndImportGuide_WhenDeviceTokenIsCreated', async (): 
   expect(screen.getByLabelText('Authorization header')).toHaveValue(expectedHeader);
   expect(writeText).toHaveBeenCalledWith(expectedHeader);
   expect(await screen.findByRole('status')).toHaveTextContent('Authorization header copied.');
+  const addressButton = screen.getByRole('button', { name: 'Copy address' });
+  expect(addressButton).toHaveAttribute('title', 'Copy address');
+  await fireEvent.click(addressButton);
+  expect(writeText).toHaveBeenLastCalledWith(window.location.origin);
   expect(screen.getByRole('link', { name: 'Add to Shortcuts' })).toHaveAttribute('href', shortcutUrl);
   expect(screen.queryByRole('button', { name: 'Start' })).toBeNull();
   await fireEvent.click(screen.getByRole('button', { name: 'Next' }));

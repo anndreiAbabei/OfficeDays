@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { request, mutate, errorMessage } from '$lib/api';
   import Feedback from '$lib/components/Feedback.svelte';
-  import CopyField from './CopyField.svelte';
+  import CopyField from '$lib/components/CopyField.svelte';
   import GuideCarousel from './GuideCarousel.svelte';
 
   let shortcutUrl = $state<string | null>(null);
@@ -75,7 +75,8 @@
     <Feedback error={createError} />
   {/if}
   
-  <p class="muted">Your device checks when you arrive at the office. OfficeDays receives an attendance request. Your office location stays on your device. <a href="https://github.com/anndreiAbabei/OfficeDays#ios-shortcut-setup" target="_blank" rel="noreferrer">Learn more about OfficeDays and Shortcuts</a>.</p>
+  <p class="muted">Your device checks when you arrive at the office. OfficeDays receives an attendance request. Your office location stays on your device.</p>
+  <a class="learn-more" href="https://github.com/anndreiAbabei/OfficeDays#ios-shortcut-setup" target="_blank" rel="noreferrer">Learn more about OfficeDays and Shortcuts</a>
 </section>
 
 <div class="panels" hidden={!header}>
@@ -112,15 +113,17 @@
   form { 
     align-items: end; 
     max-width: 32rem; 
-    margin-bottom: .75rem; 
+    margin-bottom: 1rem;
   }
   
   .intro p { 
     margin-bottom: .45rem; 
   }
   
-  .intro p:last-child { 
-    margin-bottom: 0; 
+  .learn-more {
+    display: block;
+    width: fit-content;
+    margin-top: .85rem;
   }
   
   .panels { 
