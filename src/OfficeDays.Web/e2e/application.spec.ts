@@ -92,7 +92,7 @@ test('Should_SetUpDeviceToken_WhenOpeningTheIosGuide', async ({ page }, testInfo
     await page.getByRole('link', { name: 'Automate with Shortcuts' }).click();
   } else {
     await page.getByText('Other device', { exact: true }).click();
-    await page.getByRole('link', { name: 'iOS/iPadOS — Shortcuts' }).click();
+    await page.getByRole('link', { name: 'iOS/iPadOS', exact: true }).click();
   }
   await expect(page).toHaveURL(/\/automation\/ios$/);
   const automationNav = page.getByRole('navigation').locator('a[href="/automation"]');

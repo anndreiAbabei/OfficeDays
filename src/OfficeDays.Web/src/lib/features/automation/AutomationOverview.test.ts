@@ -13,8 +13,12 @@ it('Should_OfferPhoneSetupFromDesktop_WhenOtherDeviceIsOpened', async (): Promis
     await fireEvent.click(screen.getByText('Other device'));
 
     // Assert
-    expect(screen.getByRole('link', { name: 'iOS/iPadOS — Shortcuts' })).toHaveAttribute('href', '/automation/ios');
-    expect(screen.getByRole('link', { name: /macOS — Shortcuts/ })).toHaveAttribute('href', '/automation/macos');
+    const iosLink = screen.getByRole('link', { name: 'iOS/iPadOS' });
+    const macLink = screen.getByRole('link', { name: 'macOS' });
+    expect(iosLink).toHaveAttribute('href', '/automation/ios');
+    expect(iosLink.closest('li')).toHaveTextContent('iOS/iPadOS — Shortcuts');
+    expect(macLink).toHaveAttribute('href', '/automation/macos');
+    expect(macLink.closest('li')).toHaveTextContent('macOS — Shortcuts (coming soon)');
   } finally {
     browser.mockRestore();
   }
