@@ -40,8 +40,12 @@
         To ask for access, correction, erasure, restriction or portability, or to object to processing
         based on legitimate interests, contact the operator. These rights depend on the circumstances.
         You can also complain to a data protection authority.</p>
-      
+
+      {#if notice.contactEmail === 'contact@officedays.test.com'}
+        <p>Draft privacy contact: {notice.contactEmail}. A monitored address will be provided before public launch.</p>
+      {:else}
         <p>Privacy contact: <a href={'mailto:' + notice.contactEmail}>{notice.contactEmail}</a></p>
+      {/if}
     {:else}
       <p>This instance has no published privacy notice.</p>
     {/if}
