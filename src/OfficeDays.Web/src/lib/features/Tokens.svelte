@@ -131,6 +131,7 @@
 </script>
 
 <section class="card">
+  <h2>API tokens</h2>
   <p class="muted">
     For iOS Shortcuts and other trusted clients.
   </p>
@@ -178,7 +179,14 @@
               <button type="button" class="secondary" disabled={busy} onclick={() => editingId = null}>Cancel</button>
             </form>
           {:else}
-            <strong>{token.name}</strong>
+            <span class="token-name">
+              {#if token.purpose === 'ios-shortcuts'}
+                <img src="/automation/shortcuts.webp" alt="iOS/iPadOS Shortcuts token" title="iOS/iPadOS Shortcuts token" width="20" height="20" />
+              {:else}
+                <span class="code-icon" role="img" aria-label="Generic API token" title="Generic API token">&lt;/&gt;</span>
+              {/if}
+              <strong>{token.name}</strong>
+            </span>
           {/if}
           <small>
             Created {displayTime(token.createdAt)} · Last used {displayTime(token.lastUsedAt)}
@@ -209,6 +217,22 @@
 </section>
 
 <style>
+  .item-main .token-name { 
+    display: flex; 
+    align-items: center; 
+    gap: .45rem; 
+    overflow-wrap: anywhere; 
+  }
+  
+  .token-name img { 
+    border-radius: .25rem; 
+  }
+  
+  .code-icon { 
+    color: var(--muted); 
+    font: bold .85rem monospace; 
+  }
+
   .revoked-filter {
     display: flex;
     align-items: center;

@@ -3,7 +3,7 @@ const cacheName = prefix + '__BUILD_VERSION__';
 const integrity = /* ASSET_INTEGRITY */ {};
 const shell = '/index.html';
 
-const routes = new Set(['/', '/index.html', '/dashboard', '/guest', '/login', '/register', '/profile', '/tokens', '/reports', '/admin']);
+const routes = new Set(['/', '/index.html', '/dashboard', '/guest', '/login', '/register', '/profile', '/automation', '/automation/ios', '/automation/android', '/automation/macos', '/automation/windows', '/automation/linux', '/reports', '/admin']);
 
 function assetRequest(path) {
   return new Request(path, { integrity: integrity[path], credentials: 'omit', cache: 'reload', redirect: 'error' });

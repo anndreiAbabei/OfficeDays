@@ -182,9 +182,17 @@ You will need an account, a personal API token, and an app address your iPhone c
 
 **`localhost` on your iPhone refers to the phone itself.** When testing an app running on your computer, use the computer's local network address and make sure the phone can reach it. An arrival automation at the office also needs access to your server from there—for example, through your hosted address or VPN.
 
-### 1. Create a token
+### Guided setup
 
-Sign in with your everyday account and open **API tokens**. Create a token with a name such as `My iPhone` and copy it immediately: the full token is only shown once.
+Open **Automation → Automate with Shortcuts** on your iPhone or iPad. From another device, choose **Other device → iOS/iPadOS**. Enter a device name and select **Start**. Copy the full Authorization header (including `Bearer `), open **Add to Shortcuts**, and use the illustrated guide to import the shortcut and enable its arrival automation.
+
+Use the OfficeDays address shown in the guide. If the template has a fixed address and skips the address question, edit the shortcut’s attendance URL to point to your instance before running it or enabling automation. Shortcuts uses the office location on your device. The server receives an authenticated attendance request.
+
+Operators can replace the iCloud template in `Automation:Ios:ShortcutUrl` in `appsettings.json` or set `Automation__Ios__ShortcutUrl` in the application container environment. Supply an HTTPS iCloud Shortcuts share link. A blank or invalid link disables guided token creation. Manual token management remains available under **Automation → API tokens**.
+
+### 1. Create a token manually
+
+Sign in with your everyday account and open **Automation → API tokens**. Create a token with a name such as `My iPhone` and copy it immediately: the full token is only shown once.
 
 Treat it like a password. Do not share a shortcut containing your token. If it is lost or exposed, revoke it in the app and create a new one.
 

@@ -20,5 +20,9 @@ public sealed class CreateTokenRequestBodyValidator : AbstractValidator<CreateTo
         RuleFor(b => b.Name)
             .NotEmpty()
             .MaximumLength(100);
+
+        RuleFor(b => b.Purpose)
+            .Must(purpose => purpose is null or "ios-shortcuts")
+            .WithMessage("Unsupported token purpose.");
     }
 }

@@ -50,12 +50,13 @@ export interface Holiday {
   name: string 
 }
 
-export interface ApiToken {
+export type ApiToken = {
   id: string; 
   name: string; 
   createdAt: string; 
   lastUsedAt: string | null; 
   status: string;
+  purpose: string | null;
 }
 
 export interface Period { 

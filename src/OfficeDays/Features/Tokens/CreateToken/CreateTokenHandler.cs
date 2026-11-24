@@ -37,6 +37,7 @@ public sealed class CreateTokenHandler : IRequestHandler<CreateTokenRequest>
             Id = Guid.NewGuid(),
             UserId = _currentUser.Id,
             Name = request.Name.Trim(),
+            Purpose = request.Purpose,
             TokenHash = _apiTokenService.Hash(rawToken),
             CreatedAt = _timeProvider.GetUtcNow()
         };

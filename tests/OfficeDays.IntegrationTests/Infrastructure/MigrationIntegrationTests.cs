@@ -71,6 +71,12 @@ public sealed class MigrationIntegrationTests
                 VALUES ({0}, '2026-12-01', 'National Day');
                 """, holidayId);
 
+            const string expectedTokenHash = "existing-token-hash";
+            await db.Database.ExecuteSqlRawAsync("""
+                INSERT INTO "ApiTokens" ("Id", "UserId", "Name", "TokenHash", "CreatedAt")
+                VALUES ({0}, {1}, 'Legacy', {2}, '2026-09-15 09:00:00+00:00');
+                """, Guid.NewGuid(), userId, expectedTokenHash);
+
             var attendanceId = Guid.NewGuid();
             await db.Database.ExecuteSqlRawAsync("""
                 INSERT INTO "Attendances" ("Id", "UserId", "Date", "CreatedAt")
@@ -78,6 +84,9 @@ public sealed class MigrationIntegrationTests
                 """, attendanceId, userId);
 
             await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
+            var existingToken = await db.ApiTokens.AsNoTracking().SingleAsync(TestContext.Current.CancellationToken);
+            Assert.Null(existingToken.Purpose);
+            Assert.Equal(expectedTokenHash, existingToken.TokenHash);
             var existingAttendance = await db.Attendances.AsNoTracking().SingleAsync(cancellationToken: TestContext.Current.CancellationToken);
             Assert.Equal(attendanceId, existingAttendance.Id);
             Assert.Equal(userId, existingAttendance.UserId);

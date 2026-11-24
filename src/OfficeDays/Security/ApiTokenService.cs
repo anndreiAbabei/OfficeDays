@@ -2,7 +2,6 @@ using System.Buffers;
 using System.Buffers.Text;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.AspNetCore.WebUtilities;
 
 namespace OfficeDays.Security;
 

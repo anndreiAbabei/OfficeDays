@@ -44,6 +44,7 @@ public sealed class TokensIntegrationTests
         const HttpStatusCode expectedCreated = HttpStatusCode.Created;
         const HttpStatusCode expectedNoContent = HttpStatusCode.NoContent;
         const HttpStatusCode expectedUnauthorized = HttpStatusCode.Unauthorized;
+        const string expectedPurpose = "ios-shortcuts";
         var cancellationToken = TestContext.Current.CancellationToken;
         await using var factory = new OfficeDaysFactory();
         using var browser = factory.CreateClient();
@@ -52,7 +53,7 @@ public sealed class TokensIntegrationTests
         var csrf = await Csrf(browser);
 
         // Act
-        using var createdResponse = await PostJson(browser, "/api/tokens", new { name = "Phone" }, csrf);
+        using var createdResponse = await PostJson(browser, "/api/tokens", new { name = "Phone", purpose = expectedPurpose }, csrf);
         var created = await Read(createdResponse);
         var raw = created.GetProperty("token").GetString();
 
@@ -70,7 +71,10 @@ public sealed class TokensIntegrationTests
         Assert.StartsWith("odt_", raw);
         Assert.Equal(expectedCreated, attendance.StatusCode);
         Assert.NotNull(tokens);
-        Assert.NotEqual(JsonValueKind.Null, Assert.Single(tokens).GetProperty("lastUsedAt").ValueKind);
+        var listed = Assert.Single(tokens);
+        Assert.NotEqual(JsonValueKind.Null, listed.GetProperty("lastUsedAt").ValueKind);
+        Assert.Equal(expectedPurpose, listed.GetProperty("purpose").GetString());
+        Assert.False(listed.TryGetProperty("token", out _));
         Assert.Equal(expectedNoContent, revocation.StatusCode);
         Assert.Equal(expectedUnauthorized, deniedAttendance.StatusCode);
     }

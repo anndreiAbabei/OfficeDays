@@ -86,10 +86,10 @@
       {#each primaryPages as link}
         <a href={link.href} aria-current={page.url.pathname === link.href ? 'page' : undefined}>{link.label}</a>
       {/each}
-      <button bind:this={moreButton} class="more" class:active={['/admin', '/tokens'].includes(page.url.pathname)}
+      <button bind:this={moreButton} class="more" class:active={page.url.pathname === '/admin' || page.url.pathname.startsWith('/automation')}
         aria-expanded={moreOpen} aria-controls="account-links" onclick={(): void => { moreOpen = !moreOpen; }}>More</button>
       <div bind:this={accountLinks} id="account-links" class:expanded={moreOpen}>
-        <a href="/tokens" aria-current={page.url.pathname === '/tokens' ? 'page' : undefined}>API tokens</a>
+        <a href="/automation" aria-current={page.url.pathname === '/automation' ? 'page' : undefined}>Automation</a>
         {#if $user.isAdmin}
           <a href="/admin" aria-current={page.url.pathname === '/admin' ? 'page' : undefined}>Administration</a>
         {/if}

@@ -62,7 +62,7 @@ test('Should_SupportAccountWorkflow_WhenUsingTheRealApi', async ({ page }, testI
   await page.screenshot({ path: testInfo.outputPath('requirements.png'), fullPage: true });
   if (!testInfo.project.name.startsWith('desktop'))
     await page.getByRole('button', { name: 'More', exact: true }).click();
-  await page.getByRole('link', { name: 'API tokens', exact: true }).click();
+  await page.getByRole('link', { name: 'Automation', exact: true }).click();
   await page.getByLabel('Token name').fill('Browser test');
   await page.getByRole('button', { name: 'Create token' }).click();
   await expect(page.locator('.token-reveal code')).toContainText('odt_');
@@ -79,6 +79,43 @@ test('Should_SupportAccountWorkflow_WhenUsingTheRealApi', async ({ page }, testI
   await page.goto('/profile');
   await expect(page).toHaveURL(/\/login$/);
   expect(errors).toEqual([]);
+});
+
+test('Should_SetUpDeviceToken_WhenOpeningTheIosGuide', async ({ page }, testInfo): Promise<void> => {
+  // Arrange
+  const deviceName = 'Shortcuts ' + testInfo.project.name;
+  await login(page, 'Admin');
+  await page.goto('/automation');
+  if (testInfo.project.name === 'iphone-webkit') {
+    await page.getByRole('link', { name: 'Automate with Shortcuts' }).click();
+  } else {
+    await page.getByText('Other device', { exact: true }).click();
+    await page.getByRole('link', { name: 'iOS/iPadOS — Shortcuts' }).click();
+  }
+  await expect(page).toHaveURL(/\/automation\/ios$/);
+  await expect(page.getByRole('heading', { name: 'Setup guide' })).toBeHidden();
+  await expect.poll((): Promise<boolean> => page.locator('figure img').evaluateAll(images =>
+    images.length > 0 && images.every(image => image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0)
+  )).toBe(true);
+
+  // Act
+  await page.getByLabel('Device name').fill(deviceName);
+  await page.getByRole('button', { name: 'Start' }).click();
+
+  // Assert
+  await expect(page.getByLabel('Authorization header')).toHaveValue(/^Bearer odt_/);
+  await expect(page.getByRole('link', { name: 'Add to Shortcuts' })).toHaveAttribute('href', /^https:\/\/www\.icloud\.com\/shortcuts\//);
+  await page.getByRole('button', { name: 'Next' }).click();
+  await expect(page.getByRole('link', { name: 'Enlarge screenshot: Start the import' })).toBeVisible();
+  const [credentials, guide] = await page.locator('.panels > section').evaluateAll(elements =>
+    elements.map(element => ({ x: element.getBoundingClientRect().x, y: element.getBoundingClientRect().y })));
+  if (testInfo.project.name.startsWith('desktop')) expect(guide.y).toBe(credentials.y);
+  else expect(guide.y).toBeGreaterThan(credentials.y);
+  await noOverflow(page);
+  await page.getByRole('link', { name: '← Automation' }).click();
+  const token = page.getByRole('listitem').filter({ hasText: deviceName });
+  await expect(token.getByRole('img', { name: 'iOS/iPadOS Shortcuts token' })).toBeVisible();
+  await expect(page.getByLabel('Authorization header')).toHaveCount(0);
 });
 
 test('admin manages jurisdictions and holidays, protects unsaved changes', async ({ page }, testInfo) => {

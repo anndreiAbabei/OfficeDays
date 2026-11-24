@@ -3,7 +3,7 @@ import { expect, it, vi } from 'vitest';
 import Tokens from './Tokens.svelte';
 import { resetCsrf } from '$lib/api';
 
-function setup(fail = false, status = 'Active') {
+function setup(fail = false, status = 'Active', purpose: string | null = null) {
   resetCsrf();
   const fetcher = vi.fn(async (path: string, options?: RequestInit) => {
     if (path.endsWith('csrf')) return Response.json({ token: 'csrf' });
@@ -12,7 +12,7 @@ function setup(fail = false, status = 'Active') {
         ? Response.json({ detail: 'Could not save name.' }, { status: 500 })
         : new Response(null, { status: 204 });
     }
-    return Response.json([{ id: 'token-1', name: 'Phone', createdAt: '2026-10-17T09:00:00Z', lastUsedAt: null, status }]);
+    return Response.json([{ id: 'token-1', name: 'Phone', createdAt: '2026-10-17T09:00:00Z', lastUsedAt: null, status, purpose }]);
   });
   vi.stubGlobal('fetch', fetcher);
   render(Tokens);
@@ -135,4 +135,16 @@ it('does not offer permanent deletion for active tokens', async () => {
   await screen.findByRole('button', { name: 'Revoke' });
   await fireEvent.click(screen.getByRole('checkbox', { name: 'Show revoked tokens' }));
   expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+});
+
+it.each([
+  [null, 'Generic API token'],
+  ['ios-shortcuts', 'iOS/iPadOS Shortcuts token']
+] as const)('Should_LabelTokenIcon_WhenPurposeIs%s', async (purpose, expectedLabel): Promise<void> => {
+  // Arrange and act
+  setup(false, 'Active', purpose);
+
+  // Assert
+  const icon = await screen.findByRole('img', { name: expectedLabel });
+  expect(icon).toHaveAttribute('title', expectedLabel);
 });
