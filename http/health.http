@@ -3,6 +3,11 @@
 GET {{baseUrl}}/api/version
 Accept: application/json
 
+### Public UI configuration: persistentLoginSeconds and privacyNotice (null when disabled)
+# Published notice fields: operatorName, contactEmail and details.
+GET {{baseUrl}}/api/configuration
+Accept: application/json
+
 ### API liveness
 GET {{baseUrl}}/health/live
 Accept: application/json

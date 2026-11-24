@@ -13,6 +13,7 @@ public sealed class UiIntegrationTests
     [InlineData("/dashboard")]
     [InlineData("/login")]
     [InlineData("/register")]
+    [InlineData("/privacy")]
     [InlineData("/profile")]
     [InlineData("/automation")]
     [InlineData("/automation/ios")]

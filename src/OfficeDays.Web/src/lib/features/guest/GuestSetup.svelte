@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { configuration } from '$lib/features/privacy/configuration';
   import { onMount } from 'svelte';
   import { request, errorMessage } from '$lib/api';
   import { isoDate, localDate } from '$lib/dates';
@@ -102,6 +103,9 @@
     Afterward, personal tracking works without an internet connection while the app remains open. 
     Holidays are fetched again only when you request them.
   </p>
+  {#if $configuration.status === 'ready' && $configuration.privacyNotice}
+    <p><a href="/privacy" target="_blank" rel="noopener">Read the privacy notice (opens in a new tab)</a></p>
+  {/if}
   {#if loading}
     <p role="status">Loading holiday calendars…</p>
   {:else if !calendars.length}

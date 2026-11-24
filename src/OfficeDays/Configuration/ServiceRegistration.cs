@@ -31,6 +31,13 @@ public static class ServiceRegistration
         if (cookieExpireTimeSpan <= TimeSpan.Zero)
             throw new InvalidOperationException("Authentication:CookieExpireTimeSpan must be a positive TimeSpan.");
 
+        builder.Services.AddOptions<PrivacyOptions>()
+               .Bind(builder.Configuration.GetSection("Privacy"))
+               .Validate(privacy => !privacy.Enabled || !string.IsNullOrWhiteSpace(privacy.OperatorName), "Privacy:OperatorName is required when privacy notices are enabled.")
+               .Validate(privacy => !privacy.Enabled || System.Net.Mail.MailAddress.TryCreate(privacy.ContactEmail, out var email) && email.Address == privacy.ContactEmail, "Privacy:ContactEmail must be a mailbox address when privacy notices are enabled.")
+               .Validate(privacy => !privacy.Enabled || !string.IsNullOrWhiteSpace(privacy.OperatorNotice), "Privacy:OperatorNotice is required when privacy notices are enabled.")
+               .ValidateOnStart();
+
         AddLogging(builder);
 
         builder.Services.AddResponseCompression(options =>

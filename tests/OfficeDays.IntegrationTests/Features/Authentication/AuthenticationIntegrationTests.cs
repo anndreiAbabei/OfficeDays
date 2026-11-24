@@ -5,20 +5,28 @@ namespace OfficeDays.IntegrationTests.Features.Authentication;
 
 public sealed class AuthenticationIntegrationTests
 {
-    [Fact]
-    public async Task Login_cookie_is_persistent()
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    public async Task Should_SetCookieExpiryOnlyOnRequest_WhenSigningIn(bool? rememberMe, bool expectedPersistence)
     {
+        // Arrange
         await using var factory = new OfficeDaysFactory();
         using var client = factory.CreateClient();
-        await CreateUser(client, "persistentuser");
+        const string username = "persistentuser";
+        const string password = "Normal-user-password!";
+        await CreateUser(client, username);
+        object body = rememberMe.HasValue ? new { username, password, rememberMe } : new { username, password };
 
-        var response = await client.PostAsJsonAsync("/api/auth/login", new
-            { username = "persistentuser", password = "Normal-user-password!" }, cancellationToken: TestContext.Current.CancellationToken);
+        // Act
+        using var response = await client.PostAsJsonAsync("/api/auth/login", body, TestContext.Current.CancellationToken);
 
+        // Assert
         response.EnsureSuccessStatusCode();
         var cookie = Assert.Single(response.Headers.GetValues("Set-Cookie"),
-            value => value.StartsWith("OfficeDays.Session=", StringComparison.Ordinal));
-        Assert.Contains("expires=", cookie, StringComparison.OrdinalIgnoreCase);
+                                   value => value.StartsWith("OfficeDays.Session=", StringComparison.Ordinal));
+        Assert.Equal(expectedPersistence, cookie.Contains("expires=", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]

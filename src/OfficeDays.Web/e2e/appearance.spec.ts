@@ -20,7 +20,8 @@ test('Should_RememberAppearanceAcrossRoutes_WhenProfileIsSaved', async ({ page, 
 
     // Assert
     await expect(page.getByText('Profile saved.', { exact: true })).toBeVisible();
-    expect((await context.cookies()).find(cookie => cookie.name === 'appearance')?.value).toBe(choice);
+    const expectedCookie = choice === 'System' ? undefined : choice;
+    expect((await context.cookies()).find(cookie => cookie.name === 'appearance')?.value).toBe(expectedCookie);
     await page.goto('/');
     await expect(page.locator('.calendar')).toBeVisible();
     await expect(body).toHaveCSS('background-color', choice === 'Light' ? light : dark);

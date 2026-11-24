@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { AttendanceRequirementMode } from '$lib/attendanceRequirementMode';
+  import { configuration } from '$lib/features/privacy/configuration';
   import AuthCard from '$lib/components/AuthCard.svelte';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -50,6 +51,9 @@
     event.preventDefault();
     error = '';
     
+    if ($configuration.status !== 'ready') 
+      return;
+
     if (password !== confirmation) {
       error = 'Passwords do not match.';
       return; 
@@ -94,9 +98,11 @@
     
     <label>
       Email address (optional)
-      <input type="email" autocomplete="email" maxlength="254" bind:value={email} />
+      <input type="email" autocomplete="email" maxlength="254" aria-describedby="email-help" bind:value={email} />
     </label>
     
+    <p id="email-help" class="muted">Email recovery is unavailable in this version.</p>
+
     <label>
       Password
       <input type="password" autocomplete="new-password" minlength="12" required bind:value={password} aria-describedby="password-help" />
@@ -131,7 +137,15 @@
     
     <RequirementInput bind:requirementMode bind:requirementValue disabled={busy} />
     
-    <button type="submit" disabled={busy || loading || !!calendarError}>
+    {#if $configuration.status === 'ready' && $configuration.privacyNotice}
+      <p class="muted">Read how this instance handles your data in the
+        <a href="/privacy" target="_blank" rel="noopener">privacy notice (opens in a new tab)</a>.</p>
+    {:else if $configuration.status === 'loading'}
+      <p role="status">Loading privacy settings…</p>
+    {:else if $configuration.status === 'error'}
+      <p role="alert">To continue, retry privacy settings in the footer.</p>
+    {/if}
+    <button type="submit" disabled={busy || loading || !!calendarError || $configuration.status !== 'ready'}>
       {busy ? 'Creating account…' : 'Create account'}
     </button>
   </form>

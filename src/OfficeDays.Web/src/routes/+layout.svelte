@@ -1,5 +1,7 @@
 <script lang="ts">
   import '../app.css';
+  import CookieNotice from '$lib/components/CookieNotice.svelte';
+  import { configuration, loadConfiguration } from '$lib/features/privacy/configuration';
   import OfflineStatus from '$lib/components/OfflineStatus.svelte';
   import { onMount } from 'svelte';
   import { afterNavigate, goto } from '$app/navigation';
@@ -20,6 +22,7 @@
     await goto('/guest');
   }
   onMount(() => {
+    void loadConfiguration();
     // Preserve links from the original UI.
     void (async () => {
       if (location.hash === '#register' || location.hash === '#login')
@@ -41,7 +44,9 @@
 
 <div class="app-frame">
   <main id="main-content" class="shell" tabindex="-1">
-    {#if $sessionError}
+    {#if page.route.id === '/privacy'}
+      {@render children()}
+    {:else if $sessionError}
       <section class="card">
         <p class="error" role="alert">{$sessionError}</p>
         <button onclick={loadSession}>
@@ -60,6 +65,15 @@
   <footer class="app-footer muted">
     <OfflineStatus />
     <VersionInfo />
+    {#if $configuration.status === 'ready' && $configuration.privacyNotice}
+      <a class="privacy-notice" href="/privacy">
+        <p>Privacy notice</p>
+      </a>
+      <CookieNotice persistentLoginSeconds={$configuration.persistentLoginSeconds} />
+    {:else if $configuration.status === 'error'}
+      <p role="status">Unable to load the privacy settings for this instance.</p>
+      <button class="small secondary" onclick={loadConfiguration}>Retry privacy settings</button>
+    {/if}
   </footer>
 </div>
 
@@ -82,6 +96,10 @@
     text-align: center; 
     padding: 1rem 1rem 2rem; 
     font-size: .8rem; 
+  }
+  
+  .app-footer .privacy-notice > p {
+    margin-top: 1em;
   }
   
   .skip-link:not(:focus) { 
